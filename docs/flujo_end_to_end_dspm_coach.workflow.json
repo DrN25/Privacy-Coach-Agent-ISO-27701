@@ -1,0 +1,303 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Flujo End-to-End: Caso SaludTotal S.A.C. (DSPM a Remediación)",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "main-trace",
+        "label": "Trazabilidad End-to-End",
+        "focus": [
+          "dev_input",
+          "ast_parser",
+          "profiler",
+          "dspm_eval",
+          "router_o1",
+          "graph_extract",
+          "anpd_match",
+          "coach_prompt",
+          "coach_chat"
+        ],
+        "note": "Traza completa desde la ingesta del DDL hasta el diálogo pericial y parche SQL."
+      },
+      {
+        "id": "funnel-isolation",
+        "label": "Embudo Determinista Cero-Alucinación",
+        "focus": [
+          "dspm_eval",
+          "router_o1",
+          "graph_extract",
+          "anpd_match",
+          "coach_prompt"
+        ],
+        "note": "Filtro en 4 etapas que reduce 150k tokens de normas a 850 tokens exactos."
+      },
+      {
+        "id": "coach-loop",
+        "label": "Ciclo Pericial Pedagógico",
+        "focus": [
+          "coach_prompt",
+          "coach_chat"
+        ],
+        "note": "Sensibilización al desarrollador basada en preguntas guía y entrega del script SQL."
+      }
+    ],
+    "output": "flujo_end_to_end_dspm_coach.html"
+  },
+  "lanes": [
+    {
+      "id": "lane_client",
+      "label": "Cliente MYPE & Dev"
+    },
+    {
+      "id": "lane_dspm",
+      "label": "Ingesta & Motor DSPM"
+    },
+    {
+      "id": "lane_kb",
+      "label": "Fuentes de Conocimiento"
+    },
+    {
+      "id": "lane_coach",
+      "label": "Agente Coach & Remediación"
+    }
+  ],
+  "phases": [
+    {
+      "id": "phase_ingest",
+      "label": "1. Ingesta y Parsing",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "phase_dspm",
+      "label": "2. Profiler & DSPM",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "phase_bridge",
+      "label": "3. Router & Grafo O(1)",
+      "fromCol": 4,
+      "toCol": 4
+    },
+    {
+      "id": "phase_coach",
+      "label": "4. Diálogo & Remediación",
+      "fromCol": 5,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "groups": [
+    {
+      "id": "group_candados",
+      "label": "3 Candados Anti-Falla",
+      "lane": "lane_dspm",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "group_kb",
+      "label": "Extracción Grafo & ANPD",
+      "lane": "lane_kb",
+      "fromCol": 4,
+      "toCol": 5,
+      "variant": "dashed"
+    }
+  ],
+  "mainPath": [
+    "dev_input",
+    "ast_parser",
+    "profiler",
+    "dspm_eval",
+    "router_o1",
+    "graph_extract",
+    "anpd_match",
+    "coach_prompt",
+    "coach_chat"
+  ],
+  "nodes": [
+    {
+      "id": "dev_input",
+      "lane": "lane_client",
+      "col": 0,
+      "type": "frontend",
+      "label": "Esquema SQL",
+      "sublabel": "schema_pacientes.sql",
+      "width": 132
+    },
+    {
+      "id": "ast_parser",
+      "lane": "lane_dspm",
+      "col": 1,
+      "type": "backend",
+      "label": "AST sqlglot",
+      "sublabel": "Tablas y columnas DDL",
+      "tag": "Sintaxis SQL",
+      "width": 132
+    },
+    {
+      "id": "profiler",
+      "lane": "lane_dspm",
+      "col": 2,
+      "type": "backend",
+      "label": "Profiler Semántico",
+      "sublabel": "diagnostico -> SALUD",
+      "tag": "3 Candados",
+      "width": 132
+    },
+    {
+      "id": "dspm_eval",
+      "lane": "lane_dspm",
+      "col": 3,
+      "type": "security",
+      "label": "Evaluador DSPM",
+      "sublabel": "Regla SALUD sin cifrado",
+      "tag": "Brecha Alta",
+      "width": 132
+    },
+    {
+      "id": "router_o1",
+      "lane": "lane_dspm",
+      "col": 4,
+      "type": "security",
+      "label": "Router O(1)",
+      "sublabel": "Regla -> Grafo (0 LLM)",
+      "tag": "0.2 ms",
+      "width": 132
+    },
+    {
+      "id": "graph_extract",
+      "lane": "lane_kb",
+      "col": 4,
+      "type": "database",
+      "label": "Subgrafo ISO",
+      "sublabel": "B.2.2.1 / Art. 38",
+      "tag": "NetworkX 2.2ms",
+      "width": 132
+    },
+    {
+      "id": "anpd_match",
+      "lane": "lane_kb",
+      "col": 5,
+      "type": "database",
+      "label": "Precedente ANPD",
+      "sublabel": "Multa 12.5 UIT",
+      "tag": "Res. 042-2023",
+      "width": 132
+    },
+    {
+      "id": "coach_prompt",
+      "lane": "lane_coach",
+      "col": 5,
+      "type": "backend",
+      "label": "Privacy Coach Agent",
+      "sublabel": "Prompt 850t + Parche",
+      "tag": "ISO 27701",
+      "width": 132
+    },
+    {
+      "id": "coach_chat",
+      "lane": "lane_client",
+      "col": 5,
+      "type": "frontend",
+      "label": "Dev Chat Pericial",
+      "sublabel": "Sensibilización y DDL",
+      "tag": "Interactivo",
+      "width": 132
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "dev_input",
+      "to": "ast_parser",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e2",
+      "from": "ast_parser",
+      "to": "profiler",
+      "variant": "default"
+    },
+    {
+      "id": "e3",
+      "from": "profiler",
+      "to": "dspm_eval",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e4",
+      "from": "dspm_eval",
+      "to": "router_o1",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e5",
+      "from": "router_o1",
+      "to": "graph_extract",
+      "variant": "default"
+    },
+    {
+      "id": "e6",
+      "from": "graph_extract",
+      "to": "anpd_match",
+      "variant": "default"
+    },
+    {
+      "id": "e7",
+      "from": "graph_extract",
+      "to": "coach_prompt",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e8",
+      "from": "anpd_match",
+      "to": "coach_prompt",
+      "variant": "default"
+    },
+    {
+      "id": "e9",
+      "from": "coach_prompt",
+      "to": "coach_chat",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "violet",
+      "title": "Caso Real: SaludTotal S.A.C.",
+      "items": [
+        "Insumo: Tabla pacientes con columna diagnostico_cie10 en texto plano VARCHAR",
+        "Detección DSPM: Regla R-001 (Datos de Salud sin cifrado en reposo)",
+        "Correspondencia Normativa: ISO 27701 B.2.2.1, LPDP Art. 38, Directiva Nivel Complejo",
+        "Riesgo Cuantificado ANPD: Multa estimada de 12.5 UIT (S/ 64,375.00)"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Garantía de Cero Alucinación",
+      "items": [
+        "El Router O(1) vincula la regla al subgrafo sin intervención de LLM",
+        "Tiempo de resolución: 0.2 milisegundos en memoria RAM local",
+        "El modelo local (Llama-3/Qwen) solo formula la pedagogía interactiva",
+        "Reducción de contexto del 99.4%: de 150,000 tokens a 850 tokens"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Remediación Inmediata Entregada",
+      "items": [
+        "Script DDL defensivo con extensión pgcrypto y función pgp_sym_encrypt",
+        "Creación de vista descifrada con permisos restringidos por rol médico",
+        "SoA y Matriz de Riesgos actualizada lista para inspección de auditoría"
+      ]
+    }
+  ]
+}

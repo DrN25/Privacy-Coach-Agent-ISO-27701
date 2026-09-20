@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSPM & Privacy Compliance Multi-Agent System | TIF UNSA</title>
+  <meta name="description" content="Sistema Multi-Agente para Auditoría de Privacidad y DSPM alineado a ISO/IEC 27701:2025 y Ley 29733 (ANPD Perú)">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfeff',
+              100: '#cffafe',
+              400: '#22d3ee',
+              500: '#06b6d4',
+              600: '#0891b2',
+              900: '#164e63',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+  
+  <!-- React 18 & ReactDOM 18 -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel Standalone -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Marked Markdown Parser (Local with CDN Fallback) -->
+  <script src="/js/marked.min.js"></script>
+</head>
+<body class="bg-[#090d16] text-slate-100 min-h-screen antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
+  <div id="root">
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="flex flex-col items-center gap-4 text-center">
+        <div class="w-10 h-10 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+        <div class="text-sm font-medium text-slate-400 font-mono tracking-wide">Iniciando DSPM & Privacy Compliance System...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- React JSX App -->
+  <script type="text/babel" src="/js/app.jsx"></script>
+</body>
+</html>

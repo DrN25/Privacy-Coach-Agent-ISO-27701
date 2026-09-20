@@ -1,0 +1,10 @@
+{
+  "lastAnalyzedAt": "2026-09-16T00:32:11.152920+00:00",
+  "gitCommitHash": "initial-master-tif",
+  "version": "1.0.0",
+  "analyzedFiles": 45,
+  "totalNodes": 27,
+  "totalEdges": 35,
+  "totalLayers": 7,
+  "tourSteps": 8
+}

@@ -1,0 +1,738 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "Privacy Coach & DSPM Multi-Agent System",
+    "languages": [
+      "Python",
+      "JavaScript",
+      "SQL",
+      "HTML",
+      "CSS"
+    ],
+    "frameworks": [
+      "FastAPI",
+      "React 18",
+      "NetworkX",
+      "SQLite",
+      "Model Context Protocol"
+    ],
+    "description": "Sistema Multi-Agente para Auditoría de Privacidad y DSPM alineado a ISO/IEC 27701:2025, ISO/IEC 29100:2024 y Ley 29733 (ANPD Perú) con Coach Socrático DeepSeek Flash.",
+    "analyzedAt": "2026-09-16T00:32:10.984476+00:00",
+    "gitCommitHash": "initial-master-tif"
+  },
+  "nodes": [
+    {
+      "id": "file:Sistema/backend/app.py",
+      "type": "file",
+      "name": "app.py",
+      "path": "Sistema/backend/app.py",
+      "summary": "Servidor principal FastAPI que expone endpoints REST para auditoría DSPM, ingesta documental, gestión de hallazgos y consulta al Coach.",
+      "tags": [
+        "fastapi",
+        "api",
+        "rest",
+        "backend",
+        "orchestrator"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:Sistema/backend/db.py",
+      "type": "file",
+      "name": "db.py",
+      "path": "Sistema/backend/db.py",
+      "summary": "Módulo de inicialización y conexión a SQLite (KB-3), gestionando tablas de inventario de datos, cláusulas analizadas y hallazgos.",
+      "tags": [
+        "sqlite",
+        "database",
+        "storage",
+        "persistence"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:Sistema/backend/profiler.py",
+      "type": "file",
+      "name": "profiler.py",
+      "path": "Sistema/backend/profiler.py",
+      "summary": "Motor de perfilado semántico de 3 Candados (léxico AST, tipo de dato y contexto clínico/financiero) alineado al Art. 2.5 Ley 29733.",
+      "tags": [
+        "profiler",
+        "ast",
+        "nlp",
+        "lpdp",
+        "privacy"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:Sistema/backend/dspm_engine.py",
+      "type": "file",
+      "name": "dspm_engine.py",
+      "path": "Sistema/backend/dspm_engine.py",
+      "summary": "Motor determinista de evaluación de reglas booleanas R-001 a R-007 para detección de brechas técnicas y contractuales.",
+      "tags": [
+        "dspm",
+        "rules-engine",
+        "security",
+        "deterministic"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:Sistema/backend/router.py",
+      "type": "file",
+      "name": "router.py",
+      "path": "Sistema/backend/router.py",
+      "summary": "Enrutador normativo O(1) que mapea instantáneamente cada regla DSPM violada a su control ISO/IEC 27701:2025 y sanción ANPD.",
+      "tags": [
+        "router",
+        "iso27701",
+        "ley29733",
+        "normative"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:Sistema/backend/knowledge_bridge.py",
+      "type": "file",
+      "name": "knowledge_bridge.py",
+      "path": "Sistema/backend/knowledge_bridge.py",
+      "summary": "Puente GraphRAG NetworkX con 78 nodos normativos (ISO 27701 ↔ ISO 29100 ↔ Ley 29733) y buscador de 588 resoluciones ANPD.",
+      "tags": [
+        "graphrag",
+        "networkx",
+        "knowledge-graph",
+        "anpd"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:Sistema/backend/coach_agent.py",
+      "type": "file",
+      "name": "coach_agent.py",
+      "path": "Sistema/backend/coach_agent.py",
+      "summary": "Agente Auditor Socrático basado en ISO 19011 que consume DeepSeek-v4.1-Flash con payload quirúrgico de 850 tokens y genera parches pgcrypto.",
+      "tags": [
+        "llm",
+        "deepseek",
+        "socratic",
+        "iso19011",
+        "remediation"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:Sistema/backend/ingestion.py",
+      "type": "file",
+      "name": "ingestion.py",
+      "path": "Sistema/backend/ingestion.py",
+      "summary": "Módulo de ingesta multi-formato que analiza DDLs SQL con sqlglot y extrae cláusulas de PDFs con PyMuPDF y Markdown.",
+      "tags": [
+        "ingestion",
+        "sqlglot",
+        "pymupdf",
+        "parser"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:Sistema/mcp_server.py",
+      "type": "file",
+      "name": "mcp_server.py",
+      "path": "Sistema/mcp_server.py",
+      "summary": "Servidor oficial Model Context Protocol (MCP 2.x) que expone 10 herramientas de auditoría y 3 recursos para agentes autónomos.",
+      "tags": [
+        "mcp",
+        "agentic-tools",
+        "json-rpc",
+        "integration"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:Sistema/frontend/index.html",
+      "type": "file",
+      "name": "index.html",
+      "path": "Sistema/frontend/index.html",
+      "summary": "Documento HTML5 base con Tailwind CSS, fuentes tipográficas y cargador de Babel standalone para React 18.",
+      "tags": [
+        "frontend",
+        "html",
+        "tailwind",
+        "entrypoint"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:Sistema/frontend/js/app.jsx",
+      "type": "file",
+      "name": "app.jsx",
+      "path": "Sistema/frontend/js/app.jsx",
+      "summary": "Aplicación React 18 que gestiona el estado de la auditoría: onboarding desde cero, repositorio de documentos, alerta ámbar y Coach.",
+      "tags": [
+        "react",
+        "frontend",
+        "jsx",
+        "state-management",
+        "ui"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:Sistema/frontend/css/style.css",
+      "type": "file",
+      "name": "style.css",
+      "path": "Sistema/frontend/css/style.css",
+      "summary": "Estilos visuales con glassmorphism, variables de color temáticas y micro-animaciones inspiradas en Linear y LocalCan.",
+      "tags": [
+        "css",
+        "styling",
+        "glassmorphism",
+        "design-system"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:Sistema/mockups/schema_clinica_saludtotal.sql",
+      "type": "file",
+      "name": "schema_clinica_saludtotal.sql",
+      "path": "Sistema/mockups/schema_clinica_saludtotal.sql",
+      "summary": "Esquema relacional DDL de prueba con vulnerabilidades intencionales: datos de salud en texto plano, CVV no minimizado y MD5.",
+      "tags": [
+        "mockup",
+        "sql",
+        "vulnerability",
+        "test-case"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:Sistema/mockups/politica_privacidad_saludtotal.pdf",
+      "type": "document",
+      "name": "politica_privacidad_saludtotal.pdf",
+      "path": "Sistema/mockups/politica_privacidad_saludtotal.pdf",
+      "summary": "Política de privacidad corporativa con cláusulas no conformes: consentimiento tácito, retención indefinida y cobro por ARCO.",
+      "tags": [
+        "mockup",
+        "pdf",
+        "legal-policy",
+        "vulnerability"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:Sistema/mockups/contrato_encargo_sla_cloud.pdf",
+      "type": "document",
+      "name": "contrato_encargo_sla_cloud.pdf",
+      "path": "Sistema/mockups/contrato_encargo_sla_cloud.pdf",
+      "summary": "Contrato de encargo de tratamiento con proveedor de nube en EE.UU. sin registro de flujo transfronterizo ante ANPD.",
+      "tags": [
+        "mockup",
+        "pdf",
+        "sla",
+        "cross-border-transfer"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:Sistema/mockups/diccionario_datos_negocio.txt",
+      "type": "document",
+      "name": "diccionario_datos_negocio.txt",
+      "path": "Sistema/mockups/diccionario_datos_negocio.txt",
+      "summary": "Diccionario de datos y definiciones técnicas del equipo de desarrollo de la clínica.",
+      "tags": [
+        "mockup",
+        "txt",
+        "data-dictionary"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:Material/iso27701_2025_graph.json",
+      "type": "schema",
+      "name": "iso27701_2025_graph.json",
+      "path": "Material/iso27701_2025_graph.json",
+      "summary": "Grafo de controles ISO/IEC 27701:2025 (PIMS) con 78 nodos estructurados y relaciones de seguridad de datos personales.",
+      "tags": [
+        "iso27701",
+        "pims",
+        "standards",
+        "dataset"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:Material/iso29100_2024_principles.json",
+      "type": "schema",
+      "name": "iso29100_2024_principles.json",
+      "path": "Material/iso29100_2024_principles.json",
+      "summary": "Definición de los 11 principios de privacidad del estándar ISO/IEC 29100:2024 (minimización, consentimiento, exactitud).",
+      "tags": [
+        "iso29100",
+        "privacy-framework",
+        "principles"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:Material/ley_29733_articulos.json",
+      "type": "schema",
+      "name": "ley_29733_articulos.json",
+      "path": "Material/ley_29733_articulos.json",
+      "summary": "Catálogo legal de artículos y principios de la Ley 29733 de Protección de Datos Personales en el Perú.",
+      "tags": [
+        "ley29733",
+        "anpd",
+        "peru",
+        "legislation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:Material/anpd_sanciones_dataset.json",
+      "type": "schema",
+      "name": "anpd_sanciones_dataset.json",
+      "path": "Material/anpd_sanciones_dataset.json",
+      "summary": "Dataset jurisprudencial de 588 resoluciones sancionadoras históricas de la ANPD con multas en UIT y tipos infractores.",
+      "tags": [
+        "anpd",
+        "sanctions",
+        "jurisprudence",
+        "fines"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "func:Sistema/backend/profiler.py:perfilar_columna",
+      "type": "function",
+      "name": "perfilar_columna",
+      "path": "Sistema/backend/profiler.py",
+      "summary": "Evalúa una columna mediante el algoritmo de 3 candados para clasificarla en la taxonomía LPDP.",
+      "tags": [
+        "ast",
+        "profiling",
+        "algorithm"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "func:Sistema/backend/dspm_engine.py:ejecutar_auditoria_dspm",
+      "type": "function",
+      "name": "ejecutar_auditoria_dspm",
+      "path": "Sistema/backend/dspm_engine.py",
+      "summary": "Ejecuta las reglas R-001 a R-007 sobre SQLite KB-3 y persiste los hallazgos de cumplimiento.",
+      "tags": [
+        "rules",
+        "audit",
+        "engine"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "func:Sistema/backend/router.py:resolver_enrutamiento",
+      "type": "function",
+      "name": "resolver_enrutamiento",
+      "path": "Sistema/backend/router.py",
+      "summary": "Mapeo O(1) determinista que correlaciona reglas DSPM con controles ISO 27701 y artículos de Ley 29733.",
+      "tags": [
+        "router",
+        "o1",
+        "normative"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "func:Sistema/backend/coach_agent.py:dialogar_coach",
+      "type": "function",
+      "name": "dialogar_coach",
+      "path": "Sistema/backend/coach_agent.py",
+      "summary": "Genera el diálogo socrático ISO 19011 y parches de remediación usando DeepSeek-v4.1-Flash.",
+      "tags": [
+        "llm",
+        "socratic",
+        "coach"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "func:Sistema/backend/ingestion.py:procesar_archivo_sql",
+      "type": "function",
+      "name": "procesar_archivo_sql",
+      "path": "Sistema/backend/ingestion.py",
+      "summary": "Parsea scripts DDL con sqlglot, extrae tablas/columnas y ejecuta el perfilado semántico.",
+      "tags": [
+        "sqlglot",
+        "ast",
+        "ddl"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "func:Sistema/backend/ingestion.py:procesar_archivo_documento",
+      "type": "function",
+      "name": "procesar_archivo_documento",
+      "path": "Sistema/backend/ingestion.py",
+      "summary": "Extrae texto y cláusulas de políticas de privacidad o contratos PDF/Markdown.",
+      "tags": [
+        "pdf",
+        "text-extraction",
+        "clauses"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:Sistema/backend/knowledge_bridge.py:KnowledgeBridge",
+      "type": "class",
+      "name": "KnowledgeBridge",
+      "path": "Sistema/backend/knowledge_bridge.py",
+      "summary": "Motor de grafos NetworkX que conecta normas internacionales con sanciones peruanas.",
+      "tags": [
+        "networkx",
+        "graphrag",
+        "subgraph"
+      ],
+      "complexity": "complex"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:Sistema/backend/profiler.py",
+      "target": "func:Sistema/backend/profiler.py:perfilar_columna",
+      "type": "defines"
+    },
+    {
+      "source": "file:Sistema/backend/dspm_engine.py",
+      "target": "func:Sistema/backend/dspm_engine.py:ejecutar_auditoria_dspm",
+      "type": "defines"
+    },
+    {
+      "source": "file:Sistema/backend/router.py",
+      "target": "func:Sistema/backend/router.py:resolver_enrutamiento",
+      "type": "defines"
+    },
+    {
+      "source": "file:Sistema/backend/coach_agent.py",
+      "target": "func:Sistema/backend/coach_agent.py:dialogar_coach",
+      "type": "defines"
+    },
+    {
+      "source": "file:Sistema/backend/ingestion.py",
+      "target": "func:Sistema/backend/ingestion.py:procesar_archivo_sql",
+      "type": "defines"
+    },
+    {
+      "source": "file:Sistema/backend/ingestion.py",
+      "target": "func:Sistema/backend/ingestion.py:procesar_archivo_documento",
+      "type": "defines"
+    },
+    {
+      "source": "file:Sistema/backend/knowledge_bridge.py",
+      "target": "class:Sistema/backend/knowledge_bridge.py:KnowledgeBridge",
+      "type": "defines"
+    },
+    {
+      "source": "file:Sistema/backend/app.py",
+      "target": "file:Sistema/backend/db.py",
+      "type": "imports"
+    },
+    {
+      "source": "file:Sistema/backend/app.py",
+      "target": "file:Sistema/backend/dspm_engine.py",
+      "type": "imports"
+    },
+    {
+      "source": "file:Sistema/backend/app.py",
+      "target": "file:Sistema/backend/ingestion.py",
+      "type": "imports"
+    },
+    {
+      "source": "file:Sistema/backend/app.py",
+      "target": "file:Sistema/backend/coach_agent.py",
+      "type": "imports"
+    },
+    {
+      "source": "file:Sistema/backend/app.py",
+      "target": "file:Sistema/backend/knowledge_bridge.py",
+      "type": "imports"
+    },
+    {
+      "source": "file:Sistema/backend/app.py",
+      "target": "func:Sistema/backend/dspm_engine.py:ejecutar_auditoria_dspm",
+      "type": "calls"
+    },
+    {
+      "source": "file:Sistema/backend/app.py",
+      "target": "func:Sistema/backend/coach_agent.py:dialogar_coach",
+      "type": "calls"
+    },
+    {
+      "source": "file:Sistema/backend/dspm_engine.py",
+      "target": "func:Sistema/backend/router.py:resolver_enrutamiento",
+      "type": "calls"
+    },
+    {
+      "source": "file:Sistema/backend/dspm_engine.py",
+      "target": "file:Sistema/backend/db.py",
+      "type": "imports"
+    },
+    {
+      "source": "file:Sistema/backend/ingestion.py",
+      "target": "func:Sistema/backend/profiler.py:perfilar_columna",
+      "type": "calls"
+    },
+    {
+      "source": "file:Sistema/backend/ingestion.py",
+      "target": "file:Sistema/backend/db.py",
+      "type": "imports"
+    },
+    {
+      "source": "file:Sistema/backend/knowledge_bridge.py",
+      "target": "file:Material/iso27701_2025_graph.json",
+      "type": "references",
+      "label": "carga_grafo_iso27701"
+    },
+    {
+      "source": "file:Sistema/backend/knowledge_bridge.py",
+      "target": "file:Material/iso29100_2024_principles.json",
+      "type": "references",
+      "label": "carga_principios_iso29100"
+    },
+    {
+      "source": "file:Sistema/backend/knowledge_bridge.py",
+      "target": "file:Material/ley_29733_articulos.json",
+      "type": "references",
+      "label": "carga_ley_peruana"
+    },
+    {
+      "source": "file:Sistema/backend/knowledge_bridge.py",
+      "target": "file:Material/anpd_sanciones_dataset.json",
+      "type": "references",
+      "label": "carga_jurisprudencia_anpd"
+    },
+    {
+      "source": "file:Sistema/backend/coach_agent.py",
+      "target": "class:Sistema/backend/knowledge_bridge.py:KnowledgeBridge",
+      "type": "calls",
+      "label": "inyecta_subgrafo_y_precedentes"
+    },
+    {
+      "source": "file:Sistema/mcp_server.py",
+      "target": "file:Sistema/backend/app.py",
+      "type": "references"
+    },
+    {
+      "source": "file:Sistema/mcp_server.py",
+      "target": "file:Sistema/backend/dspm_engine.py",
+      "type": "imports"
+    },
+    {
+      "source": "file:Sistema/mcp_server.py",
+      "target": "file:Sistema/backend/profiler.py",
+      "type": "imports"
+    },
+    {
+      "source": "file:Sistema/mcp_server.py",
+      "target": "file:Sistema/backend/knowledge_bridge.py",
+      "type": "imports"
+    },
+    {
+      "source": "file:Sistema/mcp_server.py",
+      "target": "file:Sistema/backend/coach_agent.py",
+      "type": "imports"
+    },
+    {
+      "source": "file:Sistema/frontend/js/app.jsx",
+      "target": "file:Sistema/frontend/index.html",
+      "type": "documents"
+    },
+    {
+      "source": "file:Sistema/frontend/js/app.jsx",
+      "target": "file:Sistema/frontend/css/style.css",
+      "type": "references"
+    },
+    {
+      "source": "file:Sistema/frontend/js/app.jsx",
+      "target": "file:Sistema/backend/app.py",
+      "type": "calls",
+      "label": "rest_api_fetch"
+    },
+    {
+      "source": "func:Sistema/backend/ingestion.py:procesar_archivo_sql",
+      "target": "file:Sistema/mockups/schema_clinica_saludtotal.sql",
+      "type": "queries"
+    },
+    {
+      "source": "func:Sistema/backend/ingestion.py:procesar_archivo_documento",
+      "target": "file:Sistema/mockups/politica_privacidad_saludtotal.pdf",
+      "type": "queries"
+    },
+    {
+      "source": "func:Sistema/backend/ingestion.py:procesar_archivo_documento",
+      "target": "file:Sistema/mockups/contrato_encargo_sla_cloud.pdf",
+      "type": "queries"
+    },
+    {
+      "source": "func:Sistema/backend/ingestion.py:procesar_archivo_documento",
+      "target": "file:Sistema/mockups/diccionario_datos_negocio.txt",
+      "type": "queries"
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:api-orchestration",
+      "name": "Capa de API & Orquestación",
+      "description": "Endpoints REST FastAPI y protocolo MCP (Model Context Protocol) para orquestación de agentes y clientes externos.",
+      "nodeIds": [
+        "file:Sistema/backend/app.py",
+        "file:Sistema/mcp_server.py"
+      ]
+    },
+    {
+      "id": "layer:dspm-security-engine",
+      "name": "Motor DSPM & Clasificación Semántica",
+      "description": "Componentes de análisis técnico: perfilado de 3 candados, motor de reglas booleanas R-001 a R-007 y enrutamiento O(1).",
+      "nodeIds": [
+        "file:Sistema/backend/profiler.py",
+        "file:Sistema/backend/dspm_engine.py",
+        "file:Sistema/backend/router.py",
+        "func:Sistema/backend/profiler.py:perfilar_columna",
+        "func:Sistema/backend/dspm_engine.py:ejecutar_auditoria_dspm",
+        "func:Sistema/backend/router.py:resolver_enrutamiento"
+      ]
+    },
+    {
+      "id": "layer:graphrag-knowledge-corpus",
+      "name": "Corpus Normativo & GraphRAG (KB-1 y KB-2)",
+      "description": "Subgrafo de conocimiento de 78 nodos (ISO 27701:2025 ↔ ISO 29100 ↔ Ley 29733) y base jurisprudencial de 588 resoluciones ANPD.",
+      "nodeIds": [
+        "file:Sistema/backend/knowledge_bridge.py",
+        "class:Sistema/backend/knowledge_bridge.py:KnowledgeBridge",
+        "file:Material/iso27701_2025_graph.json",
+        "file:Material/iso29100_2024_principles.json",
+        "file:Material/ley_29733_articulos.json",
+        "file:Material/anpd_sanciones_dataset.json"
+      ]
+    },
+    {
+      "id": "layer:ai-coach-socratic",
+      "name": "Agente Coach Socrático (ISO 19011)",
+      "description": "Agente evaluador interactivo que invoca a DeepSeek-v4.1-Flash con reducción quirúrgica de tokens y remediación criptográfica.",
+      "nodeIds": [
+        "file:Sistema/backend/coach_agent.py",
+        "func:Sistema/backend/coach_agent.py:dialogar_coach"
+      ]
+    },
+    {
+      "id": "layer:ingestion-storage",
+      "name": "Ingesta & Persistencia Empresarial (KB-3)",
+      "description": "Parsers multi-formato (sqlglot, PyMuPDF) y base SQLite de conocimiento empresarial de documentos, columnas y hallazgos.",
+      "nodeIds": [
+        "file:Sistema/backend/ingestion.py",
+        "file:Sistema/backend/db.py",
+        "func:Sistema/backend/ingestion.py:procesar_archivo_sql",
+        "func:Sistema/backend/ingestion.py:procesar_archivo_documento"
+      ]
+    },
+    {
+      "id": "layer:frontend-dashboard",
+      "name": "Interfaz React 18 & Experiencia de Usuario",
+      "description": "Dashboard web interactivo con gestión de estado onboarding, reanálisis dinámico, inspección de brechas y consulta al Coach.",
+      "nodeIds": [
+        "file:Sistema/frontend/index.html",
+        "file:Sistema/frontend/js/app.jsx",
+        "file:Sistema/frontend/css/style.css"
+      ]
+    },
+    {
+      "id": "layer:mockups-test-cases",
+      "name": "Casos de Prueba & Mockups Realistas",
+      "description": "Archivos corporativos simulados de 'Clínica SaludTotal S.A.C.' con vulnerabilidades técnicas y legales intencionales.",
+      "nodeIds": [
+        "file:Sistema/mockups/schema_clinica_saludtotal.sql",
+        "file:Sistema/mockups/politica_privacidad_saludtotal.pdf",
+        "file:Sistema/mockups/contrato_encargo_sla_cloud.pdf",
+        "file:Sistema/mockups/diccionario_datos_negocio.txt"
+      ]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "1. Arquitectura General y Entrada al Sistema",
+      "description": "Comienza en app.py y mcp_server.py para entender cómo FastAPI y el protocolo MCP exponen las capacidades de auditoría a usuarios y agentes autónomos.",
+      "nodeIds": [
+        "file:Sistema/backend/app.py",
+        "file:Sistema/mcp_server.py"
+      ]
+    },
+    {
+      "order": 2,
+      "title": "2. Ingesta Multi-Formato & Persistencia en KB-3",
+      "description": "Observa cómo ingestion.py utiliza sqlglot para analizar árboles sintácticos de bases de datos y PyMuPDF para extraer cláusulas de contratos y políticas a SQLite.",
+      "nodeIds": [
+        "file:Sistema/backend/ingestion.py",
+        "file:Sistema/backend/db.py",
+        "func:Sistema/backend/ingestion.py:procesar_archivo_sql"
+      ]
+    },
+    {
+      "order": 3,
+      "title": "3. Perfilado Semántico de 3 Candados",
+      "description": "Examina profiler.py para comprender el triple candado (léxico, tipo SQL y contexto clínico/financiero) que clasifica columnas bajo el Art. 2.5 de la Ley 29733.",
+      "nodeIds": [
+        "file:Sistema/backend/profiler.py",
+        "func:Sistema/backend/profiler.py:perfilar_columna"
+      ]
+    },
+    {
+      "order": 4,
+      "title": "4. Motor Determinista DSPM & Enrutamiento O(1)",
+      "description": "Analiza cómo dspm_engine.py evalúa las reglas R-001 a R-007 y router.py resuelve el control ISO 27701 y la escala de multas ANPD en menos de 1 milisegundo.",
+      "nodeIds": [
+        "file:Sistema/backend/dspm_engine.py",
+        "file:Sistema/backend/router.py",
+        "func:Sistema/backend/dspm_engine.py:ejecutar_auditoria_dspm"
+      ]
+    },
+    {
+      "order": 5,
+      "title": "5. GraphRAG Normativo y Precedentes ANPD",
+      "description": "Explora knowledge_bridge.py, que indexa el grafo de 78 nodos (ISO 27701 ↔ ISO 29100 ↔ Ley 29733) y el dataset jurisprudencial de 588 sanciones ANPD.",
+      "nodeIds": [
+        "file:Sistema/backend/knowledge_bridge.py",
+        "class:Sistema/backend/knowledge_bridge.py:KnowledgeBridge",
+        "file:Material/iso27701_2025_graph.json",
+        "file:Material/anpd_sanciones_dataset.json"
+      ]
+    },
+    {
+      "order": 6,
+      "title": "6. Agente Coach Socrático (ISO 19011) & Remediación",
+      "description": "Descubre cómo coach_agent.py canaliza la consulta con DeepSeek-v4.1-Flash bajo el estándar de auditoría ISO 19011, razonando con CoT y emitiendo parches SQL pgcrypto.",
+      "nodeIds": [
+        "file:Sistema/backend/coach_agent.py",
+        "func:Sistema/backend/coach_agent.py:dialogar_coach"
+      ]
+    },
+    {
+      "order": 7,
+      "title": "7. Interfaz React 18 & Experiencia de Auditoría",
+      "description": "Revisa app.jsx y style.css para ver cómo se presenta el ciclo de vida: Reset 0, ingesta progresiva, banner ámbar de reanálisis y acciones rápidas al Coach.",
+      "nodeIds": [
+        "file:Sistema/frontend/js/app.jsx",
+        "file:Sistema/frontend/css/style.css"
+      ]
+    },
+    {
+      "order": 8,
+      "title": "8. Casos de Prueba & Mockups Realistas",
+      "description": "Verifica los archivos de prueba de 'Clínica SaludTotal S.A.C.' que demuestran la detección de 7 no conformidades y una exposición de 70.5 UIT.",
+      "nodeIds": [
+        "file:Sistema/mockups/schema_clinica_saludtotal.sql",
+        "file:Sistema/mockups/politica_privacidad_saludtotal.pdf",
+        "file:Sistema/mockups/contrato_encargo_sla_cloud.pdf"
+      ]
+    }
+  ]
+}

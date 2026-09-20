@@ -1,0 +1,57 @@
+# ==============================================================================
+# Git Ignore - Privacy Coach & DSPM Multi-Agent System
+# ==============================================================================
+
+# Variables de entorno y secretos (NUNCA SUBIR A GIT)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.token
+
+# Python bytecode y caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Caches y entornos de prueba
+.pytest_cache/
+.coverage
+htmlcov/
+.cache/
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs y Editores de código
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# Bases de datos temporales / locks locales
+*.sqlite3-journal
+*.db-journal
+
+# Documentos PDF pesados / protegidos por derechos de autor (ISO OCR 14.7MB)
+# (Los grafos y datasets estructurados en .json de Material/ SÍ se versionan)
+Material/*.pdf
+
+# Archivos de log
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Understand-Anything intermediate y temporales
+.ua/intermediate/
+.ua/tmp/

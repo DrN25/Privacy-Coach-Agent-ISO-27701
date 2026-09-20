@@ -1,0 +1,474 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Arquitectura Multi-Agente: Privacy Coach & DSPM",
+    "output": "arquitectura_sistema_agentes.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "end-to-end",
+        "label": "Flujo End-to-End Completo",
+        "focus": [
+          "input_sql",
+          "ast_parser",
+          "profiler_agent",
+          "dspm_rules",
+          "router_bridge",
+          "graph_engine",
+          "anpd_store",
+          "privacy_coach",
+          "local_llm",
+          "ui_chat",
+          "sql_patch"
+        ],
+        "note": "Trazabilidad completa: del schema SQL al diálogo pericial y parche de remediación."
+      },
+      {
+        "id": "funnel-reduction",
+        "label": "Embudo (150k -> 850 tokens)",
+        "focus": [
+          "dspm_rules",
+          "router_bridge",
+          "graph_engine",
+          "anpd_store",
+          "privacy_coach",
+          "local_llm"
+        ],
+        "note": "Aislamiento del enrutador determinista que garantiza cero alucinaciones normativas."
+      },
+      {
+        "id": "knowledge-sqlite",
+        "label": "Ecosistema de Conocimiento",
+        "focus": [
+          "graph_engine",
+          "anpd_store",
+          "session_store",
+          "privacy_coach",
+          "report_engine"
+        ],
+        "note": "Integración de KB-1 (Grafo ISO/Ley), KB-2 (Sanciones ANPD) y KB-3 (Memoria SQLite)."
+      }
+    ]
+  },
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "1. Insumos MYPE",
+      "wraps": [
+        "input_sql",
+        "input_pdf",
+        "input_text"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "2. Ingesta y Motor DSPM",
+      "wraps": [
+        "ast_parser",
+        "ocr_pipe",
+        "profiler_agent",
+        "dspm_rules",
+        "router_bridge"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "3. Bases de Conocimiento Híbridas",
+      "wraps": [
+        "graph_engine",
+        "anpd_store",
+        "session_store",
+        "local_llm"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "4. Coach y Entregables",
+      "wraps": [
+        "privacy_coach",
+        "ui_chat",
+        "sql_patch",
+        "report_engine"
+      ]
+    }
+  ],
+  "components": [
+    {
+      "id": "input_sql",
+      "type": "frontend",
+      "label": "Esquema SQL DDL",
+      "sublabel": "schema.sql sucio",
+      "pos": [
+        40,
+        90
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "input_pdf",
+      "type": "frontend",
+      "label": "Políticas (PDF)",
+      "sublabel": "Digital o escaneado",
+      "pos": [
+        40,
+        210
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "input_text",
+      "type": "frontend",
+      "label": "Diccionario Datos",
+      "sublabel": "Metadatos y flujos",
+      "pos": [
+        40,
+        330
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "ast_parser",
+      "type": "backend",
+      "label": "AST Parser (sqlglot)",
+      "sublabel": "Gramática SQL a objetos",
+      "pos": [
+        230,
+        90
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "ocr_pipe",
+      "type": "backend",
+      "label": "Two-Tier OCR",
+      "sublabel": "PyMuPDF + RapidOCR",
+      "pos": [
+        230,
+        210
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "profiler_agent",
+      "type": "backend",
+      "label": "Agente Profiler",
+      "sublabel": "3 Candados + Pydantic",
+      "pos": [
+        420,
+        140
+      ],
+      "size": [
+        160,
+        65
+      ]
+    },
+    {
+      "id": "dspm_rules",
+      "type": "security",
+      "label": "Motor Reglas DSPM",
+      "sublabel": "Evaluación booleana",
+      "pos": [
+        420,
+        260
+      ],
+      "size": [
+        160,
+        65
+      ]
+    },
+    {
+      "id": "router_bridge",
+      "type": "security",
+      "label": "Router Regla-a-Grafo",
+      "sublabel": "O(1) estático (0.2 ms)",
+      "pos": [
+        420,
+        380
+      ],
+      "size": [
+        160,
+        65
+      ]
+    },
+    {
+      "id": "graph_engine",
+      "type": "database",
+      "label": "KB-1: Grafo ISO/Ley",
+      "sublabel": "78 Controles + 11 Princ",
+      "pos": [
+        620,
+        80
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "anpd_store",
+      "type": "database",
+      "label": "KB-2: Sanciones ANPD",
+      "sublabel": "588 Casos en UIT",
+      "pos": [
+        620,
+        185
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "session_store",
+      "type": "database",
+      "label": "KB-3: Memoria SQLite",
+      "sublabel": "Artefactos y Estado",
+      "pos": [
+        620,
+        290
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "local_llm",
+      "type": "external",
+      "label": "LLM Local (Ollama)",
+      "sublabel": "Llama 3 8B / Qwen 2.5",
+      "pos": [
+        620,
+        395
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "privacy_coach",
+      "type": "backend",
+      "label": "Agente Coach",
+      "sublabel": "Diálogo Pericial",
+      "pos": [
+        820,
+        230
+      ],
+      "size": [
+        160,
+        75
+      ]
+    },
+    {
+      "id": "ui_chat",
+      "type": "frontend",
+      "label": "Chat Pericial UI",
+      "sublabel": "Consola / Web Auditor",
+      "pos": [
+        1020,
+        90
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "sql_patch",
+      "type": "security",
+      "label": "Parche Remediación",
+      "sublabel": "ALTER TABLE + Cifrado",
+      "pos": [
+        1020,
+        210
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "report_engine",
+      "type": "security",
+      "label": "Informe ISO 27701",
+      "sublabel": "SoA + Matriz + Multas",
+      "pos": [
+        1020,
+        330
+      ],
+      "size": [
+        150,
+        60
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "c1",
+      "from": "input_sql",
+      "to": "ast_parser",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c2",
+      "from": "input_pdf",
+      "to": "ocr_pipe"
+    },
+    {
+      "id": "c3",
+      "from": "input_text",
+      "to": "profiler_agent"
+    },
+    {
+      "id": "c4",
+      "from": "ast_parser",
+      "to": "profiler_agent"
+    },
+    {
+      "id": "c5",
+      "from": "ocr_pipe",
+      "to": "profiler_agent"
+    },
+    {
+      "id": "c6",
+      "from": "profiler_agent",
+      "to": "dspm_rules",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c7",
+      "from": "dspm_rules",
+      "to": "router_bridge",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c8",
+      "from": "router_bridge",
+      "to": "graph_engine",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "c9",
+      "from": "router_bridge",
+      "to": "anpd_store",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "c10",
+      "from": "graph_engine",
+      "to": "privacy_coach",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "c11",
+      "from": "anpd_store",
+      "to": "privacy_coach",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "c12",
+      "from": "session_store",
+      "to": "privacy_coach",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "c13",
+      "from": "local_llm",
+      "to": "privacy_coach",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "c15",
+      "from": "privacy_coach",
+      "to": "ui_chat",
+      "fromSide": "right",
+      "toSide": "left",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c17",
+      "from": "privacy_coach",
+      "to": "sql_patch",
+      "fromSide": "right",
+      "toSide": "left",
+      "variant": "emphasis"
+    },
+    {
+      "id": "c18",
+      "from": "privacy_coach",
+      "to": "report_engine",
+      "fromSide": "right",
+      "toSide": "left",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "title": "El Embudo Quirúrgico de 4 Etapas (150k -> 850 tokens)",
+      "dot": "violet",
+      "items": [
+        "Etapa 1: Filtro por Rol (60 controles aplicables en 0.0001s)",
+        "Etapa 2: Motor DSPM AST evalúa reglas booleanas de privacidad",
+        "Etapa 3: Extracción de Subgrafo NetworkX (0.2 ms, cero tokens)",
+        "Etapa 4: Búsqueda facetada de sanciones ANPD por artículo de ley",
+        "Inyección al Coach: Payload limpio de apenas 850 tokens"
+      ]
+    },
+    {
+      "title": "Los 3 Candados Anti-Falla del Profiler Semántico",
+      "dot": "cyan",
+      "items": [
+        "Candado 1: Taxonomía Canónica Cerrada (8 Enums de Ley 29733 Art. 2.5)",
+        "Candado 2: Structured Outputs Pydantic con Gramáticas GBNF (logits forzados)",
+        "Candado 3: Cascada en 3 Capas: Regex rápido -> LLM Pydantic -> Human-in-the-loop"
+      ]
+    },
+    {
+      "title": "Router O(1) Regla-a-Grafo: CERO LLM",
+      "dot": "emerald",
+      "items": [
+        "Entre la detección del DSPM y la extracción ISO NO HAY LLM",
+        "Diccionario estático resuelve la correspondencia en 0.0002 segundos",
+        "Garantiza el 100% de eliminación de alucinaciones normativas",
+        "El LLM solo actúa al final en el rol de Coach Pedagógico"
+      ]
+    },
+    {
+      "title": "Dossier Documental del Coordinador de Privacidad",
+      "dot": "amber",
+      "items": [
+        "1. Registro RoPA e inscripción en el Registro Nacional ANPD (Art. 31)",
+        "2. Políticas de privacidad y avisos informativos visibles (Art. 18)",
+        "3. Procedimiento y bitácora de atención de derechos ARCO (Arts. 19-24)",
+        "4. Evaluaciones de Impacto PIA/EIPD para datos de salud y biométricos",
+        "5. Contratos de encargo DPA con proveedores de software y nube",
+        "6. Política de conservación y protocolo de borrado seguro de datos",
+        "7. Plan de respuesta y notificación de brechas de seguridad (Art. 41)",
+        "8. Acuerdos de confidencialidad (NDA) y capacitaciones anuales al personal"
+      ]
+    }
+  ]
+}

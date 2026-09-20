@@ -1,0 +1,23 @@
+================================================================================
+DICCIONARIO DE DATOS Y FLUJOS TÉCNICOS INTERNOS - SALUDTOTAL S.A.C.
+Archivo: diccionario_datos_negocio.txt
+Autor: Área de TI y Desarrollo Web
+================================================================================
+
+1. TABLA: pacientes
+- id_paciente: Clave primaria autoincremental.
+- numero_documento: DNI o Carnet de Extranjería. Identificador único civil del paciente.
+- nombres, apellidos: Identidad completa.
+- grupo_sanguineo: O+, O-, A+, B+, etc. Dato clínico relevante para urgencias.
+- alergias_graves: Penicilina, sulfas, látex.
+- tarjeta_credito_cvv: Código de seguridad de 3 o 4 dígitos de la tarjeta bancaria. Se guarda temporalmente en la base de datos para cobros recurrentes de consultas médicas mensuales.
+
+2. TABLA: historias_clinicas
+- diagnostico_cie10: Código y descripción médica (ej. 'B20 - Enfermedad por VIH', 'F32 - Episodio depresivo grave', 'E11 - Diabetes tipo 2'). Se guarda en texto plano para que el motor de búsqueda LIKE '%vih%' sea rápido.
+- serologia_vih: Resultado directo de laboratorio.
+- observaciones_confidenciales: Anotaciones de psiquiatría y psicología.
+
+3. FLUJOS DE INTEGRACIÓN:
+- Backend: API REST en Node.js conectada a base de datos PostgreSQL en AWS.
+- Exportación: Cada fin de semana, el área comercial exporta en CSV toda la tabla de pacientes con sus diagnósticos para enviarla por correo a una agencia de marketing digital que vende seguros oncológicos.
+- Sin trazabilidad: No existe log de quién descarga o consulta las historias clínicas.

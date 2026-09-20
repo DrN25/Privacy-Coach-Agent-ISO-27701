@@ -1,0 +1,27 @@
+# ==============================================================================
+# Dependencias del Sistema: Privacy Coach & DSPM Multi-Agent Engine
+# Compatibilidad: Python 3.10+ (Probado en Python 3.13)
+# ==============================================================================
+
+# Framework Web y Servidor ASGI
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+python-multipart>=0.0.9
+
+# Modelado y Validación de Datos
+pydantic>=2.6.0
+
+# Motor de Grafos de Conocimiento (PIMS & Redes Normativas)
+networkx>=3.2.0
+
+# Análisis y Parsing AST de Consultas SQL (DSPM)
+sqlglot>=23.0.0
+
+# Procesamiento y Extracción de Documentos PDF
+PyMuPDF>=1.24.0
+
+# Variables de Entorno
+python-dotenv>=1.0.0
+
+# Protocolo Estándar de Integración de Agentes (Model Context Protocol)
+mcp>=1.0.0

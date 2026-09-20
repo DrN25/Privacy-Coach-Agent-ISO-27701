@@ -1,0 +1,1365 @@
+{
+  "metadata": {
+    "standard": "ISO/IEC 27701:2025 (Standalone PIMS)",
+    "total_controls": 78,
+    "controllers_count": 31,
+    "processors_count": 18,
+    "security_count": 29,
+    "normative_reference": "ISO/IEC 29100:2024",
+    "peru_framework": "Ley 29733 & Directiva de Seguridad RD 019-2013-JUS",
+    "enriched_peru_framework": true,
+    "standards_integrated": [
+      "ISO/IEC 27701:2025",
+      "ISO/IEC 29100:2024",
+      "Ley N.° 29733",
+      "D.S. N.° 003-2013-JUS",
+      "Directiva de Seguridad R.D. N.° 019-2013-JUS/DGPDP"
+    ],
+    "custom_peru_mappings_count": 41
+  },
+  "controls": [
+    {
+      "id": "A.1.2.2",
+      "title": "Identify and document purpose",
+      "role": "PII Controller",
+      "category": "Conditions for collection and processing",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 1: Consent and choice",
+        "Principle 2: Purpose legitimacy and specification"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 18 Ley 29733 (Principio de Información al titular)",
+        "ds_003_2013_jus": "Art. 13 D.S. 003-2013-JUS (Políticas de privacidad y deber de información)",
+        "directiva_seguridad": "Título II, Numeral 2.2 - Medida Jurídica: Cláusulas y avisos informativos visibles."
+      },
+      "dspm_rules_triggered": [
+        "RULE_MISSING_PRIVACY_NOTICE"
+      ]
+    },
+    {
+      "id": "A.1.2.3",
+      "title": "Identify lawful basis",
+      "role": "PII Controller",
+      "category": "Conditions for collection and processing",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 1: Consent and choice",
+        "Principle 2: Purpose legitimacy and specification",
+        "Principle 11: Privacy compliance"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 13 inc. 1 Ley 29733 (Tratamiento sin consentimiento)",
+        "ds_003_2013_jus": "Art. 11 D.S. 003-2013-JUS (Excepciones legales al consentimiento: relación contractual, mandato legal)",
+        "directiva_seguridad": "Título II, Numeral 2.2 - Verificación documental de bases legales alternativas al consentimiento."
+      },
+      "dspm_rules_triggered": [
+        "RULE_UNJUSTIFIED_LEGAL_BASIS"
+      ]
+    },
+    {
+      "id": "A.1.2.4",
+      "title": "Determine when and how consent is to be obtained",
+      "role": "PII Controller",
+      "category": "Conditions for collection and processing",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 1: Consent and choice"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 18 Ley 29733 (Condiciones para recabar consentimiento)",
+        "ds_003_2013_jus": "Arts. 12 y 14 D.S. 003-2013-JUS (Consentimiento libre, previo, expreso e informado; escrito para datos sensibles)",
+        "directiva_seguridad": "Título II, Numeral 2.2 - Medida Jurídica: Mecanismos de captura inequívoca de voluntad."
+      },
+      "dspm_rules_triggered": [
+        "RULE_SENSITIVE_DATA_MISSING_CONSENT"
+      ]
+    },
+    {
+      "id": "A.1.2.5",
+      "title": "Obtain and record consent",
+      "role": "PII Controller",
+      "category": "Conditions for collection and processing",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 1: Consent and choice"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 18 Ley 29733 (Acreditación del consentimiento)",
+        "ds_003_2013_jus": "Art. 15 D.S. 003-2013-JUS (Carga de la prueba a cargo del titular del banco)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Nivel Básico: Almacenamiento seguro de evidencias de consentimiento."
+      },
+      "dspm_rules_triggered": [
+        "RULE_MISSING_CONSENT_PROOF_LOG"
+      ]
+    },
+    {
+      "id": "A.1.2.6",
+      "title": "Privacy impact assessment",
+      "role": "PII Controller",
+      "category": "Conditions for collection and processing",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 1: Consent and choice",
+        "Principle 2: Purpose legitimacy and specification",
+        "Principle 3: Collection limitation",
+        "Principle 9: Accountability"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Seguridad proactiva ante riesgos graves)",
+        "ds_003_2013_jus": "Art. 39 D.S. 003-2013-JUS (Evaluación de impacto previo al inicio de tratamientos de alto riesgo)",
+        "directiva_seguridad": "Título I, Numeral 1.3 - Análisis de riesgos preceptivo para bancos de nivel complejo."
+      },
+      "dspm_rules_triggered": [
+        "RULE_HIGH_RISK_PROCESSING_WITHOUT_PIA"
+      ]
+    },
+    {
+      "id": "A.1.2.7",
+      "title": "Contracts with PII processors",
+      "role": "PII Controller",
+      "category": "Conditions for collection and processing",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 9: Accountability"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 13 inc. 4 Ley 29733 (Consentimiento de menores)",
+        "ds_003_2013_jus": "Art. 12 numeral 3 D.S. 003-2013-JUS (Consentimiento de padres o tutores para menores de 14 años)",
+        "directiva_seguridad": "Título II, Numeral 2.2 - Verificación fehaciente de patria potestad o tutoría legal."
+      },
+      "dspm_rules_triggered": [
+        "RULE_MINOR_DATA_WITHOUT_GUARDIAN_CONSENT"
+      ]
+    },
+    {
+      "id": "A.1.2.8",
+      "title": "Joint PII controller",
+      "role": "PII Controller",
+      "category": "Conditions for collection and processing",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 9: Accountability"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 18 inc. a Ley 29733 (Identificación del responsable)",
+        "ds_003_2013_jus": "Art. 13 inc. a D.S. 003-2013-JUS (Deber de informar razón social, RUC y domicilio)",
+        "directiva_seguridad": "Título II, Numeral 2.2 - Identificación clara en páginas web y formularios de contacto."
+      },
+      "dspm_rules_triggered": [
+        "RULE_ANONYMOUS_CONTROLLER_EXPOSURE"
+      ]
+    },
+    {
+      "id": "A.1.2.9",
+      "title": "Records of processing PII",
+      "role": "PII Controller",
+      "category": "Conditions for collection and processing",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 9: Accountability"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 18 inc. f Ley 29733 (Consecuencias de proporcionar datos)",
+        "ds_003_2013_jus": "Art. 13 inc. f D.S. 003-2013-JUS (Distinción explícita entre datos obligatorios y facultativos)",
+        "directiva_seguridad": "Título II, Numeral 2.2 - Marcar claramente campos opcionales vs obligatorios en formularios."
+      },
+      "dspm_rules_triggered": [
+        "RULE_FORCED_OPTIONAL_DATA_COLLECTION"
+      ]
+    },
+    {
+      "id": "A.1.3.2",
+      "title": "Determining and fulfilling obligations to PII principals",
+      "role": "PII Controller",
+      "category": "Obligations to PII principals",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 8: Individual participation and access"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.3.3",
+      "title": "Determining information for PII principals",
+      "role": "PII Controller",
+      "category": "Obligations to PII principals",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 2: Purpose legitimacy and specification",
+        "Principle 7: Openness, transparency and notice"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.3.4",
+      "title": "Providing information to PII principals",
+      "role": "PII Controller",
+      "category": "Obligations to PII principals",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 2: Purpose legitimacy and specification",
+        "Principle 7: Openness, transparency and notice"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.3.5",
+      "title": "Providing mechanism to modify or withdraw consent",
+      "role": "PII Controller",
+      "category": "Obligations to PII principals",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 1: Consent and choice",
+        "Principle 8: Individual participation and access"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.3.6",
+      "title": "Providing mechanism to object to PII processing",
+      "role": "PII Controller",
+      "category": "Obligations to PII principals",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 1: Consent and choice",
+        "Principle 8: Individual participation and access"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.3.7",
+      "title": "Access, correction and erasure",
+      "role": "PII Controller",
+      "category": "Obligations to PII principals",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 8: Individual participation and access"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.3.8",
+      "title": "PII controllers' obligations to inform third parties",
+      "role": "PII Controller",
+      "category": "Obligations to PII principals",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 1: Consent and choice"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.3.9",
+      "title": "Providing copy of PII processed",
+      "role": "PII Controller",
+      "category": "Obligations to PII principals",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 7: Openness, transparency and notice",
+        "Principle 8: Individual participation and access"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.3.10",
+      "title": "Handling requests",
+      "role": "PII Controller",
+      "category": "Obligations to PII principals",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 8: Individual participation and access"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.3.11",
+      "title": "Automated decision making",
+      "role": "PII Controller",
+      "category": "Obligations to PII principals",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 2: Purpose legitimacy and specification"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.4.2",
+      "title": "Limit collection",
+      "role": "PII Controller",
+      "category": "Privacy by design and by default",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 3: Collection limitation",
+        "Principle 4: Data minimization"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.4.3",
+      "title": "Limit processing",
+      "role": "PII Controller",
+      "category": "Privacy by design and by default",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 4: Data minimization",
+        "Principle 5: Use, retention and disclosure limitation"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.4.4",
+      "title": "Accuracy and quality",
+      "role": "PII Controller",
+      "category": "Privacy by design and by default",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 6: Accuracy and quality"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.4.5",
+      "title": "PII minimization objectives",
+      "role": "PII Controller",
+      "category": "Privacy by design and by default",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 4: Data minimization"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.4.6",
+      "title": "PII de-identification and deletion at end of processing",
+      "role": "PII Controller",
+      "category": "Privacy by design and by default",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 4: Data minimization"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.4.7",
+      "title": "Temporary files",
+      "role": "PII Controller",
+      "category": "Privacy by design and by default",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 5: Use, retention and disclosure limitation"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.4.8",
+      "title": "Retention",
+      "role": "PII Controller",
+      "category": "Privacy by design and by default",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 5: Use, retention and disclosure limitation"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.4.9",
+      "title": "Disposal",
+      "role": "PII Controller",
+      "category": "Privacy by design and by default",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 5: Use, retention and disclosure limitation"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.4.10",
+      "title": "PII transmission controls",
+      "role": "PII Controller",
+      "category": "Privacy by design and by default",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 5: Use, retention and disclosure limitation",
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.5.2",
+      "title": "Identifying basis for PII transfer between jurisdictions",
+      "role": "PII Controller",
+      "category": "PII sharing, transfer and disclosure",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 5: Use, retention and disclosure limitation",
+        "Principle 11: Privacy compliance"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.5.3",
+      "title": "Countries and international organizations to which PII can be transferred",
+      "role": "PII Controller",
+      "category": "PII sharing, transfer and disclosure",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 5: Use, retention and disclosure limitation"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.5.4",
+      "title": "Records of transfer of PII",
+      "role": "PII Controller",
+      "category": "PII sharing, transfer and disclosure",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 5: Use, retention and disclosure limitation"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.1.5.5",
+      "title": "Records of PII disclosures to third parties",
+      "role": "PII Controller",
+      "category": "PII sharing, transfer and disclosure",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.1",
+      "iso29100_principles": [
+        "Principle 5: Use, retention and disclosure limitation"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.2.2.2",
+      "title": "Customer agreement",
+      "role": "PII Processor",
+      "category": "Conditions for collection and processing",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [
+        "Principle 11: Privacy compliance"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 16 numeral 2 Ley 29733 (Destino de los datos personales)",
+        "ds_003_2013_jus": "Art. 31 inc. d D.S. 003-2013-JUS (Prohibición de retención tras finalizar el servicio)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Protocolo de desaprovisionamiento y borrado seguro de datos de clientes."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.2.2.3",
+      "title": "Organization's purposes",
+      "role": "PII Processor",
+      "category": "Conditions for collection and processing",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 16 numeral 1 Ley 29733 (Asistencia en derechos ARCO)",
+        "ds_003_2013_jus": "Art. 32 D.S. 003-2013-JUS (El encargado debe remitir solicitudes ARCO al responsable)",
+        "directiva_seguridad": "Título II, Numeral 2.1 - Procedimiento para canalizar solicitudes ciudadanas al titular del banco."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.2.2.4",
+      "title": "Marketing and advertising use",
+      "role": "PII Processor",
+      "category": "Conditions for collection and processing",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 16 Ley 29733 (Subencargo de tratamiento)",
+        "ds_003_2013_jus": "Art. 33 D.S. 003-2013-JUS (Autorización previa por escrito del responsable para subcontratar)",
+        "directiva_seguridad": "Título II, Numeral 2.2 - Cláusulas de autorización expresa para proveedores de hosting o microservicios."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.2.2.5",
+      "title": "Infringing instruction",
+      "role": "PII Processor",
+      "category": "Conditions for collection and processing",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Asistencia en seguridad al responsable)",
+        "ds_003_2013_jus": "Art. 32 inc. c D.S. 003-2013-JUS (El encargado debe brindar garantías técnicas suficientes)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Emisión de reportes de cumplimiento de medidas técnicas al responsable."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.2.2.6",
+      "title": "Customer obligations",
+      "role": "PII Processor",
+      "category": "Conditions for collection and processing",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 7 Ley 29733 (Minimización en el procesamiento por encargo)",
+        "ds_003_2013_jus": "Art. 9 numeral 1 D.S. 003-2013-JUS (Tratar únicamente las variables indispensables)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Enmascaramiento de datos en interfaces de soporte técnico."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.2.2.7",
+      "title": "Records related to processing PII",
+      "role": "PII Processor",
+      "category": "Conditions for collection and processing",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 16 numeral 3 Ley 29733 (Devolución o destrucción de datos)",
+        "ds_003_2013_jus": "Art. 31 inc. d D.S. 003-2013-JUS (Certificado formal de destrucción de bases de datos)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Nivel Básico: Emisión de acta de destrucción segura de soportes."
+      },
+      "dspm_rules_triggered": [
+        "RULE_PROCESSOR_POST_CONTRACT_DATA_RETENTION"
+      ]
+    },
+    {
+      "id": "A.2.3.2",
+      "title": "Obligations to PII principals",
+      "role": "PII Processor",
+      "category": "Obligations to PII principals",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.2.4.2",
+      "title": "Temporary files",
+      "role": "PII Processor",
+      "category": "Privacy by design and by default",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.2.4.3",
+      "title": "Return, transfer or disposal of PII",
+      "role": "PII Processor",
+      "category": "Privacy by design and by default",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.2.4.4",
+      "title": "PII transmission controls",
+      "role": "PII Processor",
+      "category": "Privacy by design and by default",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.2.5.2",
+      "title": "Basis for PII transfer between jurisdictions",
+      "role": "PII Processor",
+      "category": "PII sharing, transfer and disclosure",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.2.5.3",
+      "title": "Countries and international organizations to which PII can be transferred",
+      "role": "PII Processor",
+      "category": "PII sharing, transfer and disclosure",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.2.5.4",
+      "title": "Records of transfer of PII",
+      "role": "PII Processor",
+      "category": "PII sharing, transfer and disclosure",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.2.5.5",
+      "title": "Disclosures of PII to third parties",
+      "role": "PII Processor",
+      "category": "PII sharing, transfer and disclosure",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.2.5.6",
+      "title": "Notification of PII disclosure requests",
+      "role": "PII Processor",
+      "category": "PII sharing, transfer and disclosure",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.2.5.7",
+      "title": "Legally binding PII disclosures",
+      "role": "PII Processor",
+      "category": "PII sharing, transfer and disclosure",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.2.5.8",
+      "title": "Disclosure of subcontractors used to process PII",
+      "role": "PII Processor",
+      "category": "PII sharing, transfer and disclosure",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.2.5.9",
+      "title": "Engagement of a subcontractor",
+      "role": "PII Processor",
+      "category": "PII sharing, transfer and disclosure",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.2",
+      "iso29100_principles": [],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.3",
+      "title": "Policies for information security",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 27 Ley 29733 (Asignación de roles de seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Definición clara de responsabilidades de administradores y usuarios)",
+        "directiva_seguridad": "Título II, Numeral 2.1 - Matriz de roles y responsabilidades de seguridad del personal."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.4",
+      "title": "Information security roles and responsibilities",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Segregación de funciones)",
+        "ds_003_2013_jus": "Art. 39 numeral 1 D.S. 003-2013-JUS (Evitar concentración de privilegios críticos)",
+        "directiva_seguridad": "Título II, Numeral 2.1 - Separación de roles de administración de BD y auditoría de logs."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.5",
+      "title": "Threat intelligence",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 17 Ley 29733 (Deber de confidencialidad y secreto)",
+        "ds_003_2013_jus": "Art. 42 D.S. 003-2013-JUS (Acuerdos de confidencialidad y subsistencia tras el cese laboral)",
+        "directiva_seguridad": "Título II, Numeral 2.1 - Cláusulas contractuales de secreto suscritas por todo el personal."
+      },
+      "dspm_rules_triggered": [
+        "RULE_MISSING_STAFF_NDA"
+      ]
+    },
+    {
+      "id": "A.3.6",
+      "title": "Information security in project management",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Capacitación obligatoria al personal)",
+        "ds_003_2013_jus": "Art. 42 D.S. 003-2013-JUS (Programas continuos de sensibilización en protección de datos)",
+        "directiva_seguridad": "Título II, Numeral 2.1 - Capacitaciones anuales documentadas en seguridad y privacidad."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.7",
+      "title": "Inventory of information and other associated assets",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 27 Ley 29733 (Régimen disciplinario interno)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Sanciones laborales ante incumplimiento de directivas de seguridad)",
+        "directiva_seguridad": "Título II, Numeral 2.1 - Inclusión de faltas graves de privacidad en el Reglamento Interno de Trabajo."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.8",
+      "title": "Acceptable use of information and other associated assets",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 17 Ley 29733 (Confidencialidad post-empleo)",
+        "ds_003_2013_jus": "Art. 42 D.S. 003-2013-JUS (El deber de confidencialidad perdura indefinidamente)",
+        "directiva_seguridad": "Título II, Numeral 2.1 - Retiro inmediato de accesos lógicos y físicos al culminar la relación laboral."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.9",
+      "title": "Return of assets",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Inventario de activos donde residen datos)",
+        "ds_003_2013_jus": "Art. 39 D.S. 003-2013-JUS (Control de servidores, discos y dispositivos que contienen PII)",
+        "directiva_seguridad": "Título II, Numeral 2.1 - Registro formal de equipos de cómputo y servidores autorizados."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.10",
+      "title": "Classification of information",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Uso aceptable de tecnología)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Reglas de uso de correo corporativo, internet y dispositivos)",
+        "directiva_seguridad": "Título II, Numeral 2.1 - Directiva de uso de computadoras, redes y prohibición de software no autorizado."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.11",
+      "title": "Labelling of information",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Devolución de activos al cese)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Entrega obligatoria de laptops, tokens y archivos institucionales)",
+        "directiva_seguridad": "Título II, Numeral 2.1 - Acta formal de entrega-recepción de activos tecnológicos."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.12",
+      "title": "Information transfer",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 2 inc. 5 y 6 Ley 29733 (Clasificación de datos personales y sensibles)",
+        "ds_003_2013_jus": "Art. 2 D.S. 003-2013-JUS (Definición de categorías de tratamiento)",
+        "directiva_seguridad": "Título I, Numeral 1.1 - Clasificación de bancos en Nivel Básico, Medio o Complejo."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.13",
+      "title": "Access control",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Etiquetado y marcado de soportes)",
+        "ds_003_2013_jus": "Art. 39 D.S. 003-2013-JUS (Identificación visual o lógica de soportes con datos sensibles)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Rotulación clara de discos duros y copias de seguridad de datos sensibles."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.14",
+      "title": "User registration and de-registration",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Control de soportes extraíbles)",
+        "ds_003_2013_jus": "Art. 39 numeral 3 D.S. 003-2013-JUS (Bloqueo de USBs y cifrado de discos externos)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Nivel Medio: Restricción de puertos USB y cifrado obligatorio en transporte."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.15",
+      "title": "Access provisioning",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Control de accesos a bancos de datos)",
+        "ds_003_2013_jus": "Art. 39 numeral 1 D.S. 003-2013-JUS (Identificación unívoca y autenticación de usuarios)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Nivel Básico: Autenticación mediante credenciales robustas y perfiles mínimos."
+      },
+      "dspm_rules_triggered": [
+        "RULE_WEAK_ACCESS_CONTROL"
+      ]
+    },
+    {
+      "id": "A.3.16",
+      "title": "Management of privileged access rights",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Trazabilidad y registro de actividad)",
+        "ds_003_2013_jus": "Art. 39 numeral 2 D.S. 003-2013-JUS (Registro de eventos, accesos y modificaciones)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Nivel Medio/Complejo: Logs inmutables de consulta, modificación y borrado (retención mín. 2 años)."
+      },
+      "dspm_rules_triggered": [
+        "RULE_MISSING_ACCESS_AUDIT_TRAIL"
+      ]
+    },
+    {
+      "id": "A.3.17",
+      "title": "Information security awareness, education and training",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Gestión de cuentas privilegiadas / DBA)",
+        "ds_003_2013_jus": "Art. 39 numeral 1 D.S. 003-2013-JUS (Restricción de cuentas administrativas de base de datos)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Nivel Básico: Prohibición de cuentas genéricas o compartidas de administrador."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.18",
+      "title": "Backup",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Restricción de acceso a código fuente)",
+        "ds_003_2013_jus": "Art. 39 D.S. 003-2013-JUS (Protección de repositorios de software contra accesos indebidos)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Control de versiones seguro y control de acceso a repositorios Git."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.19",
+      "title": "Redundancy of information processing facilities",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Autenticación y robustez de credenciales)",
+        "ds_003_2013_jus": "Art. 39 numeral 1 D.S. 003-2013-JUS (Políticas de contraseñas seguras y caducidad periódica)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Nivel Básico: Mínimo 8 caracteres, alfanumérico, vigencia máx. 1 año."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.20",
+      "title": "Logging and monitoring",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Seguridad en redes y comunicaciones)",
+        "ds_003_2013_jus": "Art. 39 numeral 3 D.S. 003-2013-JUS (Protección telemática de transferencias)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Nivel Complejo: Canales cifrados obligatorios (TLS 1.2+ / HTTPS / VPN)."
+      },
+      "dspm_rules_triggered": [
+        "RULE_UNENCRYPTED_NETWORK_TRANSFER"
+      ]
+    },
+    {
+      "id": "A.3.21",
+      "title": "Control of operational software",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Seguridad en servicios de nube)",
+        "ds_003_2013_jus": "Art. 24 y 39 D.S. 003-2013-JUS (Verificación de estándares de seguridad en proveedores cloud)",
+        "directiva_seguridad": "Título II, Numeral 2.2 - Exigir certificaciones de seguridad (ISO 27001 / SOC 2) al proveedor de nube."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.22",
+      "title": "Technical vulnerability management",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Segregación de redes)",
+        "ds_003_2013_jus": "Art. 39 D.S. 003-2013-JUS (Aislamiento de segmentos de red que albergan bases de datos)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Nivel Medio: Segmentación de redes mediante VLANs y firewalls internos."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.23",
+      "title": "Information systems audit controls",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Gestión de vulnerabilidades técnicas)",
+        "ds_003_2013_jus": "Art. 39 D.S. 003-2013-JUS (Actualización periódica de parches de seguridad en servidores de BD)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Nivel Básico: Procedimiento de aplicación oportuna de parches críticos."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.24",
+      "title": "Use of cryptography",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Seguridad en reposo para datos sensibles)",
+        "ds_003_2013_jus": "Art. 39 numeral 4 D.S. 003-2013-JUS (Cifrado de datos sensibles en almacenamiento y bases de datos)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Nivel Complejo: Cifrado robusto obligatorio (AES-256) en reposo."
+      },
+      "dspm_rules_triggered": [
+        "RULE_UNENCRYPTED_SENSITIVE_STORAGE"
+      ]
+    },
+    {
+      "id": "A.3.25",
+      "title": "Secure development lifecycle",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Gestión de copias de seguridad)",
+        "ds_003_2013_jus": "Art. 39 numeral 5 D.S. 003-2013-JUS (Copias de seguridad periódicas y pruebas de restauración)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Nivel Básico: Backups periódicos con prueba anual de restauración."
+      },
+      "dspm_rules_triggered": [
+        "RULE_MISSING_BACKUP_POLICY"
+      ]
+    },
+    {
+      "id": "A.3.26",
+      "title": "Application security requirements",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Continuidad de operaciones y alta disponibilidad)",
+        "ds_003_2013_jus": "Art. 39 D.S. 003-2013-JUS (Medidas para garantizar la disponibilidad continua de los bancos de datos)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Plan de contingencia y recuperación ante caídas del sistema."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.27",
+      "title": "Secure system architecture and engineering principles",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Protección contra software malicioso)",
+        "ds_003_2013_jus": "Art. 39 D.S. 003-2013-JUS (Antivirus y herramientas de protección activas en servidores)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Nivel Básico: Antivirus corporativo con firmas actualizadas en endpoints y servidores."
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.28",
+      "title": "Secure coding",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Gestión y comunicación de incidentes de seguridad)",
+        "ds_003_2013_jus": "Art. 41 D.S. 003-2013-JUS (Obligación de mitigar y comunicar brechas de seguridad)",
+        "directiva_seguridad": "Título II, Numeral 2.1 - Procedimiento documentado de respuesta a brechas de datos."
+      },
+      "dspm_rules_triggered": [
+        "RULE_MISSING_INCIDENT_MANAGEMENT_PLAN"
+      ]
+    },
+    {
+      "id": "A.3.29",
+      "title": "Security testing in development and acceptance",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 28 Ley 29733 (Separación de ambientes de desarrollo y producción)",
+        "ds_003_2013_jus": "Art. 39 numeral 6 D.S. 003-2013-JUS (Prohibición absoluta de utilizar datos reales en testing)",
+        "directiva_seguridad": "Título IV, Numeral 2.3 - Nivel Complejo: Uso exclusivo de datos sintéticos o disociados en desarrollo."
+      },
+      "dspm_rules_triggered": [
+        "RULE_REAL_PII_IN_TESTING_ENV"
+      ]
+    },
+    {
+      "id": "A.3.30",
+      "title": "Outsourced development",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    },
+    {
+      "id": "A.3.31",
+      "title": "Separation of development, test and production environments",
+      "role": "Shared (Controller & Processor)",
+      "category": "Information security controls",
+      "standard": "ISO/IEC 27701:2025",
+      "table": "A.3",
+      "iso29100_principles": [
+        "Principle 10: Information security"
+      ],
+      "peru_legal_bridge": {
+        "ley_29733": "Art. 9 Ley 29733 (Principio de Seguridad)",
+        "ds_003_2013_jus": "Art. 38 D.S. 003-2013-JUS (Medidas de seguridad generales)",
+        "directiva_seguridad": "Título I, Numeral 1.2 - Condiciones de seguridad generales técnicas y organizativas"
+      },
+      "dspm_rules_triggered": []
+    }
+  ]
+}

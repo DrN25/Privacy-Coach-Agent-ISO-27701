@@ -1,0 +1,165 @@
+{
+  "metadata": {
+    "standard": "ISO/IEC 29100:2024",
+    "edition": "Fourth Edition (2024)",
+    "total_principles": 11
+  },
+  "principles": [
+    {
+      "id": "Principle 1",
+      "name": "Consent and choice",
+      "standard": "ISO/IEC 29100:2024",
+      "clause": "5.2",
+      "description": "Empowering PII principals with choices and obtaining explicit or freely given consent for data collection and processing.",
+      "ley_29733_principle": "Principio de Consentimiento (Art. 5 Ley 29733 y Art. 7 D.S. 003-2013-JUS)",
+      "mapped_27701_controls": [
+        "A.1.2.3",
+        "A.1.2.4",
+        "A.1.2.5",
+        "A.1.2.7",
+        "A.1.2.10"
+      ]
+    },
+    {
+      "id": "Principle 2",
+      "name": "Purpose legitimacy and specification",
+      "standard": "ISO/IEC 29100:2024",
+      "clause": "5.3",
+      "description": "Ensuring that the processing of PII is lawful, determined, explicit and legitimate for specific business objectives.",
+      "ley_29733_principle": "Principio de Legalidad y Principio de Finalidad (Arts. 4 y 6 Ley 29733, Art. 8 D.S. 003-2013-JUS)",
+      "mapped_27701_controls": [
+        "A.1.2.1",
+        "A.1.2.2",
+        "A.2.2.1",
+        "A.2.2.2"
+      ]
+    },
+    {
+      "id": "Principle 3",
+      "name": "Collection limitation",
+      "standard": "ISO/IEC 29100:2024",
+      "clause": "5.4",
+      "description": "Limiting the collection of PII to that which is strictly necessary for specified purposes and obtained by lawful and fair means.",
+      "ley_29733_principle": "Principio de Proporcionalidad (Art. 7 Ley 29733)",
+      "mapped_27701_controls": [
+        "A.1.2.3",
+        "A.1.2.13"
+      ]
+    },
+    {
+      "id": "Principle 4",
+      "name": "Data minimization",
+      "standard": "ISO/IEC 29100:2024",
+      "clause": "5.5",
+      "description": "Minimizing the volume and sensitivity of PII processed, applying anonymization, pseudonymization and reduction techniques.",
+      "ley_29733_principle": "Principio de Proporcionalidad (Art. 7 Ley 29733 y Art. 9 D.S. 003-2013-JUS)",
+      "mapped_27701_controls": [
+        "A.1.2.14",
+        "A.2.2.6"
+      ]
+    },
+    {
+      "id": "Principle 5",
+      "name": "Use, retention and disclosure limitation",
+      "standard": "ISO/IEC 29100:2024",
+      "clause": "5.6",
+      "description": "Retaining PII only for as long as necessary, preventing secondary uses, and enforcing strict data disposal upon expiration.",
+      "ley_29733_principle": "Principio de Calidad y Principio de Finalidad (Arts. 6 y 8 Ley 29733, Art. 9 D.S. 003-2013-JUS)",
+      "mapped_27701_controls": [
+        "A.1.2.11",
+        "A.1.2.12",
+        "A.1.2.15",
+        "A.1.2.16",
+        "A.1.2.20",
+        "A.1.2.22",
+        "A.2.2.7"
+      ]
+    },
+    {
+      "id": "Principle 6",
+      "name": "Accuracy and quality",
+      "standard": "ISO/IEC 29100:2024",
+      "clause": "5.7",
+      "description": "Ensuring that PII processed is accurate, complete, up-to-date and reliable for the purposes of its processing.",
+      "ley_29733_principle": "Principio de Calidad (Art. 8 Ley 29733 y Art. 9 D.S. 003-2013-JUS)",
+      "mapped_27701_controls": [
+        "A.1.2.17",
+        "A.1.2.18"
+      ]
+    },
+    {
+      "id": "Principle 7",
+      "name": "Openness, transparency and notice",
+      "standard": "ISO/IEC 29100:2024",
+      "clause": "5.8",
+      "description": "Providing clear, easily accessible information regarding PII policies, notices, practices, and identity of the data controller.",
+      "ley_29733_principle": "Principio de Información (Art. 18 Ley 29733 y Art. 13 D.S. 003-2013-JUS)",
+      "mapped_27701_controls": [
+        "A.1.2.2",
+        "A.1.2.8",
+        "A.1.2.9",
+        "A.2.2.5"
+      ]
+    },
+    {
+      "id": "Principle 8",
+      "name": "Individual participation and access",
+      "standard": "ISO/IEC 29100:2024",
+      "clause": "5.9",
+      "description": "Providing mechanisms for PII principals to access, correct, delete, block, or contest the processing of their personal data (ARCO).",
+      "ley_29733_principle": "Derechos ARCO (Arts. 19-24 Ley 29733 y Arts. 47-58 D.S. 003-2013-JUS)",
+      "mapped_27701_controls": [
+        "A.1.2.18",
+        "A.1.2.19",
+        "A.1.2.21",
+        "A.2.2.3"
+      ]
+    },
+    {
+      "id": "Principle 9",
+      "name": "Accountability",
+      "standard": "ISO/IEC 29100:2024",
+      "clause": "5.10",
+      "description": "Demonstrating proactive compliance, appointing DPOs/CPOs, recording processing activities, and managing vendor compliance.",
+      "ley_29733_principle": "Deber de Diligencia y Registro de Bancos de Datos (Arts. 27 y 31 Ley 29733)",
+      "mapped_27701_controls": [
+        "A.1.1.1",
+        "A.1.1.2",
+        "A.1.2.6",
+        "A.1.2.23",
+        "A.2.1.1",
+        "A.2.2.4"
+      ]
+    },
+    {
+      "id": "Principle 10",
+      "name": "Information security",
+      "standard": "ISO/IEC 29100:2024",
+      "clause": "5.11",
+      "description": "Protecting PII with technical and organizational measures against unauthorized access, destruction, loss, alteration or breach.",
+      "ley_29733_principle": "Principio de Seguridad y Deber de Confidencialidad (Arts. 9 y 17 Ley 29733, R.D. 019-2013-JUS)",
+      "mapped_27701_controls": [
+        "A.3.1",
+        "A.3.15",
+        "A.3.16",
+        "A.3.20",
+        "A.3.24",
+        "A.3.25",
+        "A.3.29"
+      ]
+    },
+    {
+      "id": "Principle 11",
+      "name": "Privacy compliance",
+      "standard": "ISO/IEC 29100:2024",
+      "clause": "5.12",
+      "description": "Verifying and monitoring compliance with applicable privacy legislation, internal policies, security baseline and audit requirements.",
+      "ley_29733_principle": "Sujeción a la Fiscalización de la ANPD (Arts. 32-35 Ley 29733)",
+      "mapped_27701_controls": [
+        "A.1.1.3",
+        "A.2.1.2",
+        "A.3.28"
+      ]
+    }
+  ]
+}
