@@ -11,10 +11,10 @@ from typing import Dict, Any
 import os
 try:
     from dotenv import load_dotenv
-    # Buscar .env en Sistema/ o en raíz del proyecto TIF
-    base_sistema = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    base_tif = os.path.dirname(base_sistema)
-    for p in [os.path.join(base_sistema, ".env"), os.path.join(base_tif, ".env")]:
+    # Buscar .env en src/ o en raíz del proyecto TIF
+    base_src = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    base_tif = os.path.dirname(base_src)
+    for p in [os.path.join(base_src, ".env"), os.path.join(base_tif, ".env")]:
         if os.path.exists(p):
             load_dotenv(p)
             break

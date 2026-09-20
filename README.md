@@ -94,7 +94,7 @@ Privacy-Coach-Agent-ISO-27701/
 │   ├ graph_engine.py
 │   └ parse_advanced_sanctions.py
 │
-└ Sistema/                  # Aplicación
+└ src/                      # Código fuente de la aplicación
     ├ backend/
     │   ├ app.py             # API FastAPI
     │   ├ db.py              # Esquema SQLite
@@ -139,7 +139,7 @@ pip install -r requirements.txt
 cp .env.example .env
 # Editar .env con tu API key de OpenRouter
 
-python Sistema/run.py
+python src/run.py
 ```
 
 El servidor inicia en `http://127.0.0.1:8000`.
@@ -148,7 +148,7 @@ El servidor inicia en `http://127.0.0.1:8000`.
 
 ## Servidor MCP
 
-`Sistema/mcp_server.py` expone 10 herramientas via Model Context Protocol:
+`src/mcp_server.py` expone 10 herramientas via Model Context Protocol:
 
 | Herramienta | Descripción |
 |---|---|
@@ -170,7 +170,7 @@ El servidor inicia en `http://127.0.0.1:8000`.
   "mcpServers": {
     "privacy-dspm": {
       "command": "python",
-      "args": ["-X", "utf8", "C:/ruta/a/Privacy-Coach-Agent-ISO-27701/Sistema/mcp_server.py"]
+      "args": ["-X", "utf8", "C:/ruta/a/Privacy-Coach-Agent-ISO-27701/src/mcp_server.py"]
     }
   }
 }

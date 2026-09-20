@@ -55,3 +55,6 @@ yarn-error.log*
 # Understand-Anything intermediate y temporales
 .ua/intermediate/
 .ua/tmp/
+
+# Carpeta local para subida a Google Drive (documentos fuente PDF)
+fuentes_normativas_pdf/

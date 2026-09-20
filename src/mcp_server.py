@@ -12,10 +12,10 @@ import json
 import sqlite3
 from typing import Dict, Any, List, Optional
 
-# Ensure Sistema directory is on sys.path
-SISTEMA_DIR = os.path.dirname(os.path.abspath(__file__))
-if SISTEMA_DIR not in sys.path:
-    sys.path.insert(0, SISTEMA_DIR)
+# Ensure src directory is on sys.path
+SRC_DIR = os.path.dirname(os.path.abspath(__file__))
+if SRC_DIR not in sys.path:
+    sys.path.insert(0, SRC_DIR)
 
 from mcp.server.mcpserver import MCPServer
 

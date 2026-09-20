@@ -6,7 +6,8 @@ import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-MATERIAL_DIR = r"c:\Users\Rafael\UNSA\VIII SEMESTRE\AUDITORIA\TIF\Material"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MATERIAL_DIR = os.path.join(BASE_DIR, "Material")
 SANCTIONS_PDF = os.path.join(MATERIAL_DIR, "1255336-registro-de-sanciones-impuestas.pdf")
 SANCTIONS_OUT = os.path.join(MATERIAL_DIR, "anpd_sanciones_dataset.json")
 
