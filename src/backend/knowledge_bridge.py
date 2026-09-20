@@ -3,10 +3,10 @@ import sys
 import json
 from typing import Dict, Any, List
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.insert(0, ROOT_DIR)
-
-from scripts.graph_engine import PIMSGraphEngine
+try:
+    from .graph_engine import PIMSGraphEngine
+except ImportError:
+    from backend.graph_engine import PIMSGraphEngine
 
 class KnowledgeBridge:
     def __init__(self):

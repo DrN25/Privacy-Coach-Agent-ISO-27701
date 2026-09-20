@@ -179,11 +179,11 @@ Cuando el agente analice, por ejemplo, una columna `password` o `dni_cliente` en
 
 ---
 
-## 6. Checklist de Archivos Requeridos en la Carpeta `Material/`
+## 6. Checklist de Archivos Requeridos en la Carpeta `knowledge_base/`
 
 Para que el proyecto cuente con todo el corpus listo para ingesta:
 
-- [x] `ISO 27701-2025_ocr.pdf` *(Ya presente en `Material/`, procesado con éxito)*
+- [x] `ISO 27701-2025_ocr.pdf` *(Ya presente en `knowledge_base/`, procesado con éxito)*
 - [ ] `ISO_29100_2024_Framework.pdf` o extracto estructurado de sus 11 principios.
 - [ ] `Ley_29733_y_Reglamento_DS_003_2013_JUS.pdf` *(Descarga pública gratuita desde MINJUSDH)*.
 - [ ] `Directiva_Seguridad_RD_019_2013_JUS.pdf` *(Descarga pública gratuita desde MINJUSDH)*.

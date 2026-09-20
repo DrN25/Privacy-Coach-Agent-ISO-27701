@@ -77,24 +77,37 @@ Privacy-Coach-Agent-ISO-27701/
 ├ requirements.txt
 ├ README.md
 │
-├ docs/                     # Documentación del TIF (UNSA)
-│   ├ README.md              # Índice temático de los 9 documentos técnicos
-│   ├ 01_analisis_dominio_normativo.md
+├ docs/                     # Documentación técnica y académica (TIF UNSA)
+│   ├ README.md              # Índice temático de los 9 documentos
 │   └ ...
 │
-├ Material/                 # Datasets normativos y bases de conocimiento
-│   ├ README.md              # Descripción técnica de grafos y corpus
-│   ├ anpd_sanciones_dataset.json
-│   ├ iso27701_2025_graph.json
-│   ├ iso29100_2024_principles.json
-│   └ ley_29733_articulos.json
-│
-├ scripts/                  # Pipelines de ingesta
-│   ├ build_datasets.py
-│   ├ graph_engine.py
-│   └ parse_advanced_sanctions.py
+├ knowledge_base/           # Dominio normativo estructurado (ISO 27701 y Ley 29733)
+│   ├ README.md              # Enlace a Google Drive (fuentes PDF) y matriz de trazabilidad
+│   ├ datasets/              # Grafos y datasets JSON procesados
+│   │   ├ iso27701_2025_graph.json
+│   │   ├ anpd_sanciones_dataset.json
+│   │   ├ iso29100_2024_principles.json
+│   │   └ ley_29733_articulos.json
+│   └ pipelines/             # Pipelines ETL de extracción y compilación
+│       ├ build_datasets.py
+│       └ parse_advanced_sanctions.py
 │
 └ src/                      # Código fuente de la aplicación
+    ├ backend/
+    │   ├ app.py             # API REST FastAPI
+    │   ├ coach_agent.py     # Privacy Coach Agent (DeepSeek)
+    │   ├ db.py              # Esquema SQLite
+    │   ├ dspm_engine.py     # Motor de reglas deterministas
+    │   ├ graph_engine.py    # Motor de consulta GraphRAG (NetworkX)
+    │   ├ ingestion.py       # Parser DDL y contratos
+    │   ├ knowledge_bridge.py# Puente semántico normativo
+    │   ├ profiler.py        # Clasificador de columnas
+    │   └ router.py          # Enrutador normativo
+    ├ data/
+    ├ frontend/
+    ├ mockups/               # Caso de prueba: Clínica SaludTotal
+    ├ mcp_server.py          # Servidor Model Context Protocol
+    └ run.py                 # Punto de entrada unificado
     ├ backend/
     │   ├ app.py             # API FastAPI
     │   ├ db.py              # Esquema SQLite

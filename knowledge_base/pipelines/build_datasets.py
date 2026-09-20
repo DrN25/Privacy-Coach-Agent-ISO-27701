@@ -7,13 +7,26 @@ import sys
 # Ensure UTF-8 output
 sys.stdout.reconfigure(encoding="utf-8")
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MATERIAL_DIR = os.path.join(BASE_DIR, "Material")
-SANCTIONS_PDF = os.path.join(MATERIAL_DIR, "1255336-registro-de-sanciones-impuestas.pdf")
-ISO_PDF = os.path.join(MATERIAL_DIR, "ISO 27701-2025_ocr.pdf")
+PIPELINES_DIR = os.path.dirname(os.path.abspath(__file__))
+KB_DIR = os.path.dirname(PIPELINES_DIR)
+BASE_DIR = os.path.dirname(KB_DIR)
+DATASETS_DIR = os.path.join(KB_DIR, "datasets")
 
-SANCTIONS_OUT = os.path.join(MATERIAL_DIR, "anpd_sanciones_dataset.json")
-GRAPH_OUT = os.path.join(MATERIAL_DIR, "iso27701_2025_graph.json")
+# Buscar PDFs en fuentes_normativas_pdf o en knowledge_base
+PDF_DIR = os.path.join(BASE_DIR, "fuentes_normativas_pdf")
+if not os.path.exists(PDF_DIR):
+    PDF_DIR = KB_DIR
+
+SANCTIONS_PDF = os.path.join(PDF_DIR, "05_ANPD_Registro_Oficial_Sanciones_Impuestas.pdf")
+if not os.path.exists(SANCTIONS_PDF):
+    SANCTIONS_PDF = os.path.join(PDF_DIR, "1255336-registro-de-sanciones-impuestas.pdf")
+
+ISO_PDF = os.path.join(PDF_DIR, "01_ISO_IEC_27701_2025_PIMS_Standard.pdf")
+if not os.path.exists(ISO_PDF):
+    ISO_PDF = os.path.join(PDF_DIR, "ISO 27701-2025_ocr.pdf")
+
+SANCTIONS_OUT = os.path.join(DATASETS_DIR, "anpd_sanciones_dataset.json")
+GRAPH_OUT = os.path.join(DATASETS_DIR, "iso27701_2025_graph.json")
 
 def extract_sanctions():
     print(f"[1/2] Extrayendo sanciones desde {os.path.basename(SANCTIONS_PDF)}...")

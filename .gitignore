@@ -44,7 +44,8 @@ Thumbs.db
 
 # Documentos PDF pesados / protegidos por derechos de autor (ISO OCR 14.7MB)
 # (Los grafos y datasets estructurados en .json de Material/ SÍ se versionan)
-Material/*.pdf
+knowledge_base/**/*.pdf
+knowledge_base/*.pdf
 
 # Archivos de log
 *.log

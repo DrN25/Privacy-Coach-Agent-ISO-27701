@@ -6,10 +6,20 @@ import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MATERIAL_DIR = os.path.join(BASE_DIR, "Material")
-SANCTIONS_PDF = os.path.join(MATERIAL_DIR, "1255336-registro-de-sanciones-impuestas.pdf")
-SANCTIONS_OUT = os.path.join(MATERIAL_DIR, "anpd_sanciones_dataset.json")
+PIPELINES_DIR = os.path.dirname(os.path.abspath(__file__))
+KB_DIR = os.path.dirname(PIPELINES_DIR)
+BASE_DIR = os.path.dirname(KB_DIR)
+DATASETS_DIR = os.path.join(KB_DIR, "datasets")
+
+PDF_DIR = os.path.join(BASE_DIR, "fuentes_normativas_pdf")
+if not os.path.exists(PDF_DIR):
+    PDF_DIR = KB_DIR
+
+SANCTIONS_PDF = os.path.join(PDF_DIR, "05_ANPD_Registro_Oficial_Sanciones_Impuestas.pdf")
+if not os.path.exists(SANCTIONS_PDF):
+    SANCTIONS_PDF = os.path.join(PDF_DIR, "1255336-registro-de-sanciones-impuestas.pdf")
+
+SANCTIONS_OUT = os.path.join(DATASETS_DIR, "anpd_sanciones_dataset.json")
 
 def parse_uit_values(multa_text):
     """Extracts all individual UIT float values from text, e.g. '7,50 UIT\n9,75 UIT' -> [7.5, 9.75]"""

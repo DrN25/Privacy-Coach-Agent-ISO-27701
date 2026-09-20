@@ -14,12 +14,12 @@ try:
 except ImportError:
     nx = None
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MATERIAL_DIR = os.path.join(BASE_DIR, "Material")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DATASETS_DIR = os.path.join(BASE_DIR, "knowledge_base", "datasets")
 
-ISO27701_FILE = os.path.join(MATERIAL_DIR, "iso27701_2025_graph.json")
-ISO29100_FILE = os.path.join(MATERIAL_DIR, "iso29100_2024_principles.json")
-SANCTIONS_FILE = os.path.join(MATERIAL_DIR, "anpd_sanciones_dataset.json")
+ISO27701_FILE = os.path.join(DATASETS_DIR, "iso27701_2025_graph.json")
+ISO29100_FILE = os.path.join(DATASETS_DIR, "iso29100_2024_principles.json")
+SANCTIONS_FILE = os.path.join(DATASETS_DIR, "anpd_sanciones_dataset.json")
 
 # Deterministic DSPM Rule to ISO Controls Router (O(1) dictionary)
 DSPM_RULE_ROUTER: Dict[str, List[str]] = {
