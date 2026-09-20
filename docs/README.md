@@ -25,6 +25,5 @@ Este directorio contiene la investigación formal, diseño arquitectónico y fun
 
 ## Visualizadores Interactivos
 
-- [Arquitectura Interactiva del Sistema](arquitectura_interactiva.html): Visualizador HTML del flujo entre componentes y almacenes de datos.
-- [Esquema de Agentes](arquitectura_sistema_agentes.html): Diagrama interactivo de la interacción entre el motor DSPM, el subgrafo y el LLM.
-- [Flujo End-to-End](flujo_end_to_end_dspm_coach.html): Diagrama secuencial interactivo del ciclo de auditoría y remediación.
+- [Arquitectura del Sistema Multi-Agente](arquitectura_sistema_agentes.html): Diagrama interactivo de componentes, límites arquitectónicos y conexiones del sistema.
+- [Flujo End-to-End DSPM y Privacy Coach](flujo_end_to_end_dspm_coach.html): Diagrama interactivo de la secuencia de auditoría, trazabilidad AST y remediación SQL.

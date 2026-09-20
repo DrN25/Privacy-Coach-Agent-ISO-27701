@@ -277,7 +277,7 @@ def resolver_subgrafo_normativo(hallazgos: list, graph_db, sanciones_db) -> dict
       "iso29100_principles": ["Principle 10: Information security"],
       "ley_peru_mapping": {
         "ley": "Art. 28 Ley 29733 (Seguridad) y Directiva R.D. 019-2013-JUS/DGPDP",
-        "directiva_seguridad": "Nivel Complejo: Cifrado robusto obligatorio en reposo para datos sensibles"
+        "directiva_seguridad": "Nivel Complejo: Cifrado obligatorio en reposo para datos sensibles (Directiva R.D. 019-2013-JUS)"
       }
     }
   ],

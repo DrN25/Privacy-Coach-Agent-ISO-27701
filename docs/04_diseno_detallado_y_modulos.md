@@ -46,7 +46,7 @@ El grafo de conocimiento modela las interdependencias de **ISO/IEC 27701:2025**:
 | `dni`, `documento`, `doc_identidad` | PII Identificable (Nacional) | **ALTO (Amarillo)** | Exige registro de banco de datos y control de acceso estricto. |
 | `password`, `clave`, `pass`, `pin` | Credenciales de Autenticación | **CRÍTICO (Rojo)** | Si el tipo es `VARCHAR` y no contiene indicios de hashing (Argon2, bcrypt), se alerta infracción grave a R.D. 019-2013-JUS. |
 | `tarjeta`, `cvv`, `card_number` | Datos Financieros | **CRÍTICO (Rojo)** | Prohibición estricta de almacenar CVV. Violación a normas de protección de datos y PCI-DSS. |
-| `huella`, `rostro`, `biometria` | **Dato Sensible (Biométrico)** | **EXTREMO (Púrpura)** | Exige consentimiento reforzado y cifrado robusto. Multa Muy Grave ante ANPD (hasta 100 UIT). |
+| `huella`, `rostro`, `biometria` | **Dato Sensible (Biométrico)** | **EXTREMO (Púrpura)** | Exige consentimiento expreso y cifrado en reposo (AES-256). Multa Muy Grave ante ANPD (hasta 100 UIT). |
 | `enfermedad`, `diagnostico`, `salud` | **Dato Sensible (Salud)** | **EXTREMO (Púrpura)** | Infracción muy grave si se almacena o comparte sin consentimiento expreso y cifrado. |
 
 ### 2.2. Visualizador Interactivo en el Frontend

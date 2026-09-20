@@ -233,7 +233,7 @@ En un RAG clásico plano, la creencia común es: *"Solo cargo el nuevo PDF, vuel
 * En una auditoría formal, fundamentar un hallazgo en una norma derogada o citar un artículo legal derogado invalida el dictamen técnico ante un jurado o cliente.
 
 ### 6.2. La Solución Determinista en Nuestra Arquitectura (Pipelines de Código Reproducibles)
-Gracias a la existencia del script `scripts/build_datasets.py`, la mantenibilidad del sistema es matemática y reproducible:
+Gracias a la existencia del script `knowledge_base/pipelines/build_datasets.py`, la mantenibilidad del sistema es matemática y reproducible:
 1. **Versionado Inmutable de Nodos:** Cada nodo del grafo posee metadatos de versión explícitos (`"standard": "ISO/IEC 27701:2025"`, `"id": "A.1.2.4"`). No existen fragmentos de texto flotando sin linaje normativo.
 2. **Actualización de la Norma Internacional:** Ante una nueva versión de la ISO, se corre el script extractor sobre el nuevo PDF. El script genera un nuevo archivo inmutable (`iso27701_2030_graph.json`). El sistema permite auditar empresas bajo la versión 2025 o la versión 2030 mediante un simple selector de versión, sin que jamás se mezclen sus requisitos.
 3. **Actualización del Marco Legal Peruano:** Si el MINJUSDH aprueba el nuevo reglamento y deroga el D.S. 003-2013-JUS (cambiando artículos o multas), la actualización se realiza en una sola tabla centralizada de mapeo (`peru_law_map` dentro del script). Con cambiar 5 líneas de equivalencia, los 78 controles quedan re-alineados a la nueva ley de inmediato, sin re-entrenar modelos ni re-vectorizar millones de tokens.

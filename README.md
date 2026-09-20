@@ -103,28 +103,15 @@ Privacy-Coach-Agent-ISO-27701/
     │   ├ knowledge_bridge.py# Puente semántico normativo
     │   ├ profiler.py        # Clasificador de columnas
     │   └ router.py          # Enrutador normativo
-    ├ data/
+    ├ data/                  # Almacén SQLite local
     ├ frontend/
+    │   ├ index.html         # Shell HTML y Tailwind
+    │   ├ css/style.css      # Estilos y tema oscuro
+    │   ├ js/app.jsx         # Dashboard interactivo React 18
+    │   └ js/marked.min.js   # Parser Markdown local
     ├ mockups/               # Caso de prueba: Clínica SaludTotal
-    ├ mcp_server.py          # Servidor Model Context Protocol
+    ├ mcp_server.py          # Servidor Model Context Protocol (10 tools)
     └ run.py                 # Punto de entrada unificado
-    ├ backend/
-    │   ├ app.py             # API FastAPI
-    │   ├ db.py              # Esquema SQLite
-    │   ├ ingestion.py       # Parser SQL y documentos
-    │   ├ profiler.py        # Clasificador DSPM
-    │   ├ dspm_engine.py     # Motor de reglas
-    │   ├ router.py          # Enrutamiento normativo
-    │   ├ knowledge_bridge.py
-    │   └ coach_agent.py     # Agente LLM (OpenRouter)
-    ├ data/
-    ├ frontend/
-    │   ├ index.html
-    │   ├ css/style.css
-    │   └ js/app.jsx
-    ├ mockups/               # Caso de prueba: Clínica SaludTotal
-    ├ mcp_server.py
-    └ run.py
 ```
 
 ---
@@ -195,7 +182,7 @@ El servidor inicia en `http://127.0.0.1:8000`.
 
 - **Universidad Nacional de San Agustín de Arequipa (UNSA)**
 - Escuela Profesional de Ingeniería de Sistemas
-- Auditoría de Sistemas — Trabajo de Investigación Formativa (TIF), Semestre 2026-A
+- Auditoría de Sistemas — Trabajo de Investigación Formativa (TIF), Semestre 2026-B
 
 ## Licencia
 
