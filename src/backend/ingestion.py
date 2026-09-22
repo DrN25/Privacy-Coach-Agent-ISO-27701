@@ -1,7 +1,7 @@
 import os
 import re
 from datetime import datetime
-import fitz  # PyMuPDF
+import pymupdf as fitz
 import sqlglot
 from sqlglot import exp
 

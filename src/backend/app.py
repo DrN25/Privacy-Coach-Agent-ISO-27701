@@ -1,11 +1,15 @@
 import os
 import shutil
+import base64
+import binascii
+import secrets
+from contextlib import asynccontextmanager
 from typing import List, Optional
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Path
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .db import init_db, get_db_connection
 from .ingestion import procesar_archivo_sql, procesar_archivo_documento
@@ -13,33 +17,63 @@ from .dspm_engine import ejecutar_auditoria_dspm
 from .knowledge_bridge import knowledge_bridge
 from .coach_agent import dialogar_coach
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    if os.getenv("ENVIRONMENT", "development") == "production":
+        if not os.getenv("APP_USERNAME") or not os.getenv("APP_PASSWORD"):
+            raise RuntimeError("APP_USERNAME y APP_PASSWORD son obligatorios en producción")
+    init_db()
+    yield
+
 app = FastAPI(
     title="Privacy & DSPM Multi-Agent System",
     description="Sistema Multi-Agente de Auditoría de Privacidad (ISO 27701, ISO 29100, Ley 29733) con React y OpenRouter DeepSeek",
-    version="2.1.0"
+    version="2.1.0",
+    lifespan=lifespan,
 )
+
+
+@app.middleware("http")
+async def production_basic_auth(request, call_next):
+    if os.getenv("ENVIRONMENT", "development") != "production" or request.url.path == "/api/status":
+        return await call_next(request)
+
+    authorization = request.headers.get("Authorization", "")
+    try:
+        scheme, encoded = authorization.split(" ", 1)
+        username, password = base64.b64decode(encoded).decode("utf-8").split(":", 1)
+    except (ValueError, UnicodeDecodeError, binascii.Error):
+        scheme, username, password = "", "", ""
+
+    valid_user = secrets.compare_digest(username, os.getenv("APP_USERNAME", ""))
+    valid_password = secrets.compare_digest(password, os.getenv("APP_PASSWORD", ""))
+    if scheme.lower() != "basic" or not (valid_user and valid_password):
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Autenticación requerida"},
+            headers={"WWW-Authenticate": 'Basic realm="Privacy Coach"'},
+        )
+    return await call_next(request)
 
 @app.exception_handler(OSError)
 async def os_error_handler(request, exc):
     return JSONResponse(status_code=404, content={"error": "Ruta inválida en sistema operativo"})
 
+cors_origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "*").split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_credentials=cors_origins != ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-@app.on_event("startup")
-def startup_event():
-    init_db()
 
 # Modelos Pydantic
 class ChatRequest(BaseModel):
     hallazgo_id: int
     mensaje_usuario: str
-    historial: Optional[List[dict]] = []
+    historial: List[dict] = Field(default_factory=list)
 
 class RemediacionRequest(BaseModel):
     hallazgo_id: int
@@ -60,7 +94,7 @@ def get_status():
 
     return {
         "status": "online",
-        "llm_model": "deepseek/deepseek-v4.1-flash",
+        "llm_model": os.getenv("OPENROUTER_MODEL", "deepseek/deepseek-v4.1-flash"),
         "provider": "OpenRouter",
         "zero_cost_local_kbs": {
             "iso27701_nodes": knowledge_bridge.controls_count,
@@ -176,6 +210,8 @@ def load_mockups():
 
 @app.post("/api/load-single-mockup/{filename}")
 def load_single_mockup(filename: str):
+    if filename != os.path.basename(filename):
+        raise HTTPException(status_code=400, detail="Nombre de archivo inválido.")
     mockups_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "mockups")
     file_path = os.path.join(mockups_dir, filename)
     if not os.path.exists(file_path):
@@ -195,21 +231,24 @@ def load_single_mockup(filename: str):
 async def upload_file(file: UploadFile = File(...)):
     temp_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "uploads")
     os.makedirs(temp_dir, exist_ok=True)
-    temp_path = os.path.join(temp_dir, file.filename)
+    safe_filename = os.path.basename(file.filename or "")
+    if not safe_filename or safe_filename != file.filename:
+        raise HTTPException(status_code=400, detail="Nombre de archivo inválido.")
+    fname = safe_filename.lower()
+    if not fname.endswith((".sql", ".pdf", ".md", ".txt")):
+        raise HTTPException(status_code=400, detail="Formato no soportado. Suba archivos SQL, PDF, MD o TXT.")
+    temp_path = os.path.join(temp_dir, safe_filename)
 
     with open(temp_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    fname = file.filename.lower()
     if fname.endswith(".sql"):
-        procesar_archivo_sql(temp_path, file.filename)
-    elif fname.endswith((".pdf", ".md", ".txt")):
-        procesar_archivo_documento(temp_path, file.filename)
+        procesar_archivo_sql(temp_path, safe_filename)
     else:
-        raise HTTPException(status_code=400, detail="Formato no soportado. Suba archivos SQL, PDF, MD o TXT.")
+        procesar_archivo_documento(temp_path, safe_filename)
 
     return {
-        "mensaje": f"Archivo '{file.filename}' parseado e incorporado a la base de datos de la empresa.",
+        "mensaje": f"Archivo '{safe_filename}' parseado e incorporado a la base de datos de la empresa.",
         "necesita_reanalisis": True
     }
 
@@ -264,6 +303,9 @@ def post_chat(req: ChatRequest):
         raise HTTPException(status_code=404, detail="Hallazgo no encontrado.")
     
     brecha_dict = dict(brecha)
+    brecha_dict["contexto_normativo"] = knowledge_bridge.extraer_subgrafo_control(
+        brecha_dict["control_iso27701"]
+    )
 
     mensajes = req.historial or []
     mensajes.append({"role": "user", "content": req.mensaje_usuario})
@@ -280,7 +322,9 @@ def post_chat(req: ChatRequest):
     return {
         "mensaje": respuesta["content"],
         "reasoning": respuesta.get("reasoning", ""),
-        "sql_patch": respuesta.get("sql_patch", "")
+        "sql_patch": respuesta.get("sql_patch", ""),
+        "mode": respuesta.get("mode", "openrouter"),
+        "error": respuesta.get("error")
     }
 
 @app.post("/api/remediate")
@@ -288,6 +332,9 @@ def remediate_finding(req: RemediacionRequest):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("UPDATE hallazgos_dspm SET estado = 'REMEDIADO' WHERE id = ?", (req.hallazgo_id,))
+    if cur.rowcount == 0:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Hallazgo no encontrado.")
     conn.commit()
     conn.close()
     return {"mensaje": f"Hallazgo #{req.hallazgo_id} marcado como REMEDIADO con éxito."}

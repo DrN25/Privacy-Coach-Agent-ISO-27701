@@ -144,6 +144,56 @@ python src/run.py
 
 El servidor inicia en `http://127.0.0.1:8000`.
 
+### Docker
+
+```bash
+docker build -t privacy-coach:local .
+docker volume create privacy-coach-data
+docker run --rm -p 8000:8000 \
+  --env-file .env \
+  -e DATABASE_PATH=/var/data/empresa_conocimiento.db \
+  -v privacy-coach-data:/var/data \
+  privacy-coach:local
+```
+
+Comprobar el contenedor:
+
+```bash
+curl --fail http://127.0.0.1:8000/api/status
+```
+
+---
+
+## CI/CD y Render
+
+El pipeline de `.github/workflows/ci.yml` ejecuta compilación, Ruff, Pytest, `pip-audit`, Bandit y el build de la imagen Docker. Las pruebas usan SQLite temporal y simulan el Coach, por lo que no consumen créditos de OpenRouter.
+
+`render.yaml` define un Web Service Docker con un disco persistente en `/var/data`. Para configurarlo:
+
+1. Crear un Blueprint en Render conectado a este repositorio.
+2. Introducir `OPENROUTER_API_KEY` y una contraseña robusta en `APP_PASSWORD` cuando Render solicite las variables marcadas con `sync: false`.
+3. Crear un Deploy Hook en **Settings > Deploy Hook** del servicio.
+4. Guardar el hook en GitHub como secreto `RENDER_DEPLOY_HOOK_URL`.
+5. Proteger el environment de GitHub `production` si se requiere aprobación manual.
+
+Cada push a `main` despliega únicamente después de completar CI. `autoDeploy` queda desactivado en Render para evitar despliegues paralelos fuera del pipeline.
+
+En producción, toda la interfaz y API usan HTTP Basic con `APP_USERNAME` y `APP_PASSWORD`. Solo `/api/status` permanece público para el health check de Render.
+
+> El disco persistente requiere un plan de Render compatible. Sin disco, SQLite se pierde en cada despliegue. Para escalado horizontal debe reemplazarse SQLite por PostgreSQL.
+
+Comandos de verificación local equivalentes a CI:
+
+```bash
+pip install -r requirements-dev.txt
+python -m compileall -q src knowledge_base tests
+ruff check src knowledge_base tests
+pytest
+pip-audit -r requirements.txt
+bandit -q -r src -x tests
+docker build -t privacy-coach:ci .
+```
+
 ---
 
 ## Servidor MCP

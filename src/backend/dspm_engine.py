@@ -160,4 +160,7 @@ def ejecutar_auditoria_dspm():
             ))
 
     conn.commit()
+    cur.execute("SELECT * FROM hallazgos_dspm ORDER BY multa_estimada_uit DESC")
+    hallazgos = [dict(row) for row in cur.fetchall()]
     conn.close()
+    return hallazgos

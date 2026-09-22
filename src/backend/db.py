@@ -1,7 +1,8 @@
 import os
 import sqlite3
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "empresa_conocimiento.db")
+DEFAULT_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "empresa_conocimiento.db")
+DB_PATH = os.path.abspath(os.getenv("DATABASE_PATH", DEFAULT_DB_PATH))
 
 def get_db_connection():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
