@@ -7,7 +7,8 @@ import uvicorn
 
 def abrir_navegador():
     time.sleep(1.5)
-    webbrowser.open("http://localhost:8000")
+    port = int(os.getenv("PORT", "8000"))
+    webbrowser.open(f"http://localhost:{port}")
 
 def main():
     print("=" * 75)
@@ -20,10 +21,17 @@ def main():
     print("Servidor web iniciado en: http://localhost:8000")
     print("Abriendo interfaz de usuario en el navegador...")
 
-    threading.Thread(target=abrir_navegador, daemon=True).start()
+    if os.getenv("ENVIRONMENT", "development") == "development":
+        threading.Thread(target=abrir_navegador, daemon=True).start()
 
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    uvicorn.run("backend.app:app", host="127.0.0.1", port=8000, reload=False, log_level="info")
+    uvicorn.run(
+        "backend.app:app",
+        host=os.getenv("HOST", "127.0.0.1"),
+        port=int(os.getenv("PORT", "8000")),
+        reload=False,
+        log_level="info",
+    )
 
 if __name__ == "__main__":
     main()

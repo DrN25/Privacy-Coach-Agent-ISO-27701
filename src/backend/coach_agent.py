@@ -5,6 +5,7 @@ Privacy & DSPM Multi-Agent System — Inferencia OpenRouter (deepseek/deepseek-v
 """
 import json
 import urllib.request
+import urllib.parse
 import re
 from typing import Dict, Any
 
@@ -49,6 +50,7 @@ REGLAS ESTRICTAS DE RESPUESTA (CERO AI SLOP):
 """
 
 def dialogar_coach(historial_mensajes: list, contexto_brecha: dict) -> dict:
+    contexto_normativo = contexto_brecha.get("contexto_normativo", {})
     prompt_usuario = f"""EXPEDIENTE TÉCNICO DE AUDITORÍA DE PRIVACIDAD:
 - Hallazgo Técnico: {contexto_brecha.get('titulo', 'Vulnerabilidad crítica')} (Código: {contexto_brecha.get('codigo_regla', 'R-001')})
 - Activo Afectado: {contexto_brecha.get('elemento_afectado', 'Datos de producción')}
@@ -57,6 +59,7 @@ def dialogar_coach(historial_mensajes: list, contexto_brecha: dict) -> dict:
 - Directiva de Seguridad: {contexto_brecha.get('directiva_seguridad', 'Directiva R.D. 019-2013-JUS')}
 - Multa Estimada ANPD: {contexto_brecha.get('multa_estimada_uit', 10.0)} UIT (S/ {contexto_brecha.get('multa_estimada_pen', 51500.0):,.2f})
 - Precedente ANPD: {contexto_brecha.get('precedente_anpd', 'Resolución Directoral ANPD')}
+- Subgrafo normativo verificado: {json.dumps(contexto_normativo, ensure_ascii=False)}
 
 Requerimiento del Auditor / Ingeniero:
 {historial_mensajes[-1]['content']}
@@ -86,7 +89,10 @@ Requerimiento del Auditor / Ingeniero:
     req = urllib.request.Request(OPENROUTER_URL, data=json.dumps(payload).encode("utf-8"), headers=headers)
     
     try:
-        with urllib.request.urlopen(req, timeout=90) as resp:
+        if urllib.parse.urlparse(OPENROUTER_URL).scheme != "https":
+            raise ValueError("OPENROUTER_URL debe usar HTTPS")
+        # URL schemes other than HTTPS are rejected immediately above.
+        with urllib.request.urlopen(req, timeout=90) as resp:  # nosec B310
             data = json.loads(resp.read().decode("utf-8"))
             choice = data.get("choices", [{}])[0]
             msg = choice.get("message", {})
@@ -120,15 +126,14 @@ Requerimiento del Auditor / Ingeniero:
             return {
                 "content": content,
                 "reasoning": reasoning,
-                "sql_patch": parche
+                "sql_patch": parche,
+                "mode": "openrouter"
             }
     except Exception as e:
         return {
-            "content": f"Dictamen de Auditoría (Modo de Contingencia Local): Se activó la respuesta pericial estándar para el control {contexto_brecha.get('control_iso27701', 'A.3.24')} por contingencia de red ({str(e)}).",
-            "reasoning": "Inferencia pericial local defensiva activada.",
-            "sql_patch": """-- Remediación defensiva automatizada: Cifrado en reposo con pgcrypto
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-ALTER TABLE historias_clinicas ADD COLUMN diagnostico_cifrado BYTEA;
-UPDATE historias_clinicas SET diagnostico_cifrado = pgp_sym_encrypt(diagnostico_cie10, 'CLAVE_ROBUSTA_KMS');
-ALTER TABLE historias_clinicas DROP COLUMN diagnostico_cie10;"""
+            "content": "No fue posible generar el dictamen mediante OpenRouter. Verifique credenciales, modelo y conectividad.",
+            "reasoning": "",
+            "sql_patch": "",
+            "mode": "error",
+            "error": str(e)
         }

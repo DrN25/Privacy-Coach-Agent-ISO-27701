@@ -73,7 +73,11 @@ flowchart TD
 ```text
 Privacy-Coach-Agent-ISO-27701/
 ├ .env.example              # Plantilla de variables de entorno
+├ .env.production.example   # Plantilla de secretos para la VPS
+├ .github/workflows/        # CI y despliegue automatizado por SSH
 ├ .gitignore
+├ docker-compose.prod.yml   # Build y ejecución productiva en VPS
+├ Dockerfile                # Imagen de la API y frontend
 ├ requirements.txt
 ├ README.md
 │
@@ -143,6 +147,91 @@ python src/run.py
 ```
 
 El servidor inicia en `http://127.0.0.1:8000`.
+
+### Docker
+
+```bash
+docker build -t privacy-coach:local .
+docker volume create privacy-coach-data
+docker run --rm -p 8000:8000 \
+  --env-file .env \
+  -e DATABASE_PATH=/var/data/empresa_conocimiento.db \
+  -v privacy-coach-data:/var/data \
+  privacy-coach:local
+```
+
+Comprobar el contenedor:
+
+```bash
+curl --fail http://127.0.0.1:8000/api/status
+```
+
+---
+
+## CI/CD y VPS
+
+El pipeline de `.github/workflows/ci.yml` ejecuta compilación, Ruff, Pytest, `pip-audit`, Bandit y el build de la imagen Docker. Las pruebas usan SQLite temporal y simulan el Coach, por lo que no consumen créditos de OpenRouter.
+
+Después de un CI exitoso sobre `main`, el mismo workflow comprime el código, lo copia por SCP y ejecuta `docker compose build/up` dentro de la VPS. No usa registry ni publica imágenes.
+
+- FastAPI en `127.0.0.1:8000`, accesible solo desde la propia VPS.
+- SQLite en un volumen Docker persistente.
+- Contenedores con reinicio automático, health checks y logs rotados.
+- Aplicación con filesystem de solo lectura y directorios temporales limitados.
+- Una sola imagen local `privacy-coach:local`; imágenes anteriores no usadas se eliminan.
+
+### Preparación de la VPS
+
+Requisitos: Docker Engine, plugin Docker Compose y usuario SSH con acceso a Docker. Un Nginx/Caddy externo puede publicar `127.0.0.1:8000`; también puede accederse mediante túnel SSH sin exponer puertos adicionales.
+
+```bash
+mkdir -p ~/privacy-coach
+cd ~/privacy-coach
+# Crear este archivo desde la plantilla del repositorio:
+nano .env.production
+chmod 600 .env.production
+```
+
+Contenido basado en `.env.production.example`. `APP_PASSWORD`, `OPENROUTER_API_KEY` y `CORS_ORIGINS` deben tener valores reales. No copiar este archivo al repositorio.
+
+### Secretos de GitHub Actions
+
+Crear en **Settings > Secrets and variables > Actions**:
+
+| Secreto | Valor |
+|---|---|
+| `VPS_HOST` | IP o hostname SSH de la VPS |
+| `VPS_PORT` | Puerto SSH, normalmente `22` |
+| `VPS_USER` | Usuario con permiso para ejecutar Docker |
+| `VPS_SSH_KEY` | Clave privada SSH dedicada al despliegue |
+| `VPS_KNOWN_HOSTS` | Clave pública de host SSH verificada de la VPS |
+
+La llave pública correspondiente a `VPS_SSH_KEY` debe estar en `~/.ssh/authorized_keys` del usuario remoto. Se recomienda proteger el environment de GitHub `production` con aprobación manual.
+
+### Flujo
+
+Cada push a `main` sigue `CI -> SCP -> docker compose build/up -> health check`. Los secretos permanecen solo en `.env.production` dentro de la VPS. Docker conserva únicamente la imagen local en ejecución; las anteriores se eliminan tras un despliegue exitoso.
+
+Acceso interno desde una computadora:
+
+```bash
+ssh -L 8000:127.0.0.1:8000 usuario@IP_VPS
+# Abrir http://127.0.0.1:8000
+```
+
+En producción, toda la interfaz y API usan HTTP Basic con `APP_USERNAME` y `APP_PASSWORD`. Solo `/api/status` permanece público para health checks. SQLite es apropiado para una sola instancia; para escalado horizontal debe reemplazarse por PostgreSQL.
+
+Comandos de verificación local equivalentes a CI:
+
+```bash
+pip install -r requirements-dev.txt
+python -m compileall -q src knowledge_base tests
+ruff check src knowledge_base tests
+pytest
+pip-audit -r requirements.txt
+bandit -q -r src -x tests
+docker build -t privacy-coach:ci .
+```
 
 ---
 
