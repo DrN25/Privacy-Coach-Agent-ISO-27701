@@ -73,7 +73,11 @@ flowchart TD
 ```text
 Privacy-Coach-Agent-ISO-27701/
 ├ .env.example              # Plantilla de variables de entorno
+├ .env.production.example   # Plantilla de secretos para la VPS
+├ .github/workflows/        # CI y despliegue automatizado por SSH
 ├ .gitignore
+├ docker-compose.prod.yml   # Build y ejecución productiva en VPS
+├ Dockerfile                # Imagen de la API y frontend
 ├ requirements.txt
 ├ README.md
 │
@@ -164,23 +168,58 @@ curl --fail http://127.0.0.1:8000/api/status
 
 ---
 
-## CI/CD y Render
+## CI/CD y VPS
 
 El pipeline de `.github/workflows/ci.yml` ejecuta compilación, Ruff, Pytest, `pip-audit`, Bandit y el build de la imagen Docker. Las pruebas usan SQLite temporal y simulan el Coach, por lo que no consumen créditos de OpenRouter.
 
-`render.yaml` define un Web Service Docker con un disco persistente en `/var/data`. Para configurarlo:
+Después de un CI exitoso sobre `main`, el mismo workflow comprime el código, lo copia por SCP y ejecuta `docker compose build/up` dentro de la VPS. No usa registry ni publica imágenes.
 
-1. Crear un Blueprint en Render conectado a este repositorio.
-2. Introducir `OPENROUTER_API_KEY` y una contraseña robusta en `APP_PASSWORD` cuando Render solicite las variables marcadas con `sync: false`.
-3. Crear un Deploy Hook en **Settings > Deploy Hook** del servicio.
-4. Guardar el hook en GitHub como secreto `RENDER_DEPLOY_HOOK_URL`.
-5. Proteger el environment de GitHub `production` si se requiere aprobación manual.
+- FastAPI en `127.0.0.1:8000`, accesible solo desde la propia VPS.
+- SQLite en un volumen Docker persistente.
+- Contenedores con reinicio automático, health checks y logs rotados.
+- Aplicación con filesystem de solo lectura y directorios temporales limitados.
+- Una sola imagen local `privacy-coach:local`; imágenes anteriores no usadas se eliminan.
 
-Cada push a `main` despliega únicamente después de completar CI. `autoDeploy` queda desactivado en Render para evitar despliegues paralelos fuera del pipeline.
+### Preparación de la VPS
 
-En producción, toda la interfaz y API usan HTTP Basic con `APP_USERNAME` y `APP_PASSWORD`. Solo `/api/status` permanece público para el health check de Render.
+Requisitos: Docker Engine, plugin Docker Compose y usuario SSH con acceso a Docker. Un Nginx/Caddy externo puede publicar `127.0.0.1:8000`; también puede accederse mediante túnel SSH sin exponer puertos adicionales.
 
-> El disco persistente requiere un plan de Render compatible. Sin disco, SQLite se pierde en cada despliegue. Para escalado horizontal debe reemplazarse SQLite por PostgreSQL.
+```bash
+mkdir -p ~/privacy-coach
+cd ~/privacy-coach
+# Crear este archivo desde la plantilla del repositorio:
+nano .env.production
+chmod 600 .env.production
+```
+
+Contenido basado en `.env.production.example`. `APP_PASSWORD`, `OPENROUTER_API_KEY` y `CORS_ORIGINS` deben tener valores reales. No copiar este archivo al repositorio.
+
+### Secretos de GitHub Actions
+
+Crear en **Settings > Secrets and variables > Actions**:
+
+| Secreto | Valor |
+|---|---|
+| `VPS_HOST` | IP o hostname SSH de la VPS |
+| `VPS_PORT` | Puerto SSH, normalmente `22` |
+| `VPS_USER` | Usuario con permiso para ejecutar Docker |
+| `VPS_SSH_KEY` | Clave privada SSH dedicada al despliegue |
+| `VPS_KNOWN_HOSTS` | Clave pública de host SSH verificada de la VPS |
+
+La llave pública correspondiente a `VPS_SSH_KEY` debe estar en `~/.ssh/authorized_keys` del usuario remoto. Se recomienda proteger el environment de GitHub `production` con aprobación manual.
+
+### Flujo
+
+Cada push a `main` sigue `CI -> SCP -> docker compose build/up -> health check`. Los secretos permanecen solo en `.env.production` dentro de la VPS. Docker conserva únicamente la imagen local en ejecución; las anteriores se eliminan tras un despliegue exitoso.
+
+Acceso interno desde una computadora:
+
+```bash
+ssh -L 8000:127.0.0.1:8000 usuario@IP_VPS
+# Abrir http://127.0.0.1:8000
+```
+
+En producción, toda la interfaz y API usan HTTP Basic con `APP_USERNAME` y `APP_PASSWORD`. Solo `/api/status` permanece público para health checks. SQLite es apropiado para una sola instancia; para escalado horizontal debe reemplazarse por PostgreSQL.
 
 Comandos de verificación local equivalentes a CI:
 
