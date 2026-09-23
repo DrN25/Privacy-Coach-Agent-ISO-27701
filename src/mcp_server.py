@@ -1,344 +1,255 @@
 # -*- coding: utf-8 -*-
-"""
-Privacy Coach & DSPM Multi-Agent System — MCP Server
-Model Context Protocol (MCP) server for automated privacy posture management,
-deterministic DSPM rules (R-001..R-007), 3-padlock LPDP column classification,
-ISO 27701:2025 / ISO 29100 GraphRAG traversal, 588 ANPD sanction precedents lookup,
-and ISO/IEC 27701:2025 & Ley 29733 Compliance & DSPM remediation with DeepSeek Flash.
-"""
-import sys
-import os
+"""MCP server for Privacy Coach and deterministic DSPM auditing."""
 import json
-import sqlite3
-from typing import Dict, Any, List, Optional
+import os
+import re
+import sys
+from typing import Any, Dict, Optional
 
-# Ensure src directory is on sys.path
 SRC_DIR = os.path.dirname(os.path.abspath(__file__))
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
-from mcp.server.mcpserver import MCPServer
+try:
+    from mcp.server.mcpserver import MCPServer
+except ImportError:
+    # MCP >= 1 exposes FastMCP; retain the documented MCPServer name locally.
+    from mcp.server.fastmcp import FastMCP
 
-from backend.db import init_db, get_db_connection, DB_PATH
-from backend.profiler import perfilar_columna, CategoriaDatoLPDP
+    class MCPServer(FastMCP):
+        pass
+
+from backend.db import get_db_connection, init_db
 from backend.dspm_engine import ejecutar_auditoria_dspm
-from backend.router import resolver_enrutamiento, ROUTER_MAP
+from backend.ingestion import procesar_archivo_documento, procesar_archivo_sql
 from backend.knowledge_bridge import knowledge_bridge
+from backend.profiler import perfilar_columna
 from backend.coach_agent import dialogar_coach
-from backend.ingestion import procesar_archivo_sql, procesar_archivo_documento
+from backend.router import ROUTER_MAP
+
 
 app = MCPServer("privacy-dspm")
-
-# Initialize database schema on startup
 init_db()
+
+
+def _rows(query: str, params=()) -> list:
+    conn = get_db_connection()
+    try:
+        return [dict(row) for row in conn.execute(query, params).fetchall()]
+    finally:
+        conn.close()
+
 
 @app.tool()
 def dspm_get_status() -> Dict[str, Any]:
-    """Get the current compliance and inventory status of the enterprise privacy repository.
-    Returns counts of evaluated documents, categorized columns, legal clauses, active breach findings,
-    calculated economic exposure in UIT and PEN (Ley 29733 / ANPD), and GraphRAG/ANPD metrics.
-    """
-    conn = get_db_connection()
-    c = conn.cursor()
-    
-    c.execute("SELECT COUNT(*) FROM archivos_evaluados")
-    archivos = c.fetchone()[0]
-    
-    c.execute("SELECT COUNT(*) FROM inventario_datos")
-    columnas = c.fetchone()[0]
-    
-    c.execute("SELECT COUNT(*) FROM clausulas_analizadas")
-    clausulas = c.fetchone()[0]
-    
-    c.execute("SELECT id_hallazgo, titulo, severidad, multa_uit_estimada, estado_remediacion FROM hallazgos_cumplimiento WHERE estado_remediacion = 'ABIERTO'")
-    hallazgos_rows = c.fetchall()
-    
-    total_uit = sum(r[3] for r in hallazgos_rows)
-    pen_valor = total_uit * 5150.0  # UIT 2024: S/ 5,150
-    
-    conn.close()
-    
+    """Get current counts, open DSPM findings, exposure, and knowledge-base metrics."""
+    archivos = _rows("SELECT COUNT(*) AS total FROM archivos_cargados")[0]["total"]
+    columnas = _rows("SELECT COUNT(*) AS total FROM inventario_activos_datos")[0]["total"]
+    clausulas = _rows("SELECT COUNT(*) AS total FROM clausulas_documentales")[0]["total"]
+    hallazgos = _rows(
+        """SELECT id, codigo_regla, titulo, nivel_riesgo, multa_estimada_uit, estado
+           FROM hallazgos_dspm WHERE estado <> 'REMEDIADO'"""
+    )
+    total_uit = sum(row["multa_estimada_uit"] for row in hallazgos)
     return {
         "sistema": "Privacy Coach & DSPM Multi-Agent System (UNSA)",
-        "normas_referencia": ["ISO/IEC 27701:2025", "ISO/IEC 29100:2024", "Ley 29733 (Perú)", "D.S. 003-2013-JUS"],
+        "normas_referencia": ["ISO/IEC 27701:2025", "ISO/IEC 29100:2024", "Ley 29733 (Perú)"],
         "documentos_evaluados": archivos,
         "columnas_catalogadas": columnas,
         "clausulas_analizadas": clausulas,
-        "brechas_abiertas": len(hallazgos_rows),
+        "brechas_abiertas": len(hallazgos),
         "multa_total_uit": round(total_uit, 2),
-        "exposicion_pen": round(pen_valor, 2),
-        "kb1_nodos_grafo": len(knowledge_bridge.graph.nodes),
-        "kb2_resoluciones_anpd": len(knowledge_bridge.anpd_cases),
-        "hallazgos_resumen": [
-            {"id": r[0], "titulo": r[1], "severidad": r[2], "multa_uit": r[3]} for r in hallazgos_rows
-        ]
+        "exposicion_pen": round(total_uit * 5150.0, 2),
+        "kb1_nodos": len(knowledge_bridge.engine.controls_map) + len(knowledge_bridge.engine.principles_map),
+        "kb2_resoluciones_anpd": len(knowledge_bridge.sanciones),
+        "hallazgos_resumen": hallazgos,
     }
+
 
 @app.tool()
 def dspm_audit_repository() -> Dict[str, Any]:
-    """Run full deterministic DSPM audit (Rules R-001 through R-007) and O(1) normative routing.
-    Evaluates database schemas and legal clauses in SQLite KB-3, correlates violations with ISO 27701:2025,
-    calculates official UIT fine ranges according to Peruvian scale (Art. 39 Ley 29733),
-    and updates the active findings database.
-    """
-    findings = ejecutar_auditoria_dspm()
-    status = dspm_get_status()
+    """Run deterministic DSPM rules R-001 through R-007."""
+    findings = ejecutar_auditoria_dspm() or []
     return {
         "resultado": "Auditoría completada exitosamente",
         "total_brechas": len(findings),
         "detalles_brechas": findings,
-        "metricas_resumen": status
+        "metricas_resumen": dspm_get_status(),
     }
+
 
 @app.tool()
 def dspm_classify_column(nombre_columna: str, tipo_dato: str = "VARCHAR(255)", comentario: str = "") -> Dict[str, Any]:
-    """Classify a database column using the 3-Candados semantic profiler (AST + NLP regex + Statistical confidence).
-    Categorizes the field into LPDP categories (Art. 2.5 Ley 29733) and outputs security recommendations.
-    
-    Args:
-        nombre_columna: Name of the column (e.g. 'diagnostico_cie10', 'tarjeta_credito_cvv', 'password_hash')
-        tipo_dato: SQL data type (e.g. 'VARCHAR(255)', 'BYTEA', 'SERIAL')
-        comentario: Optional column comment or business description
-    """
-    res = perfilar_columna("custom_table", nombre_columna, tipo_dato, comentario)
+    """Classify a SQL column with the three-lock LPDP profiler."""
+    res = perfilar_columna(nombre_columna, "custom_table", tipo_dato)
     return {
         "columna": nombre_columna,
         "tipo_dato": tipo_dato,
-        "categoria_lpdp": res.categoria_lpdp.value,
-        "confianza": f"{res.confianza * 100:.1f}%",
-        "candado_1_lexico": res.candado_1_lexico,
-        "candado_2_tipo": res.candado_2_tipo,
-        "candado_3_contexto": res.candado_3_contexto,
-        "requiere_cifrado_reposo": res.requiere_cifrado,
-        "recomendacion_tecnica": res.recomendacion
+        "comentario": comentario,
+        "categoria_lpdp": res.categoria.value,
+        "confianza": f"{res.nivel_confianza * 100:.1f}%",
+        "candado_deteccion": res.candado,
+        "requiere_cifrado_reposo": res.es_sensible,
+        "recomendacion_tecnica": res.recomendacion,
     }
+
 
 @app.tool()
 def graphrag_query_normative(codigo_control_o_termino: str) -> Dict[str, Any]:
-    """Traverse the 78-node NetworkX Knowledge Graph.
-    Maps an ISO 27701:2025 control (e.g. 'A.3.24', 'A.1.4.5', 'A.3.13'), ISO 29100 privacy principle,
-    or Ley 29733 article to retrieve cross-standard requirements and Peruvian legal bridges.
-    
-    Args:
-        codigo_control_o_termino: Control code (e.g. 'A.3.24', 'A.1.4.5') or keyword
-    """
-    node_data = knowledge_bridge.get_control_details(codigo_control_o_termino)
-    subgraph = knowledge_bridge.get_subgraph(codigo_control_o_termino)
-    return {
-        "consulta": codigo_control_o_termino,
-        "control_encontrado": node_data is not None,
-        "detalles": node_data or {},
-        "subgrafo_relaciones": subgraph
+    """Query ISO 27701, ISO 29100, and Ley 29733 knowledge relations."""
+    engine = knowledge_bridge.engine
+    control = engine.get_control(codigo_control_o_termino)
+    if control is None:
+        matches = engine.search_controls(codigo_control_o_termino, limit=1)
+        control = matches[0] if matches else None
+    control_id = control.get("id") if control else codigo_control_o_termino
+    subgraph = engine.get_subgraph([control_id]) if control else {
+        "requested_control_ids": [codigo_control_o_termino], "controls": [],
+        "iso29100_principles": [], "anpd_precedents": [],
     }
+    return {"consulta": codigo_control_o_termino, "control_encontrado": control is not None,
+            "detalles": control or {}, "subgrafo_relaciones": subgraph}
+
 
 @app.tool()
 def anpd_search_sanctions(termino_busqueda: str, limite: int = 5) -> Dict[str, Any]:
-    """Search the 588 official sanction resolutions of the Autoridad Nacional de Protección de Datos Personales (ANPD Perú).
-    Returns real legal precedents, infractions, and historical penalties in UIT.
-    
-    Args:
-        termino_busqueda: Keyword or concept (e.g. 'salud', 'medidas de seguridad', 'consentimiento', 'flujo transfronterizo')
-        limite: Maximum number of matching cases to return (default: 5)
-    """
-    casos = knowledge_bridge.get_anpd_precedent(termino_busqueda)
-    # Filter or return top cases
+    """Search loaded ANPD sanction records by text."""
+    if limite <= 0:
+        return {"termino": termino_busqueda, "total_encontrados": 0, "casos": []}
     q = termino_busqueda.lower()
     matches = []
-    for c in knowledge_bridge.anpd_cases:
-        desc = str(c.get("hechos", "")).lower() + " " + str(c.get("infraccion", "")).lower() + " " + str(c.get("sancionado", "")).lower()
-        if q in desc:
-            matches.append(c)
+    for caso in knowledge_bridge.sanciones:
+        texto = json.dumps(caso, ensure_ascii=False).lower()
+        if q in texto:
+            matches.append(caso)
             if len(matches) >= limite:
                 break
-    
-    return {
-        "termino": termino_busqueda,
-        "total_encontrados": len(matches),
-        "precedente_destacado": casos,
-        "casos": matches if matches else [casos] if casos else []
-    }
+    return {"termino": termino_busqueda, "total_encontrados": len(matches), "casos": matches}
+
 
 @app.tool()
 def coach_consult(id_hallazgo: str, consulta_usuario: str = "") -> Dict[str, Any]:
-    """Consult the Senior AI Privacy Compliance Auditor (DeepSeek-v4.1-Flash) for ISO/IEC 27701:2025 & Ley 29733.
-    Injects an exact 850-token payload containing the deterministic breach context, normative subgraph,
-    and ANPD precedents, returning chain-of-thought reasoning, executive legal verdict, and remediation code.
-    
-    Args:
-        id_hallazgo: Finding ID (e.g. 'R-001', 'R-002', 'R-003', 'R-004', 'R-005', 'R-006', 'R-007')
-        consulta_usuario: Specific technical question or action requested (e.g. 'Genera el parche SQL', 'Explica la base legal')
-    """
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM hallazgos_cumplimiento WHERE id_hallazgo = ?", (id_hallazgo,))
-    row = c.fetchone()
-    conn.close()
-    
-    if not row:
+    """Request a technical compliance opinion for a DSPM finding."""
+    rows = _rows("SELECT * FROM hallazgos_dspm WHERE codigo_regla = ?", (id_hallazgo,))
+    if not rows:
         return {"error": f"Hallazgo {id_hallazgo} no encontrado en la base de datos."}
-    
-    # Build finding dict
-    finding_dict = {
-        "id_hallazgo": row["id_hallazgo"],
-        "control_iso27701": row["control_iso27701"],
-        "articulo_ley29733": row["articulo_ley29733"],
-        "titulo": row["titulo"],
-        "descripcion": row["descripcion"],
-        "severidad": row["severidad"],
-        "multa_uit_estimada": row["multa_uit_estimada"],
-        "elemento_afectado": row["elemento_afectado"]
-    }
-    
-    # Run Coach Dialog
-    res = dialogar_coach(
-        historial_mensajes=[{"role": "user", "content": consulta_usuario if consulta_usuario else f"Analiza y remedia la brecha {id_hallazgo}"}],
-        contexto_brecha=finding_dict
+    row = rows[0]
+    row["contexto_normativo"] = knowledge_bridge.extraer_subgrafo_control(row["control_iso27701"])
+    result = dialogar_coach(
+        historial_mensajes=[{"role": "user", "content": consulta_usuario or f"Analiza y remedia la brecha {id_hallazgo}"}],
+        contexto_brecha=row,
     )
-    
     return {
         "id_hallazgo": id_hallazgo,
         "control_iso27701": row["control_iso27701"],
         "articulo_ley29733": row["articulo_ley29733"],
-        "multa_uit": row["multa_uit_estimada"],
-        "dictamen_coach": res.get("content", ""),
-        "reasoning": res.get("reasoning", ""),
-        "sql_patch": res.get("sql_patch", "")
+        "multa_uit": row["multa_estimada_uit"],
+        "dictamen_coach": result.get("content", ""),
+        "reasoning": result.get("reasoning", ""),
+        "sql_patch": result.get("sql_patch", ""),
+        "mode": result.get("mode", "openrouter"),
+        "error": result.get("error"),
     }
 
+
 @app.tool()
-def dspm_apply_remediation(id_hallazgo: str) -> Dict[str, Any]:
-    """Mark a finding as remediated in SQLite (KB-3), immediately updating the enterprise risk balance
-    and deducting the estimated fine from total exposure.
-    
-    Args:
-        id_hallazgo: Finding ID to resolve (e.g. 'R-001', 'R-003')
-    """
+def dspm_apply_remediation(id_hallazgo: str, parche_sql: Optional[str] = None) -> Dict[str, Any]:
+    """Mark R-xxx as REMEDIADO; optional SQL patch is recorded in the response, never executed."""
+    if not re.fullmatch(r"R-\d{3}", id_hallazgo):
+        return {"error": "El código de hallazgo debe tener formato R-xxx."}
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("UPDATE hallazgos_cumplimiento SET estado_remediacion = 'REMEDIADO' WHERE id_hallazgo = ?", (id_hallazgo,))
-    conn.commit()
-    conn.close()
-    
-    # Recalculate status
-    status = dspm_get_status()
-    return {
-        "resultado": f"Hallazgo {id_hallazgo} marcado como REMEDIADO exitosamente.",
-        "nuevo_estado": status
-    }
+    try:
+        cur = conn.execute("UPDATE hallazgos_dspm SET estado = 'REMEDIADO' WHERE codigo_regla = ?", (id_hallazgo,))
+        conn.commit()
+        updated = cur.rowcount > 0
+    finally:
+        conn.close()
+    return {"resultado": "Hallazgo marcado como REMEDIADO." if updated else "Hallazgo no encontrado.",
+            "codigo_regla": id_hallazgo, "nuevo_estado": "REMEDIADO" if updated else None,
+            "parche_sql_recibido": bool(parche_sql), "parche_sql_ejecutado": False,
+            "estado": dspm_get_status()}
+
 
 @app.tool()
 def dspm_reset_repository() -> Dict[str, Any]:
-    """Wipe all enterprise documents, column inventories, clauses, and findings from SQLite (KB-3)
-    to start a pristine audit from scratch (0 documents, 0 UIT fines).
-    """
+    """Delete loaded documents, inventory, clauses, and DSPM findings."""
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("DELETE FROM archivos_evaluados")
-    c.execute("DELETE FROM inventario_datos")
-    c.execute("DELETE FROM clausulas_analizadas")
-    c.execute("DELETE FROM hallazgos_cumplimiento")
-    conn.commit()
-    conn.close()
-    return {
-        "resultado": "Repositorio reiniciado a 0. Listo para una nueva auditoría empresarial.",
-        "estado": dspm_get_status()
-    }
+    try:
+        conn.execute("DELETE FROM interacciones_coach")
+        conn.execute("DELETE FROM hallazgos_dspm")
+        conn.execute("DELETE FROM clausulas_documentales")
+        conn.execute("DELETE FROM inventario_activos_datos")
+        conn.execute("DELETE FROM archivos_cargados")
+        conn.commit()
+    finally:
+        conn.close()
+    return {"resultado": "Repositorio reiniciado a 0.", "estado": dspm_get_status()}
+
 
 @app.tool()
 def dspm_load_demo_case(case_name: str = "saludtotal") -> Dict[str, Any]:
-    """Ingest the 4 realistic enterprise mockups for 'Clínica SaludTotal S.A.C.' into SQLite (KB-3):
-    1. schema_clinica_saludtotal.sql (DDL with sensitive health data, plain CVV, MD5 passwords)
-    2. politica_privacidad_saludtotal.pdf (Policy with tacit consent, indefinite retention, ARCO fee)
-    3. contrato_encargo_sla_cloud.pdf (Cloud SLA with unnotified cross-border transfer to US servers)
-    4. diccionario_datos_negocio.txt (Business glossary with developer field definitions)
-    
-    Automatically triggers DSPM rule evaluation and normative routing.
-    """
-    mockups_dir = os.path.join(SISTEMA_DIR, "mockups")
-    if not os.path.exists(mockups_dir):
+    """Load demo files from the project's mockups directory, when present."""
+    mockups_dir = os.path.join(SRC_DIR, "mockups")
+    if not os.path.isdir(mockups_dir):
         return {"error": f"Directorio de mockups no encontrado en {mockups_dir}"}
-        
+    names = ["schema_clinica_saludtotal.sql", "politica_privacidad_saludtotal.pdf",
+             "contrato_encargo_sla_cloud.pdf", "diccionario_datos_negocio.txt"]
     ingested = []
-    # 1. SQL
-    sql_path = os.path.join(mockups_dir, "schema_clinica_saludtotal.sql")
-    if os.path.exists(sql_path):
-        procesar_archivo_sql(sql_path)
-        ingested.append("schema_clinica_saludtotal.sql")
-        
-    # 2. Documents
-    for doc in ["politica_privacidad_saludtotal.pdf", "contrato_encargo_sla_cloud.pdf", "diccionario_datos_negocio.txt"]:
-        p = os.path.join(mockups_dir, doc)
-        if os.path.exists(p):
-            procesar_archivo_documento(p)
-            ingested.append(doc)
-            
-    # Run audit
-    findings = ejecutar_auditoria_dspm()
+    for name in names:
+        path = os.path.join(mockups_dir, name)
+        if os.path.isfile(path):
+            if name.endswith(".sql"):
+                procesar_archivo_sql(path, name)
+            else:
+                procesar_archivo_documento(path, name)
+            ingested.append(name)
+    findings = ejecutar_auditoria_dspm() or []
     status = dspm_get_status()
-    
-    return {
-        "resultado": f"Caso demo '{case_name}' cargado exitosamente.",
-        "archivos_procesados": ingested,
-        "total_brechas_detectadas": len(findings),
-        "multa_total_estimada_uit": status["multa_total_uit"],
-        "exposicion_pen": status["exposicion_pen"]
-    }
+    return {"resultado": f"Caso demo '{case_name}' cargado exitosamente.",
+            "archivos_procesados": ingested, "total_brechas_detectadas": len(findings),
+            "multa_total_estimada_uit": status["multa_total_uit"], "exposicion_pen": status["exposicion_pen"]}
+
 
 @app.tool()
-def dspm_ingest_file(file_path: str) -> Dict[str, Any]:
-    """Ingest an enterprise file (.sql, .pdf, .md, .txt) into SQLite (KB-3).
-    Parses schemas with AST or extracts legal clauses, runs 3-candados classification,
-    and updates repository metadata.
-    
-    Args:
-        file_path: Absolute path to the file to ingest.
-    """
-    if not os.path.exists(file_path):
+def dspm_ingest_file(file_path: str, nombre_archivo: Optional[str] = None) -> Dict[str, Any]:
+    """Ingest SQL, PDF, Markdown, or text using its route and display name."""
+    if not os.path.isfile(file_path):
         return {"error": f"El archivo no existe: {file_path}"}
-        
-    ext = os.path.splitext(file_path)[1].lower()
+    nombre = nombre_archivo or os.path.basename(file_path)
+    ext = os.path.splitext(nombre)[1].lower()
     if ext == ".sql":
-        doc_id = procesar_archivo_sql(file_path)
-    elif ext in [".pdf", ".md", ".txt"]:
-        doc_id = procesar_archivo_documento(file_path)
+        doc_id = procesar_archivo_sql(file_path, nombre)
+    elif ext in (".pdf", ".md", ".txt"):
+        doc_id = procesar_archivo_documento(file_path, nombre)
     else:
         return {"error": f"Formato no soportado: {ext}. Formatos válidos: .sql, .pdf, .md, .txt"}
-        
-    return {
-        "resultado": f"Archivo {os.path.basename(file_path)} procesado exitosamente.",
-        "id_documento": doc_id,
-        "sugerencia": "Ejecuta 'dspm_audit_repository' para recalcular las brechas y multas."
-    }
+    return {"resultado": f"Archivo {nombre} procesado exitosamente.", "id_documento": doc_id,
+            "sugerencia": "Ejecuta 'dspm_audit_repository' para recalcular las brechas."}
 
-# =========================================================================
-# MCP Resources
-# =========================================================================
+
 @app.resource("privacy://graph/summary")
 def get_graph_summary() -> str:
-    """Normative Knowledge Graph (KB-1) summary and coverage metrics."""
-    nodes = len(knowledge_bridge.graph.nodes)
-    edges = len(knowledge_bridge.graph.edges)
-    return f"Knowledge Graph KB-1: {nodes} nodes, {edges} cross-standard edges covering ISO/IEC 27701:2025 (PIMS), ISO/IEC 29100:2024 (Privacy Framework), and Ley 29733 (ANPD Perú)."
+    """Knowledge-base coverage summary."""
+    engine = knowledge_bridge.engine
+    edges = sum(len(values) for values in engine.adj.values())
+    nodes = len(engine.controls_map) + len(engine.principles_map)
+    return f"Knowledge base: {nodes} nodes, {edges} cross-standard edges."
+
 
 @app.resource("privacy://dspm/rules-catalog")
 def get_rules_catalog() -> str:
     """Catalog of deterministic DSPM rules R-001 through R-007."""
-    catalog = {
-        "R-001": {"titulo": "Datos de Salud Sensibles sin Cifrado en Reposo", "control": "A.3.24", "severidad": "CRÍTICO", "multa_uit": 12.5},
-        "R-002": {"titulo": "Almacenamiento de Contraseñas con Algoritmo Hash Débil (MD5)", "control": "A.3.24", "severidad": "ALTO", "multa_uit": 8.0},
-        "R-003": {"titulo": "Almacenamiento Ilegal de Código de Seguridad CVV de Tarjetas", "control": "A.1.4.5", "severidad": "CRÍTICO", "multa_uit": 15.0},
-        "R-004": {"titulo": "Consentimiento Tácito o Automático por Mera Navegación Web", "control": "A.3.2", "severidad": "ALTO", "multa_uit": 10.0},
-        "R-005": {"titulo": "Plazo de Conservación Indefinido de Datos Personales", "control": "A.3.13", "severidad": "MEDIO", "multa_uit": 7.0},
-        "R-006": {"titulo": "Flujo Transfronterizo a Nube Extranjera sin Registro ante ANPD", "control": "A.3.22", "severidad": "ALTO", "multa_uit": 11.0},
-        "R-007": {"titulo": "Cobro Indebido de Tarifas para Ejercicio de Derechos ARCO", "control": "A.3.12", "severidad": "MEDIO", "multa_uit": 7.0},
-    }
-    return json.dumps(catalog, indent=2, ensure_ascii=False)
+    return json.dumps({code: {"titulo": data["titulo"], "control": data["control_iso27701"],
+                              "severidad": data["nivel_riesgo"], "multa_uit": data["multa_estimada_uit"]}
+                      for code, data in ROUTER_MAP.items()},
+                      indent=2, ensure_ascii=False)
+
 
 @app.resource("privacy://anpd/statistics")
 def get_anpd_statistics() -> str:
-    """ANPD Sanction Precedents (KB-2) summary statistics."""
-    total = len(knowledge_bridge.anpd_cases)
-    return f"ANPD Enforcement Database KB-2: {total} official sanction resolutions cataloged with infraction types, affected sectors, and historical UIT fine amounts."
+    """ANPD sanction dataset summary."""
+    return f"ANPD enforcement database: {len(knowledge_bridge.sanciones)} sanction resolutions loaded."
+
 
 if __name__ == "__main__":
     app.run(transport="stdio")
