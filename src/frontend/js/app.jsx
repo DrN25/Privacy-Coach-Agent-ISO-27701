@@ -31,6 +31,33 @@ function App() {
   // Custom React Confirmation Modal (replaces window.confirm)
   const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null });
   
+  // Modal de referencia legal (controles ISO, artículos Ley, sanciones ANPD)
+  const [legalRefModal, setLegalRefModal] = useState({ open: false, tipo: '', data: null, loading: false });
+
+  const handleExportDictamen = (finding) => {
+    if (!finding) return;
+    const fid = finding.codigo_regla || finding.id;
+    window.open(`/api/export-dictamen/${encodeURIComponent(fid)}`, '_blank');
+  };
+
+  const formatMarkdownCitations = (content) => {
+    if (!content) return '';
+    let parsed = window.marked ? window.marked.parse(content) : content;
+    // Replace ISO controls: A.1.4.5, A.3.24
+    parsed = parsed.replace(/\b(A\.\d+\.\d+(?:\.\d+)?)\b/g, (match) => {
+      return `<button type="button" class="inline-flex items-center gap-0.5 px-1.5 py-0.2 mx-0.5 text-[10px] font-mono font-medium rounded bg-cyan-950/90 text-cyan-300 border border-cyan-800 hover:bg-cyan-900 transition-colors cursor-pointer" onclick="window.fetchLegalRefGlobal && window.fetchLegalRefGlobal('control','${match}')">📖 ${match} ↗</button>`;
+    });
+    // Replace Ley articles: Art. 13, Art 13, Artículo 13
+    parsed = parsed.replace(/\b(?:Art(?:ículo|\.)?\s*)(\d+)\b/g, (match, num) => {
+      return `<button type="button" class="inline-flex items-center gap-0.5 px-1.5 py-0.2 mx-0.5 text-[10px] font-mono font-medium rounded bg-violet-950/90 text-violet-300 border border-violet-800 hover:bg-violet-900 transition-colors cursor-pointer" onclick="window.fetchLegalRefGlobal && window.fetchLegalRefGlobal('articulo','Art_${num}')">⚖️ Art. ${num} ↗</button>`;
+    });
+    return parsed;
+  };
+
+  
+  // Panel de precedentes expandido
+  const [precedentPanel, setPrecedentPanel] = useState({ open: false, findingId: null });
+  
   // Filtros de búsqueda en BD
   const [searchColumna, setSearchColumna] = useState('');
   const [filterCategoria, setFilterCategoria] = useState('ALL');
@@ -52,6 +79,21 @@ function App() {
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3800);
+  };
+
+  // Fetch legal reference from backend
+  const fetchLegalRef = async (tipo, refId) => {
+  window.fetchLegalRefGlobal = fetchLegalRef;
+
+    setLegalRefModal({ open: true, tipo, data: null, loading: true });
+    try {
+      const res = await fetch('/api/legal-reference/' + encodeURIComponent(tipo) + '/' + encodeURIComponent(refId));
+      if (!res.ok) throw new Error('Referencia no encontrada');
+      const data = await res.json();
+      setLegalRefModal({ open: true, tipo, data, loading: false });
+    } catch (e) {
+      setLegalRefModal({ open: true, tipo, data: { error: e.message }, loading: false });
+    }
   };
 
   const fetchStatus = async () => {
@@ -377,6 +419,24 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
           </div>
         </div>
       </header>
+
+      {/* BARRA DE PROGRESO DE REMEDIACIÓN */}
+      {hallazgos.length > 0 && (
+        <div className="mx-6 mt-3 flex items-center gap-3">
+          <div className="flex-1 h-2 rounded-full bg-slate-800 overflow-hidden">
+            <div 
+              className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 transition-all duration-700"
+              style={{ width: `${hallazgos.length > 0 ? (hallazgos.filter(h => h.estado === 'REMEDIADO').length / hallazgos.length * 100) : 0}%` }}
+            />
+          </div>
+          <span className="text-[11px] font-mono text-slate-400 whitespace-nowrap">
+            {hallazgos.filter(h => h.estado === 'REMEDIADO').length}/{hallazgos.length} remediados
+          </span>
+          {hallazgos.filter(h => h.estado === 'REMEDIADO').length === hallazgos.length && hallazgos.length > 0 && (
+            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-700">✓ Completo</span>
+          )}
+        </div>
+      )}
 
       {/* POPUP / MODAL DE REANÁLISIS OBLIGATORIO (TRIGGER REACTIVO) */}
       {reanalysisNeeded && (
@@ -709,43 +769,85 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                       <h4 className="text-xs font-semibold text-slate-100 mb-1">{h.titulo}</h4>
                       <p className="text-[11px] text-slate-400 line-clamp-2 mb-2.5">{h.descripcion}</p>
 
-                      {/* BOTONES RÁPIDOS DE PASO DE CONTEXTO */}
-                      <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectFinding(h);
-                            handleSendMessage(`¿Cuál es el diagnóstico pericial y fundamento jurídico de la vulnerabilidad en ${h.elemento_afectado} según el control ${h.control_iso27701} y la Ley 29733?`, h);
-                          }}
-                          className="px-2 py-1 rounded bg-slate-800/90 hover:bg-cyan-950 text-cyan-300 border border-slate-700 text-[10px] font-semibold transition-colors"
-                          title="Pasa el contexto de esta brecha y solicita fundamentación legal pericial"
-                        >
-                          💬 Explicar
-                        </button>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectFinding(h);
-                            handleSendMessage(`Genera el script SQL ALTER TABLE con pgcrypto o la cláusula redactada para remediar de inmediato la brecha ${h.codigo_regla}: ${h.titulo}.`, h);
-                          }}
-                          className="px-2 py-1 rounded bg-slate-800/90 hover:bg-emerald-950 text-emerald-300 border border-slate-700 text-[10px] font-semibold transition-colors"
-                          title="Pide generar el script de remediación técnica inmediata (DDL/DML)"
-                        >
-                          🛠️ Parche SQL
-                        </button>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectFinding(h);
-                            handleSendMessage(`¿Cuál es el precedente sancionador de la ANPD para este caso y cómo se cuantificó la multa de ${h.multa_estimada_uit} UIT?`, h);
-                          }}
-                          className="px-2 py-1 rounded bg-slate-800/90 hover:bg-violet-950 text-violet-300 border border-slate-700 text-[10px] font-semibold transition-colors"
-                          title="Consulta la jurisprudencia de resoluciones sancionadoras de la ANPD"
-                        >
-                          ⚖️ Precedente
-                        </button>
+                      {/* ACCIONES CONTEXTUALES DINÁMICAS */}
+                      <div className="pt-2 border-t border-slate-800/80 flex flex-wrap items-center gap-1">
+                        {(() => {
+                          const cat = (h.codigo_regla || '').toUpperCase();
+                          const isTech = ['R-001','R-002','R-003','R-004','R-005'].some(r => cat.includes(r)) || 
+                                         (h.origen_archivo || '').endsWith('.sql');
+                          const isARCO = cat.includes('R-007') || (h.titulo || '').toLowerCase().includes('arco');
+                          const isContract = cat.includes('R-006') || (h.titulo || '').toLowerCase().includes('contrato') || 
+                                             (h.titulo || '').toLowerCase().includes('sla');
+                          
+                          const prompts = [];
+                          
+                          // Siempre: Diagnóstico
+                          prompts.push({
+                            label: '🔍 Diagnóstico',
+                            color: 'hover:bg-cyan-950 text-cyan-300',
+                            prompt: `¿Cuál es el diagnóstico pericial y fundamento jurídico de la vulnerabilidad en ${h.activo_afectado || 'el activo'} según el control ${h.control_iso27701} y la Ley 29733?`
+                          });
+                          
+                          if (isTech) {
+                            prompts.push({
+                              label: '🛠️ Remediación SQL',
+                              color: 'hover:bg-emerald-950 text-emerald-300',
+                              prompt: `Genera el script SQL de remediación defensiva para la brecha ${h.codigo_regla}: ${h.titulo}. Incluye ALTER TABLE con pgcrypto si aplica cifrado, o DROP/PURGE si corresponde eliminar el dato.`
+                            });
+                          }
+                          
+                          if (isARCO) {
+                            prompts.push({
+                              label: '📝 Redacción Política',
+                              color: 'hover:bg-emerald-950 text-emerald-300',
+                              prompt: `Redacta la cláusula correctiva para la política de privacidad que resuelva la brecha ${h.codigo_regla}: ${h.titulo}. Incluye los canales ARCO que deben habilitarse y la verificación de identidad proporcional.`
+                            });
+                          }
+                          
+                          if (isContract) {
+                            prompts.push({
+                              label: '📋 Cláusula Contractual',
+                              color: 'hover:bg-emerald-950 text-emerald-300',
+                              prompt: `Redacta las cláusulas contractuales de blindaje legal para remediar la brecha ${h.codigo_regla}: ${h.titulo}. Incluye requisitos DPA, SLA de seguridad y obligaciones del encargado.`
+                            });
+                          }
+                          
+                          if (!isTech && !isARCO && !isContract) {
+                            prompts.push({
+                              label: '🛠️ Remediación',
+                              color: 'hover:bg-emerald-950 text-emerald-300',
+                              prompt: `Recomienda las acciones de remediación concretas (técnicas, legales y organizativas) para cerrar la brecha ${h.codigo_regla}: ${h.titulo}.`
+                            });
+                          }
+                          
+                          // Siempre: Precedente
+                          prompts.push({
+                            label: '⚖️ Precedente',
+                            color: 'hover:bg-violet-950 text-violet-300',
+                            prompt: `¿Cuál es el precedente sancionador de la ANPD más análogo a este caso y cómo se cuantificó la multa de ${h.multa_estimada_uit || 0} UIT? Cita la resolución directoral específica.`
+                          });
+                          
+                          // Siempre: Controles ISO
+                          prompts.push({
+                            label: '📖 Controles ISO',
+                            color: 'hover:bg-amber-950 text-amber-300',
+                            prompt: `¿Qué controles específicos de ISO/IEC 27701:2025 se vulneran con la brecha ${h.codigo_regla}? Detalla cada control, su objetivo y las acciones correctivas para cumplirlo.`
+                          });
+                          
+                          return prompts.map((p, i) => (
+                            <button
+                              key={i}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSelectFinding(h);
+                                handleSendMessage(p.prompt, h);
+                              }}
+                              className={`px-2 py-1 rounded bg-slate-800/90 ${p.color} border border-slate-700 text-[10px] font-semibold transition-colors`}
+                            >
+                              {p.label}
+                            </button>
+                          ));
+                        })()}
                       </div>
                     </div>
                   );
@@ -786,20 +888,66 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                 </h5>
                 <div className="max-h-28 overflow-y-auto space-y-1.5 pr-1">
                   {subgraphData?.subgrafo_nodos?.map(n => (
-                    <div key={n.id} className="p-2 rounded bg-slate-900 border border-slate-800 text-[11px]">
+                    <div 
+                      key={n.id} 
+                      className="p-2 rounded bg-slate-900 border border-slate-800 text-[11px] cursor-pointer hover:border-cyan-600 hover:bg-slate-800/80 transition-all group"
+                      onClick={() => {
+                        if (n.tipo === 'ISO27701_CONTROL') fetchLegalRef('control', n.id);
+                        else if (n.tipo === 'ANPD_SANCTION') fetchLegalRef('sancion', String(n.id).replace('ANPD-',''));
+                        else if (n.tipo === 'ISO29100_PRINCIPLE') showToast('Principio ' + n.id + ': ' + n.label, 'info');
+                      }}
+                      title="Click para ver contenido original"
+                    >
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-cyan-400 font-bold">{n.id}</span>
+                        <span className="font-mono text-cyan-400 font-bold group-hover:text-cyan-300">{n.id}</span>
                         <span className="text-[9px] bg-slate-800 text-slate-300 px-1 rounded">{n.tipo}</span>
                       </div>
-                      <p className="text-slate-200 font-medium mt-0.5">{n.label}</p>
+                      <p className="text-slate-200 font-medium mt-0.5 group-hover:text-white">{n.label}</p>
                       {n.peru_bridge && (
                         <p className="text-slate-400 text-[10px] mt-1 border-t border-slate-800/80 pt-0.5">
-                          <span className="text-emerald-400 font-medium">Perú:</span> {n.peru_bridge.ley_29733}
+                          <span className="text-emerald-400 font-medium">Perú:</span>{' '}
+                          <span 
+                            className="underline decoration-dotted cursor-pointer hover:text-emerald-300"
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              const match = n.peru_bridge.ley_29733.match(/Art\.?\s*(\d+)/);
+                              if (match) fetchLegalRef('articulo', 'Art_' + match[1]);
+                            }}
+                          >{n.peru_bridge.ley_29733}</span>
                         </p>
                       )}
                     </div>
                   ))}
                 </div>
+                
+                {/* PRECEDENTES ANPD DEL GRAFO (datos duros sin LLM) */}
+                {subgraphData?.sanciones_anpd?.length > 0 && (
+                  <div className="mt-3">
+                    <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                      <svg className="w-3 h-3 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+                      Precedentes ANPD Vinculados
+                    </h5>
+                    <div className="space-y-1.5">
+                      {subgraphData.sanciones_anpd.map((s, i) => (
+                        <div 
+                          key={i} 
+                          className="p-2 rounded bg-violet-950/30 border border-violet-800/40 text-[11px] cursor-pointer hover:border-violet-600 transition-all"
+                          onClick={() => fetchLegalRef('sancion', String(s.id))}
+                          title="Click para ver detalle completo"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-violet-300 font-semibold">{s.entidad}</span>
+                            <span className="text-rose-400 font-mono font-bold">{s.multa_total_uit} UIT</span>
+                          </div>
+                          <p className="text-slate-400 text-[10px] mt-0.5 font-mono">{s.resolucion}</p>
+                          {s.infracciones && s.infracciones.slice(0, 1).map((inf, j) => (
+                            <p key={j} className="text-slate-500 text-[10px] mt-0.5 truncate">{inf}</p>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -811,6 +959,16 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                   <h4 className="text-xs font-bold text-white uppercase tracking-wider">Auditor de Cumplimiento & DSPM (ISO/IEC 27701 & Ley 29733)</h4>
                 </div>
                 <span className="text-[10px] text-cyan-400 font-mono">{status?.llm_model ? `${status.llm_model} (OpenRouter)` : "Auditor IA (OpenRouter)"}</span>
+                  {selectedFinding && (
+                    <button 
+                      onClick={() => handleExportDictamen(selectedFinding)}
+                      title="Descargar dictamen pericial completo en Markdown"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 ml-2 rounded bg-cyan-950/80 hover:bg-cyan-900 text-[10px] font-medium text-cyan-300 border border-cyan-800 transition-colors shadow-sm"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                      Dictamen .MD
+                    </button>
+                  )}
               </div>
 
               {/* Mensajes del chat */}
@@ -841,7 +999,7 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                         <div
                           className="chat-markdown"
                           dangerouslySetInnerHTML={{
-                            __html: window.marked ? window.marked.parse(m.content) : m.content
+                            __html: formatMarkdownCitations(m.content)
                           }}
                         />
                       )}
@@ -853,13 +1011,13 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                         <div className="flex items-center justify-between mb-1.5">
                           <span className="text-[10px] font-bold text-cyan-300 font-mono flex items-center gap-1">
                             <svg className="w-3 h-3 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                            Parche SQL de Remediación Defensiva
+                            Código de Remediación
                           </span>
                           <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => {
                                 navigator.clipboard.writeText(m.sql_patch);
-                                showToast("Parche SQL copiado al portapapeles.", "success");
+                                showToast("Código copiado al portapapeles.", "success");
                               }}
                               className="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-0.5 rounded border border-slate-700"
                             >
@@ -895,7 +1053,7 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                   type="text"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Escribe una instrucción técnica o consulta al Auditor (ej. 'Genera parche SQL', 'Fundamento legal')..."
+                  placeholder="Consulta al Auditor: diagnóstico, remediación, precedentes ANPD, fundamento legal...'Genera parche SQL', 'Fundamento legal')..."
                   className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
                 />
                 <button
@@ -942,6 +1100,121 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
           <div className="w-12 h-12 rounded-full border-4 border-cyan-500 border-t-transparent animate-spin mb-3"></div>
           <p className="text-xs font-semibold text-slate-200">{loadingMsg || 'Procesando...'}</p>
+        </div>
+      )}
+
+      {/* MODAL DE REFERENCIA LEGAL */}
+      {legalRefModal.open && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setLegalRefModal({ open: false })}>
+          <div className="glass-card max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6 border border-slate-700 shadow-2xl animate-scale-up" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+                {legalRefModal.tipo === 'control' && 'Control ISO/IEC 27701:2025'}
+                {legalRefModal.tipo === 'articulo' && 'Ley N.° 29733 - Protección de Datos Personales'}
+                {legalRefModal.tipo === 'sancion' && 'Precedente Sancionador ANPD'}
+              </h3>
+              <button onClick={() => setLegalRefModal({ open: false })} className="text-slate-400 hover:text-white text-lg">✕</button>
+            </div>
+            
+            {legalRefModal.loading && (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-6 h-6 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin"></div>
+                <span className="ml-2 text-xs text-slate-400">Cargando referencia...</span>
+              </div>
+            )}
+            
+            {legalRefModal.data && !legalRefModal.loading && (
+              <div className="space-y-3 text-xs">
+                {legalRefModal.data.error && (
+                  <p className="text-rose-400">{legalRefModal.data.error}</p>
+                )}
+                
+                {/* CONTROL ISO */}
+                {legalRefModal.tipo === 'control' && legalRefModal.data.data && (
+                  <>
+                    <div className="bg-slate-900 rounded-lg p-3 border border-slate-800">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-mono text-cyan-400 font-bold text-sm">{legalRefModal.data.data.id}</span>
+                        <span className="text-[10px] bg-cyan-950 text-cyan-300 px-2 py-0.5 rounded-full border border-cyan-800">{legalRefModal.data.data.role}</span>
+                      </div>
+                      <h4 className="text-white font-semibold mb-1">{legalRefModal.data.data.title}</h4>
+                      <p className="text-slate-400 text-[11px]">Categoría: {legalRefModal.data.data.category}</p>
+                    </div>
+                    
+                    {legalRefModal.data.data.peru_legal_bridge && (
+                      <div className="bg-emerald-950/40 rounded-lg p-3 border border-emerald-800/50">
+                        <h5 className="text-emerald-400 font-bold text-[11px] mb-2">Mapeo Legal Peruano</h5>
+                        <div className="space-y-1.5">
+                          <p className="text-slate-300"><span className="text-emerald-400 font-medium">Ley 29733:</span> {legalRefModal.data.data.peru_legal_bridge.ley_29733}</p>
+                          <p className="text-slate-300"><span className="text-emerald-400 font-medium">D.S. 003-2013:</span> {legalRefModal.data.data.peru_legal_bridge.ds_003_2013_jus}</p>
+                          <p className="text-slate-300"><span className="text-emerald-400 font-medium">Directiva:</span> {legalRefModal.data.data.peru_legal_bridge.directiva_seguridad}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {legalRefModal.data.principios_vinculados && legalRefModal.data.principios_vinculados.length > 0 && (
+                      <div className="bg-violet-950/30 rounded-lg p-3 border border-violet-800/40">
+                        <h5 className="text-violet-400 font-bold text-[11px] mb-2">Principios ISO 29100 Vinculados</h5>
+                        {legalRefModal.data.principios_vinculados.map((p, i) => (
+                          <p key={i} className="text-slate-300 text-[11px] mb-1">• {p.name || p.id}: {p.ley_29733_principle || ''}</p>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+                
+                {/* ARTÍCULO LEY 29733 */}
+                {legalRefModal.tipo === 'articulo' && legalRefModal.data.data && (
+                  <div className="bg-slate-900 rounded-lg p-4 border border-slate-800">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="font-mono text-emerald-400 font-bold">Art. {legalRefModal.data.data.articulo}</span>
+                      <span className="text-white font-semibold">{legalRefModal.data.data.titulo}</span>
+                    </div>
+                    <p className="text-slate-300 leading-relaxed whitespace-pre-wrap text-[11px]">{legalRefModal.data.data.texto}</p>
+                  </div>
+                )}
+                
+                {/* SANCIÓN ANPD */}
+                {legalRefModal.tipo === 'sancion' && legalRefModal.data.data && (
+                  <>
+                    <div className="bg-slate-900 rounded-lg p-3 border border-slate-800">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-white font-bold">{legalRefModal.data.data.entidad}</span>
+                        <span className="text-rose-400 font-mono font-bold">{legalRefModal.data.data.multa_total_uit} UIT</span>
+                      </div>
+                      <p className="text-slate-400 text-[11px]">Sector: {legalRefModal.data.data.sector}</p>
+                      {legalRefModal.data.data.resoluciones && legalRefModal.data.data.resoluciones.map((r, i) => (
+                        <p key={i} className="text-cyan-400 text-[11px] font-mono mt-1">{r}</p>
+                      ))}
+                    </div>
+                    
+                    {legalRefModal.data.data.infracciones && legalRefModal.data.data.infracciones.length > 0 && (
+                      <div className="bg-rose-950/30 rounded-lg p-3 border border-rose-800/40">
+                        <h5 className="text-rose-400 font-bold text-[11px] mb-2">Infracciones Tipificadas</h5>
+                        {legalRefModal.data.data.infracciones.map((inf, i) => (
+                          <div key={i} className="text-slate-300 text-[11px] mb-2 pl-2 border-l-2 border-rose-800/50">
+                            {typeof inf === 'object' ? (
+                              <><span className="text-rose-300 font-medium">{inf.articulo_referencia}:</span> {inf.texto_infraccion}</>
+                            ) : inf}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {legalRefModal.data.data.medidas_correctivas && legalRefModal.data.data.medidas_correctivas.length > 0 && (
+                      <div className="bg-amber-950/30 rounded-lg p-3 border border-amber-800/40">
+                        <h5 className="text-amber-400 font-bold text-[11px] mb-2">Medidas Correctivas Ordenadas</h5>
+                        {legalRefModal.data.data.medidas_correctivas.map((m, i) => (
+                          <p key={i} className="text-slate-300 text-[11px] mb-1">• {m}</p>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
