@@ -1,0 +1,86 @@
+[
+  {
+    "caso": "CASO_1_R001_SALUD",
+    "duracion_s": 39.56,
+    "longitud_chars": 4206,
+    "secciones": {
+      "Sec 1: Diagnostico Tecnico y Tipificacion": true,
+      "Sec 2: Fundamentacion Normativa": true,
+      "Sec 3: Cuantificacion y Precedente ANPD": true,
+      "Sec 4: Parche Tecnico (SQL o Clausula)": true,
+      "Sec 5: Acciones Administrativas": true
+    },
+    "todas_secciones": true,
+    "control_iso_detectado": true,
+    "uit_presente": true,
+    "mencion_tabla_real": true,
+    "mencion_columna_real": true,
+    "sql_transaccional_begin_commit": true,
+    "slop_detectado": [],
+    "es_slop_free": true,
+    "parche_detectado_longitud": 277
+  },
+  {
+    "caso": "CASO_2_R002_AUTH",
+    "duracion_s": 23.94,
+    "longitud_chars": 4535,
+    "secciones": {
+      "Sec 1: Diagnostico Tecnico y Tipificacion": true,
+      "Sec 2: Fundamentacion Normativa": true,
+      "Sec 3: Cuantificacion y Precedente ANPD": true,
+      "Sec 4: Parche Tecnico (SQL o Clausula)": true,
+      "Sec 5: Acciones Administrativas": true
+    },
+    "todas_secciones": true,
+    "control_iso_detectado": true,
+    "uit_presente": true,
+    "mencion_tabla_real": true,
+    "mencion_columna_real": true,
+    "sql_transaccional_begin_commit": true,
+    "slop_detectado": [],
+    "es_slop_free": true,
+    "parche_detectado_longitud": 234
+  },
+  {
+    "caso": "CASO_3_R003_PAGOS",
+    "duracion_s": 35.23,
+    "longitud_chars": 4075,
+    "secciones": {
+      "Sec 1: Diagnostico Tecnico y Tipificacion": true,
+      "Sec 2: Fundamentacion Normativa": true,
+      "Sec 3: Cuantificacion y Precedente ANPD": true,
+      "Sec 4: Parche Tecnico (SQL o Clausula)": true,
+      "Sec 5: Acciones Administrativas": true
+    },
+    "todas_secciones": true,
+    "control_iso_detectado": true,
+    "uit_presente": true,
+    "mencion_tabla_real": true,
+    "mencion_columna_real": true,
+    "sql_transaccional_begin_commit": true,
+    "slop_detectado": [],
+    "es_slop_free": true,
+    "parche_detectado_longitud": 94
+  },
+  {
+    "caso": "CASO_4_R004_LEGAL",
+    "duracion_s": 24.43,
+    "longitud_chars": 5761,
+    "secciones": {
+      "Sec 1: Diagnostico Tecnico y Tipificacion": true,
+      "Sec 2: Fundamentacion Normativa": true,
+      "Sec 3: Cuantificacion y Precedente ANPD": true,
+      "Sec 4: Parche Tecnico (SQL o Clausula)": true,
+      "Sec 5: Acciones Administrativas": true
+    },
+    "todas_secciones": true,
+    "control_iso_detectado": true,
+    "uit_presente": true,
+    "mencion_tabla_real": "N/A",
+    "mencion_columna_real": "N/A",
+    "sql_transaccional_begin_commit": "N/A",
+    "slop_detectado": [],
+    "es_slop_free": true,
+    "parche_detectado_longitud": 0
+  }
+]

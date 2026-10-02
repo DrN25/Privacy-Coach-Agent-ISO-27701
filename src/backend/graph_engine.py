@@ -110,13 +110,16 @@ class PIMSGraphEngine:
 
         cid = control_id.strip()
         keywords_map = {
-            "A.3.24": (["seguridad", "cifrado", "sensible", "salud", "diagnostico"], "Salud / Clínica"),
-            "A.3.13": (["seguridad", "credenciales", "contraseña", "autenticación", "hash"], None),
-            "A.1.4.5": (["tarjeta", "financiero", "proporcionalidad", "minimiza", "cvv"], "Financiero / Banca"),
-            "A.1.2.4": (["consentimiento", "autorización", "tácito"], None),
-            "A.1.4.8": (["conservación", "plazo", "retención", "cancelación"], None),
+            "A.3.24": (["seguridad", "cifrado", "sensible", "salud", "diagnostico", "medico", "historia clinica"], "Salud / Clínica"),
+            "A.3.26": (["seguridad", "cifrado", "sensible", "salud", "diagnostico", "medico", "historia clinica"], "Salud / Clínica"),
+            "A.3.13": (["seguridad", "credenciales", "contraseña", "autenticación", "hash", "password"], None),
+            "A.3.23": (["seguridad", "credenciales", "contraseña", "autenticación", "hash", "password"], None),
+            "A.1.4.5": (["tarjeta", "cvv", "pago", "proporcional", "retenci", "desproporcion", "financier"], "Financiero / Banca"),
+            "A.1.2.4": (["consentimiento", "autorización", "tácito", "presunto", "speech", "publicidad"], None),
+            "A.1.2.5": (["consentimiento", "autorización", "tácito", "presunto", "speech"], None),
+            "A.1.4.8": (["conservación", "plazo", "retención", "cancelación", "purga"], None),
             "A.1.5.2": (["transfronterizo", "transferencia", "exterior", "nube", "internacional"], None),
-            "A.1.3.7": (["arco", "acceso", "rectificación", "cancelación", "oposición", "traba"], None),
+            "A.1.3.7": (["arco", "acceso", "rectificación", "cancelación", "oposición", "traba", "cobro", "tasa"], None),
         }
         keywords, pref_sector = keywords_map.get(cid, (["seguridad", "protección"], None))
 
@@ -131,17 +134,21 @@ class PIMSGraphEngine:
                     inf_tokens.append(inf.get("articulo_referencia", "") + " " + inf.get("texto_infraccion", ""))
                 elif isinstance(inf, str):
                     inf_tokens.append(inf)
+            for m in s.get("medidas_correctivas", []):
+                inf_tokens.append(m)
             inf_str = " ".join(inf_tokens).lower()
 
-            if pref_sector and pref_sector.lower() in sec.lower():
-                score += 4
+            kw_hits = 0
             for kw in keywords:
                 if kw.lower() in inf_str:
-                    score += 3
+                    score += 10
+                    kw_hits += 1
                 if kw.lower() in ent.lower():
-                    score += 2
+                    score += 3
+            if pref_sector and pref_sector.lower() in sec.lower():
+                score += 2
 
-            if score > 0:
+            if kw_hits > 0 or (not keywords and score > 0):
                 scored.append((score, s))
 
         scored.sort(key=lambda x: x[0], reverse=True)

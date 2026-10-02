@@ -26,6 +26,30 @@ OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY", "")
 OPENROUTER_URL = os.getenv("OPENROUTER_URL", "https://openrouter.ai/api/v1/chat/completions")
 MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-6-luna")
 
+
+def obtener_system_prompt() -> str:
+    """
+    Carga dinamicamente las directrices periciales del Skill si existe en .agents/skills/agente-incidentes-brechas/SKILL.md.
+    Remueve el frontmatter YAML y retorna el cuerpo de instrucciones operativas.
+    Si no existe o falla la lectura, recurre a SYSTEM_PROMPT como fallback.
+    """
+    base_src = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    base_root = os.path.dirname(base_src)
+    skill_path = os.path.join(base_root, ".agents", "skills", "agente-incidentes-brechas", "SKILL.md")
+    
+    if os.path.exists(skill_path):
+        try:
+            with open(skill_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            if content.startswith("---"):
+                partes = content.split("---", 2)
+                if len(partes) >= 3:
+                    return partes[2].strip()
+            return content.strip()
+        except Exception:
+            pass
+    return SYSTEM_PROMPT
+
 SYSTEM_PROMPT = """Eres el Senior Lead Privacy & DSPM Compliance Auditor, perito especializado en ISO/IEC 27701:2025 (PIMS), ISO/IEC 27001, Ley Peruana N.° 29733 (Protección de Datos Personales), su nuevo Reglamento D.S. 016-2024-JUS, la Directiva de Seguridad R.D. 019-2013-JUS y jurisprudencia sancionadora de la Autoridad Nacional de Protección de Datos Personales (ANPD).
 
 ACCESO INTEGRAL A BASE DE DATOS Y CORPUS DOCUMENTAL:
@@ -95,7 +119,7 @@ def dialogar_coach(historial_mensajes: list, contexto_brecha: dict) -> dict:
 - Principios ISO 29100 / Ley 29733 Vinculados: {', '.join(principios_nombres) if principios_nombres else 'Principio de Seguridad'}
 """
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    messages = [{"role": "system", "content": obtener_system_prompt()}]
 
     if not historial_mensajes:
         messages.append({"role": "user", "content": f"{expediente_header}\n\nRequerimiento: Emitir dictamen pericial completo y script de remediación."})
