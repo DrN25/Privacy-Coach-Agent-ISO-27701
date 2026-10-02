@@ -6,7 +6,8 @@ import secrets
 from contextlib import asynccontextmanager
 from typing import List, Optional
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Path
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
+import datetime
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -291,6 +292,71 @@ def get_database_view():
 def get_subgraph(control_id: str):
     return knowledge_bridge.extraer_subgrafo_control(control_id)
 
+@app.get("/api/legal-reference/{tipo}/{ref_id}")
+def get_legal_reference(tipo: str, ref_id: str):
+    """
+    Devuelve contenido original de controles ISO 27701, artículos de Ley 29733 o sanciones ANPD.
+    tipo: "control" | "articulo" | "sancion"
+    ref_id: "A.1.4.5" | "Art_13" | "42" (id numérico de sanción)
+    """
+    import json as _json
+    datasets_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", "knowledge_base", "datasets")
+    datasets_dir = os.path.normpath(datasets_dir)
+
+    if tipo == "control":
+        ctrl = knowledge_bridge.engine.get_control(ref_id)
+        if not ctrl:
+            raise HTTPException(status_code=404, detail=f"Control {ref_id} no encontrado.")
+        principios = []
+        for p_str in ctrl.get("iso29100_principles", []):
+            p_id = p_str.split(":")[0].strip()
+            princ = knowledge_bridge.engine.get_principle(p_id)
+            if princ:
+                principios.append(princ)
+        return {
+            "tipo": "control",
+            "data": ctrl,
+            "principios_vinculados": principios
+        }
+
+    elif tipo == "articulo":
+        ley_path = os.path.join(datasets_dir, "ley_29733_articulos.json")
+        if not os.path.exists(ley_path):
+            raise HTTPException(status_code=404, detail="Dataset de Ley 29733 no encontrado.")
+        with open(ley_path, "r", encoding="utf-8") as f:
+            ley_data = _json.load(f)
+        articulo = ley_data.get("articulos", {}).get(ref_id)
+        if not articulo:
+            for k, v in ley_data.get("articulos", {}).items():
+                if ref_id.replace("Art. ", "Art_").replace("Art ", "Art_") == k or str(v.get("articulo")) == ref_id:
+                    articulo = v
+                    ref_id = k
+                    break
+        if not articulo:
+            raise HTTPException(status_code=404, detail=f"Artículo {ref_id} no encontrado.")
+        return {
+            "tipo": "articulo",
+            "id": ref_id,
+            "data": articulo
+        }
+
+    elif tipo == "sancion":
+        try:
+            sid = int(ref_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="ID de sanción debe ser numérico.")
+        for s in knowledge_bridge.engine.sanctions_dataset:
+            if s.get("id") == sid:
+                return {
+                    "tipo": "sancion",
+                    "data": s
+                }
+        raise HTTPException(status_code=404, detail=f"Sanción {ref_id} no encontrada.")
+
+    else:
+        raise HTTPException(status_code=400, detail="Tipo debe ser 'control', 'articulo' o 'sancion'.")
+
+
 @app.post("/api/chat")
 def post_chat(req: ChatRequest):
     conn = get_db_connection()
@@ -350,6 +416,157 @@ def remediate_finding(req: RemediacionRequest):
     conn.commit()
     conn.close()
     return {"mensaje": f"Hallazgo #{req.hallazgo_id} marcado como REMEDIADO con éxito."}
+
+@app.get("/api/export-dictamen/{hallazgo_id}")
+def export_dictamen(hallazgo_id: str):
+    """
+    Genera y descarga un dictamen pericial estructurado en formato Markdown (.md)
+    para el hallazgo especificado, integrando metadatos, subgrafo normativo,
+    precedentes ANPD y el historial pericial completo de deliberación.
+    """
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    if hallazgo_id.isdigit():
+        cur.execute("SELECT * FROM hallazgos_dspm WHERE id = ?", (int(hallazgo_id),))
+    else:
+        cur.execute("SELECT * FROM hallazgos_dspm WHERE codigo_regla = ?", (hallazgo_id,))
+    h = cur.fetchone()
+    if not h:
+        conn.close()
+        raise HTTPException(status_code=404, detail=f"Hallazgo {hallazgo_id} no encontrado")
+    
+    h_dict = dict(h)
+    
+    cur.execute("SELECT * FROM interacciones_coach WHERE hallazgo_id = ? ORDER BY id ASC", (h_dict["id"],))
+    interacciones = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    
+    # Subgrafo normativo y control
+    ctrl_id = h_dict.get("control_iso27701", "")
+    ctrl = knowledge_bridge.engine.get_control(ctrl_id) or {}
+    
+    # Precedentes vinculados
+    sanciones = []
+    for s in knowledge_bridge.engine.sanctions_dataset:
+        if ctrl_id in s.get("iso27701_controls", []):
+            sanciones.append(s)
+
+    fecha_emision = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    monto_pen = h_dict.get("multa_estimada_pen", 0) or 0
+    monto_formateado = f"{monto_pen:,.0f}" if isinstance(monto_pen, (int, float)) else str(monto_pen)
+    
+    # Construcción del dictamen estructurado en Markdown
+    md_lines = [
+        "# DICTAMEN PERICIAL DE AUDITORÍA Y CUMPLIMIENTO DSPM",
+        f"**Expediente de No Conformidad:** `{h_dict.get('codigo_regla', 'R-XXX')}`",
+        f"**Título:** {h_dict.get('titulo', 'Sin título')}",
+        f"**Fecha de Emisión:** `{fecha_emision}`",
+        "**Estándares de Referencia:** ISO/IEC 27701:2025, ISO/IEC 29100:2024, Ley 29733 (ANPD Perú)",
+        f"**Estado de Remediación:** `{h_dict.get('estado', 'PENDIENTE')}`",
+        "",
+        "---",
+        "",
+        "## 1. RESUMEN EJECUTIVO Y FICHA TÉCNICA DEL HALLAZGO",
+        f"- **Activo / Elemento Afectado:** `{h_dict.get('elemento_afectado', 'N/A')}`",
+        f"- **Nivel de Riesgo:** `{h_dict.get('nivel_riesgo', 'ALTO')}`",
+        f"- **Origen Documental/Código:** `{h_dict.get('origen_archivo', 'N/A')}`",
+        f"- **Control ISO/IEC 27701:2025:** `{ctrl_id}` - *{ctrl.get('title', 'Control de Privacidad')}*",
+        f"- **Tipificación Ley 29733:** {h_dict.get('articulo_ley29733', 'N/A')}",
+        f"- **Directiva de Seguridad:** {h_dict.get('directiva_seguridad', 'N/A')}",
+        f"- **Exposición Sancionadora Estimada:** **{h_dict.get('multa_estimada_uit', 0)} UIT** (S/ {monto_formateado})",
+        "",
+        "### Descripción Pericial",
+        f"> {h_dict.get('descripcion', 'Sin descripción')}",
+        "",
+        "---",
+        "",
+        "## 2. FUNDAMENTACIÓN NORMATIVA Y CONTROL ISO/IEC 27701:2025",
+        f"- **Categoría:** {ctrl.get('category', 'Controles Operacionales de Privacidad')}",
+        f"- **Rol Organizacional:** {ctrl.get('role', 'Shared (Controller & Processor)')}",
+        f"- **Tabla Normativa:** {ctrl.get('table', 'A.1 / A.3')}",
+        "",
+        "### Principios ISO/IEC 29100 Vinculados:",
+    ]
+    
+    for p in ctrl.get("iso29100_principles", []):
+        md_lines.append(f"- **{p}**")
+        
+    peru_bridge = ctrl.get("peru_legal_bridge", {})
+    if peru_bridge:
+        md_lines.extend([
+            "",
+            "### Puente Legal Perú (Ley 29733 & D.S. 003-2013-JUS):",
+            f"- **Ley 29733:** {peru_bridge.get('ley_29733', 'N/A')}",
+            f"- **Reglamento D.S. 003-2013-JUS:** {peru_bridge.get('ds_003_2013_jus', 'N/A')}",
+            f"- **Directiva de Seguridad:** {peru_bridge.get('directiva_seguridad', 'N/A')}",
+        ])
+
+    md_lines.extend([
+        "",
+        "---",
+        "",
+        "## 3. PRECEDENTES SANCIONADORES ANPD Y ANÁLISIS DE CASOS HISTÓRICOS",
+    ])
+    
+    if sanciones:
+        for idx, s in enumerate(sanciones[:3], 1):
+            md_lines.extend([
+                f"### Caso {idx}: {s.get('entidad', 'Entidad')} ({s.get('resolucion', 'R.D.')})",
+                f"- **Sector:** {s.get('sector', 'General')}",
+                f"- **Sanción Impuesta:** **{s.get('multa_uit', 0)} UIT** ({s.get('monto_pen', 'S/ 0')})",
+                f"- **Infracción Tipificada:** {s.get('infraccion', 'N/A')}",
+                f"- **Criterio de Graduación:** {s.get('criterio_graduacion', 'N/A')}",
+                f"- **Medida Correctiva:** {s.get('medida_correctiva', 'N/A')}",
+                "",
+            ])
+    else:
+        md_lines.append(f"- Precedente registrado: {h_dict.get('precedente_anpd', 'Resolución Directoral ANPD')}")
+        md_lines.append("")
+
+    md_lines.extend([
+        "---",
+        "",
+        "## 4. HISTORIAL DE DELIBERACIÓN Y DICTÁMENES PERICIALES (AUDITOR IA)",
+    ])
+    
+    if interacciones:
+        for it in interacciones:
+            rol_label = "👤 REQUERIMIENTO DEL AUDITOR" if it.get("rol") == "user" else "🤖 DICTAMEN PERICIAL (IA)"
+            md_lines.append(f"### {rol_label} [{it.get('timestamp', '')}]")
+            if it.get("pensamiento_reasoning"):
+                md_lines.append(f"> **Cadena de Razonamiento:**\n> {it.get('pensamiento_reasoning')}\n")
+            md_lines.append(it.get("mensaje", ""))
+            if it.get("parche_sql"):
+                md_lines.append(f"\n```sql\n{it.get('parche_sql')}\n```")
+            md_lines.append("")
+    else:
+        md_lines.append("*Sin deliberaciones registradas en la consola pericial para este expediente.*")
+        md_lines.append("")
+
+    md_lines.extend([
+        "---",
+        "",
+        "## 5. RECOMENDACIONES DE REMEDIACIÓN DEFENSIVA",
+        "1. **Implementación Técnica / Documental Inmediata:** Proceder según las pautas correctivas generadas por el auditor de cumplimiento.",
+        "2. **Actualización del Registro de Actividades de Tratamiento (RAT):** Modificar el inventario de datos y flujos de información en cumplimiento de la Directiva de Seguridad.",
+        "3. **Verificación de Eficacia:** Ejecutar re-análisis de DSPM para constatar el paso del estado a `REMEDIADO` y mitigar la exposición ante la ANPD.",
+        "",
+        "---",
+        "*Dictamen pericial generado automáticamente por el Sistema Multi-Agente DSPM & Privacy Compliance (UNSA TIF).*",
+        ""
+    ])
+    
+    report_content = "\n".join(md_lines)
+    codigo = h_dict.get("codigo_regla", "EXP").replace(" ", "_")
+    
+    return Response(
+        content=report_content,
+        media_type="text/markdown; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="Dictamen_Pericial_{codigo}.md"'
+        }
+    )
 
 frontend_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
 if os.path.exists(frontend_dir):
