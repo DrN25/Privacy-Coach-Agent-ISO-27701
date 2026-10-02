@@ -136,7 +136,7 @@ def dialogar_coach(historial_mensajes: list, contexto_brecha: dict) -> dict:
                 raise ValueError("OPENROUTER_URL debe usar HTTPS")
             
             req = urllib.request.Request(OPENROUTER_URL, data=json.dumps(payload).encode("utf-8"), headers=headers)
-            with urllib.request.urlopen(req, timeout=90) as resp:
+            with urllib.request.urlopen(req, timeout=90) as resp:  # nosec B310
                 data = json.loads(resp.read().decode("utf-8"))
                 choice = data.get("choices", [{}])[0]
                 msg = choice.get("message", {})
