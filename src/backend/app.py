@@ -307,6 +307,18 @@ def post_chat(req: ChatRequest):
         brecha_dict["control_iso27701"]
     )
 
+    archivo_origen = brecha_dict.get("origen_archivo", "")
+    codigo_regla = brecha_dict.get("codigo_regla", "")
+    rule_pattern = f"%{codigo_regla}%"
+    cur.execute("""
+        SELECT documento, numero_clausula, titulo_clausula, texto_clausula, alerta_legal 
+        FROM clausulas_documentales 
+        WHERE titulo_clausula LIKE ? OR texto_clausula LIKE ? OR documento = ?
+        ORDER BY CASE WHEN titulo_clausula LIKE ? OR texto_clausula LIKE ? THEN 0 ELSE 1 END
+        LIMIT 6
+    """, (rule_pattern, rule_pattern, archivo_origen, rule_pattern, rule_pattern))
+    brecha_dict["clausulas_documento"] = [dict(c) for c in cur.fetchall()]
+
     mensajes = req.historial or []
     mensajes.append({"role": "user", "content": req.mensaje_usuario})
 

@@ -260,32 +260,41 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
   };
 
   // 8. ENVIAR MENSAJE AL COACH (OpenRouter DeepSeek v4.1 Flash)
-  const handleSendMessage = async (promptOverride = null) => {
+  const handleSendMessage = async (promptOverride = null, findingOverride = null) => {
+    const currentFinding = findingOverride || selectedFinding;
     const textToSend = promptOverride || chatInput.trim();
-    if (!textToSend || !selectedFinding) return;
+    if (!textToSend || !currentFinding) return;
+
+    if (findingOverride && (!selectedFinding || selectedFinding.id !== findingOverride.id)) {
+      setSelectedFinding(findingOverride);
+    }
 
     const newHistory = [...chatHistory, { role: "user", content: textToSend }];
     setChatHistory(newHistory);
     if (!promptOverride) setChatInput('');
 
     setLoading(true);
-    setLoadingMsg("DeepSeek v4.1 Flash generando razonamiento y remediación...");
+    setLoadingMsg("Auditor de Cumplimiento razonando dictamen pericial...");
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          hallazgo_id: selectedFinding.id,
+          hallazgo_id: currentFinding.id,
           mensaje_usuario: textToSend,
           historial: newHistory.slice(-6)
         })
       });
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Servidor devolvió código ${res.status}: ${errorText.slice(0, 100)}`);
+      }
       const data = await res.json();
       setChatHistory(prev => [
         ...prev,
         {
           role: "assistant",
-          content: data.mensaje,
+          content: data.mensaje || data.error || "Dictamen generado.",
           reasoning: data.reasoning,
           sql_patch: data.sql_patch
         }
@@ -663,7 +672,7 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                   <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
                   Brechas Identificadas ({hallazgos.length})
                 </h3>
-                <span className="text-[11px] text-slate-400">Pulsa los botones rápidos para consultar directamente a DeepSeek</span>
+                <span className="text-[11px] text-slate-400">Pulsa los botones rápidos para consultar directamente al Auditor</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[380px] overflow-y-auto pr-1">
@@ -706,7 +715,7 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                           onClick={(e) => {
                             e.stopPropagation();
                             handleSelectFinding(h);
-                            handleSendMessage(`¿Cuál es el diagnóstico pericial y fundamento jurídico de la vulnerabilidad en ${h.elemento_afectado} según el control ${h.control_iso27701} y la Ley 29733?`);
+                            handleSendMessage(`¿Cuál es el diagnóstico pericial y fundamento jurídico de la vulnerabilidad en ${h.elemento_afectado} según el control ${h.control_iso27701} y la Ley 29733?`, h);
                           }}
                           className="px-2 py-1 rounded bg-slate-800/90 hover:bg-cyan-950 text-cyan-300 border border-slate-700 text-[10px] font-semibold transition-colors"
                           title="Pasa el contexto de esta brecha y solicita fundamentación legal pericial"
@@ -718,7 +727,7 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                           onClick={(e) => {
                             e.stopPropagation();
                             handleSelectFinding(h);
-                            handleSendMessage(`Genera el script SQL ALTER TABLE con pgcrypto o la cláusula redactada para remediar de inmediato la brecha ${h.codigo_regla}: ${h.titulo}.`);
+                            handleSendMessage(`Genera el script SQL ALTER TABLE con pgcrypto o la cláusula redactada para remediar de inmediato la brecha ${h.codigo_regla}: ${h.titulo}.`, h);
                           }}
                           className="px-2 py-1 rounded bg-slate-800/90 hover:bg-emerald-950 text-emerald-300 border border-slate-700 text-[10px] font-semibold transition-colors"
                           title="Pide generar el script de remediación técnica inmediata (DDL/DML)"
@@ -730,7 +739,7 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                           onClick={(e) => {
                             e.stopPropagation();
                             handleSelectFinding(h);
-                            handleSendMessage(`¿Cuál es el precedente sancionador de la ANPD para este caso y cómo se cuantificó la multa de ${h.multa_estimada_uit} UIT?`);
+                            handleSendMessage(`¿Cuál es el precedente sancionador de la ANPD para este caso y cómo se cuantificó la multa de ${h.multa_estimada_uit} UIT?`, h);
                           }}
                           className="px-2 py-1 rounded bg-slate-800/90 hover:bg-violet-950 text-violet-300 border border-slate-700 text-[10px] font-semibold transition-colors"
                           title="Consulta la jurisprudencia de resoluciones sancionadoras de la ANPD"
@@ -801,7 +810,7 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                   <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></div>
                   <h4 className="text-xs font-bold text-white uppercase tracking-wider">Auditor de Cumplimiento & DSPM (ISO/IEC 27701 & Ley 29733)</h4>
                 </div>
-                <span className="text-[10px] text-cyan-400 font-mono">DeepSeek Flash (OpenRouter)</span>
+                <span className="text-[10px] text-cyan-400 font-mono">{status?.llm_model ? `${status.llm_model} (OpenRouter)` : "Auditor IA (OpenRouter)"}</span>
               </div>
 
               {/* Mensajes del chat */}
@@ -813,7 +822,7 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                       <details className="mb-1.5 w-full text-[11px] bg-slate-950/90 rounded-lg p-2 border border-slate-800 text-slate-400">
                         <summary className="cursor-pointer font-semibold text-cyan-400 flex items-center gap-1.5 hover:text-cyan-300">
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                          Razonamiento Interno de DeepSeek (Reasoning Tokens)
+                          Razonamiento Pericial del Modelo (Reasoning Tokens)
                         </summary>
                         <div className="mt-2 text-slate-400 font-mono text-[10px] whitespace-pre-wrap leading-relaxed border-t border-slate-800/80 pt-2">
                           {m.reasoning}

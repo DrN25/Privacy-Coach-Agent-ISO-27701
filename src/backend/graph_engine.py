@@ -108,33 +108,44 @@ class PIMSGraphEngine:
         if not ctrl:
             return []
 
-        peru_info = ctrl.get("peru_legal_bridge", {})
-        ley_str = peru_info.get("ley_29733", "")
+        cid = control_id.strip()
+        keywords_map = {
+            "A.3.24": (["seguridad", "cifrado", "sensible", "salud", "diagnostico"], "Salud / Clínica"),
+            "A.3.13": (["seguridad", "credenciales", "contraseña", "autenticación", "hash"], None),
+            "A.1.4.5": (["tarjeta", "financiero", "proporcionalidad", "minimiza", "cvv"], "Financiero / Banca"),
+            "A.1.2.4": (["consentimiento", "autorización", "tácito"], None),
+            "A.1.4.8": (["conservación", "plazo", "retención", "cancelación"], None),
+            "A.1.5.2": (["transfronterizo", "transferencia", "exterior", "nube", "internacional"], None),
+            "A.1.3.7": (["arco", "acceso", "rectificación", "cancelación", "oposición", "traba"], None),
+        }
+        keywords, pref_sector = keywords_map.get(cid, (["seguridad", "protección"], None))
 
-        matched_cases = []
-        target_tokens = []
-        for token in ley_str.split():
-            clean_tok = token.strip("(),.")
-            if clean_tok in ["18", "28", "16", "7", "8", "9", "15", "17", "19", "20", "21", "22", "31", "32"]:
-                target_tokens.append(clean_tok)
-
+        scored = []
         for s in self.sanctions_dataset:
-            # Build string of infractions
+            score = 0
+            sec = str(s.get("sector", ""))
+            ent = str(s.get("entidad", ""))
             inf_tokens = []
             for inf in s.get("infracciones", []):
                 if isinstance(inf, dict):
                     inf_tokens.append(inf.get("articulo_referencia", "") + " " + inf.get("texto_infraccion", ""))
                 elif isinstance(inf, str):
                     inf_tokens.append(inf)
-            inf_str = " ".join(inf_tokens)
+            inf_str = " ".join(inf_tokens).lower()
 
-            for t in target_tokens:
-                if f"Art" in inf_str and (t in inf_str or f"numeral {t}" in inf_str):
-                    matched_cases.append(s)
-                    break
-            
-            if len(matched_cases) >= limit:
-                break
+            if pref_sector and pref_sector.lower() in sec.lower():
+                score += 4
+            for kw in keywords:
+                if kw.lower() in inf_str:
+                    score += 3
+                if kw.lower() in ent.lower():
+                    score += 2
+
+            if score > 0:
+                scored.append((score, s))
+
+        scored.sort(key=lambda x: x[0], reverse=True)
+        matched_cases = [item[1] for item in scored[:limit]]
 
         if not matched_cases and self.sanctions_dataset:
             matched_cases = [self.sanctions_dataset[0]]
