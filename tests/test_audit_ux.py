@@ -45,3 +45,11 @@ def test_export_dictamen_markdown():
     assert "DICTAMEN PERICIAL DE AUDITORÍA Y CUMPLIMIENTO DSPM" in content
     assert "R-003" in content
     assert "ISO/IEC 27701:2025" in content
+
+def test_adaptive_system_prompt():
+    from backend.coach_agent import obtener_system_prompt
+    prompt = obtener_system_prompt()
+    assert "Tabla Markdown GFM" in prompt
+    assert "Graduación Pericial" in prompt
+    assert "Ficha Técnica Pericial" in prompt
+    assert "BEGIN; ... COMMIT;" in prompt

@@ -27,28 +27,53 @@ OPENROUTER_URL = os.getenv("OPENROUTER_URL", "https://openrouter.ai/api/v1/chat/
 MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-6-luna")
 
 
+ADAPTIVE_OUTPUT_RULES = """
+DIRECTRICES DE FORMATO Y PRESENTACIÓN ADAPTATIVA (SELECCIÓN DINÁMICA SEGÚN LA CONSULTA):
+Evalúa de manera autónoma el tipo y objetivo de la consulta del usuario para elegir la estructura de salida más entendible, completa y profesional:
+
+1. CONSULTAS DE COMPARACIÓN O MULTI-ELEMENTOS (Precedentes ANPD, cruce de controles ISO 27701, evaluación de múltiples tablas/columnas o artículos de la Ley 29733):
+   - OBLIGATORIO: Presentar en Tabla Markdown GFM comparativa de alto contraste.
+   - Columnas para precedentes: | Resolución ANPD | Entidad Sancionada | Multa (UIT / S/) | Conducta Tipificada | Medida Correctiva ANPD | Grado de Analogía |
+   - Columnas para controles/artículos: | Marco / Estándar | Control / Artículo | Exigencia Normativa | Estado en el Sistema | Nivel de Riesgo |
+2. CONSULTAS DE CUANTIFICACIÓN, GRADUACIÓN O DESGLOSE DE MULTAS (Art. 39 Ley 29733 y D.S. 016-2024-JUS):
+   - OBLIGATORIO: Presentar en Tabla Markdown de Graduación Pericial paso a paso.
+   - Columnas: | Componente del Cálculo | Criterio Jurídico / Técnico | Ponderación | Cuantía Parcial | Sustento Pericial |
+   - Detallar: Calificación legal del rango, Multa base, Agravantes porcentuales (+25% a +50%), Atenuante por subsanación voluntaria (Art. 133 RLPDP) y Total consolidado.
+3. CONSULTAS DE PROFUNDIZACIÓN MONOGRÁFICA (Análisis detallado de un solo caso, concepto o control específico):
+   - Presentar en Ficha Técnica Pericial estructurada con subtítulos delimitados: Ratio Decidendi, Hechos Probados, Medidas Correctivas Dictadas y Subsunción al Caso Concreto.
+4. CONSULTAS DE REMEDIACIÓN O PARCHE (Corrección técnica o legal solicitada):
+   - Scripts SQL: Bloque transaccional BEGIN; ... COMMIT; debidamente documentado.
+   - Cláusulas contractuales: Texto jurídico listo para incorporar en contratos de encargo (SLA, confidencialidad, flujos transfronterizos).
+5. CONSULTAS DE ESTRATEGIA PROCESAL O DEFENSA ANTE LA DFI:
+   - Resumen ejecutivo estructurado con líneas de defensa ordenadas por jerarquía probatoria, plazos procesales y requisitos de acreditación formal.
+"""
+
+
 def obtener_system_prompt() -> str:
     """
     Carga dinamicamente las directrices periciales del Skill si existe en .agents/skills/agente-incidentes-brechas/SKILL.md.
-    Remueve el frontmatter YAML y retorna el cuerpo de instrucciones operativas.
+    Remueve el frontmatter YAML y retorna el cuerpo de instrucciones operativas, complementado con las directrices adaptativas.
     Si no existe o falla la lectura, recurre a SYSTEM_PROMPT como fallback.
     """
     base_src = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     base_root = os.path.dirname(base_src)
     skill_path = os.path.join(base_root, ".agents", "skills", "agente-incidentes-brechas", "SKILL.md")
     
+    contenido_base = SYSTEM_PROMPT
     if os.path.exists(skill_path):
         try:
             with open(skill_path, "r", encoding="utf-8") as f:
-                content = f.read()
-            if content.startswith("---"):
-                partes = content.split("---", 2)
+                raw = f.read()
+            if raw.startswith("---"):
+                partes = raw.split("---", 2)
                 if len(partes) >= 3:
-                    return partes[2].strip()
-            return content.strip()
+                    contenido_base = partes[2].strip()
+            else:
+                contenido_base = raw.strip()
         except Exception:
-            pass
-    return SYSTEM_PROMPT
+            contenido_base = SYSTEM_PROMPT
+
+    return f"{contenido_base}\n\n{ADAPTIVE_OUTPUT_RULES.strip()}"
 
 SYSTEM_PROMPT = """Eres el Senior Lead Privacy & DSPM Compliance Auditor, perito especializado en ISO/IEC 27701:2025 (PIMS), ISO/IEC 27001, Ley Peruana N.° 29733 (Protección de Datos Personales), su nuevo Reglamento D.S. 016-2024-JUS, la Directiva de Seguridad R.D. 019-2013-JUS y jurisprudencia sancionadora de la Autoridad Nacional de Protección de Datos Personales (ANPD).
 
