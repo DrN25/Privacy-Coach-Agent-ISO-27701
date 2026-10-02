@@ -1,12 +1,38 @@
-# Privacy-Coach-Agent-ISO-27701
+# Agente de Incidentes y Brechas (ISO/IEC 27701:2025)
 
-> Motor DSPM y auditoría automatizada de privacidad. Alineado a ISO/IEC 27701:2025 y Ley Peruana N.º 29733 (ANPD).
+> Motor DSPM y auditoría pericial automatizada de privacidad para gestión de incidentes y brechas. Alineado a ISO/IEC 27701:2025 y Ley Peruana N.º 29733 (ANPD).
+
+### Información Académica
+
+- **Curso:** Auditoría de Sistemas
+- **Semestre:** 2026-B
+- **Institución:** Universidad Nacional de San Agustín de Arequipa (UNSA)
+
+**Integrantes — Grupo 2:**
+- Condori Pinto, Juan Matías
+- Fernandez Huarca, Rodrigo Alexander
+- Nina Calizaya, Rafael Diego
+
+**Skill:** [`.agents/skills/agente-incidentes-brechas/SKILL.md`](.agents/skills/agente-incidentes-brechas/SKILL.md)
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-[![DeepSeek](https://img.shields.io/badge/LLM-DeepSeek%20Flash-4E75F6.svg?style=for-the-badge)](https://openrouter.ai/)
-[![MCP](https://img.shields.io/badge/Protocol-MCP-purple.svg?style=for-the-badge)](https://modelcontextprotocol.io/)
+[![LLM](https://img.shields.io/badge/LLM-GPT--6%20Luna%20%7C%20OpenRouter-4E75F6.svg?style=for-the-badge)](https://openrouter.ai/)
+[![Protocol](https://img.shields.io/badge/Protocol-MCP-purple.svg?style=for-the-badge)](https://modelcontextprotocol.io/)
+
+---
+
+## Interfaz del Sistema
+
+### 1. Dashboard Principal y Gobernanza DSPM
+![Dashboard Principal DSPM](docs/img/main_screen.png)
+
+### 2. Panel de Brechas y Hallazgos de No Conformidad
+![Panel de Brechas y Hallazgos](docs/img/brechas_section.png)
+
+### 3. Agente Coach Pericial y Diálogo Forense
+![Agente Coach Pericial](docs/img/agent_chat_section.png)
 
 ---
 
