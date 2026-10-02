@@ -532,7 +532,7 @@ def export_dictamen(hallazgo_id: str):
     
     if interacciones:
         for it in interacciones:
-            rol_label = "👤 REQUERIMIENTO DEL AUDITOR" if it.get("rol") == "user" else "🤖 DICTAMEN PERICIAL (IA)"
+            rol_label = "REQUERIMIENTO DEL AUDITOR" if it.get("rol") == "user" else "DICTAMEN PERICIAL"
             md_lines.append(f"### {rol_label} [{it.get('timestamp', '')}]")
             if it.get("pensamiento_reasoning"):
                 md_lines.append(f"> **Cadena de Razonamiento:**\n> {it.get('pensamiento_reasoning')}\n")

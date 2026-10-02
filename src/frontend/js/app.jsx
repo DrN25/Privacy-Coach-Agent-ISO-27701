@@ -24,6 +24,7 @@ function App() {
   const [chatInput, setChatInput] = useState('');
   
   const [loading, setLoading] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState('');
   const [reanalysisNeeded, setReanalysisNeeded] = useState(false);
   const [toast, setToast] = useState(null);
@@ -45,11 +46,11 @@ function App() {
     let parsed = window.marked ? window.marked.parse(content) : content;
     // Replace ISO controls: A.1.4.5, A.3.24
     parsed = parsed.replace(/\b(A\.\d+\.\d+(?:\.\d+)?)\b/g, (match) => {
-      return `<button type="button" class="inline-flex items-center gap-0.5 px-1.5 py-0.2 mx-0.5 text-[10px] font-mono font-medium rounded bg-cyan-950/90 text-cyan-300 border border-cyan-800 hover:bg-cyan-900 transition-colors cursor-pointer" onclick="window.fetchLegalRefGlobal && window.fetchLegalRefGlobal('control','${match}')">📖 ${match} ↗</button>`;
+      return `<button type="button" class="inline-flex items-center px-1.5 py-0.5 mx-0.5 text-[10px] font-mono font-medium rounded bg-cyan-950 text-cyan-300 border border-cyan-800 hover:bg-cyan-900 transition-colors cursor-pointer" onclick="window.fetchLegalRefGlobal && window.fetchLegalRefGlobal('control','${match}')">${match} [Ref]</button>`;
     });
     // Replace Ley articles: Art. 13, Art 13, Artículo 13
     parsed = parsed.replace(/\b(?:Art(?:ículo|\.)?\s*)(\d+)\b/g, (match, num) => {
-      return `<button type="button" class="inline-flex items-center gap-0.5 px-1.5 py-0.2 mx-0.5 text-[10px] font-mono font-medium rounded bg-violet-950/90 text-violet-300 border border-violet-800 hover:bg-violet-900 transition-colors cursor-pointer" onclick="window.fetchLegalRefGlobal && window.fetchLegalRefGlobal('articulo','Art_${num}')">⚖️ Art. ${num} ↗</button>`;
+      return `<button type="button" class="inline-flex items-center px-1.5 py-0.5 mx-0.5 text-[10px] font-mono font-medium rounded bg-violet-950 text-violet-300 border border-violet-800 hover:bg-violet-900 transition-colors cursor-pointer" onclick="window.fetchLegalRefGlobal && window.fetchLegalRefGlobal('articulo','Art_${num}')">Art. ${num} [Ley]</button>`;
     });
     return parsed;
   };
@@ -315,8 +316,7 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
     setChatHistory(newHistory);
     if (!promptOverride) setChatInput('');
 
-    setLoading(true);
-    setLoadingMsg("Auditor de Cumplimiento razonando dictamen pericial...");
+    setChatLoading(true);
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -347,7 +347,7 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
         { role: "assistant", content: "Error al consultar al Auditor de Cumplimiento: " + e.message }
       ]);
     } finally {
-      setLoading(false);
+      setChatLoading(false);
     }
   };
 
@@ -456,7 +456,7 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
               className="py-1.5 px-4 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-md shadow-amber-500/20 transition-all flex items-center gap-1.5"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-              <span>⚡ Ejecutar Reanálisis Ahora</span>
+              <span>Ejecutar reanálisis</span>
             </button>
             <button
               onClick={() => setReanalysisNeeded(false)}
@@ -539,7 +539,7 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
               className="py-3 px-6 rounded-xl bg-gradient-to-r from-cyan-600 to-violet-600 hover:from-cyan-500 hover:to-violet-500 font-bold text-xs text-white shadow-lg shadow-cyan-600/20 transition-all flex items-center gap-2"
             >
               <svg className="w-4 h-4 text-cyan-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-              <span>⚡ Cargar Caso Completo SaludTotal (4 archivos)</span>
+              <span>Cargar caso SaludTotal (4 archivos)</span>
             </button>
 
             <label className="py-3 px-6 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-xs font-semibold text-slate-200 cursor-pointer transition-all flex items-center gap-2">
@@ -752,6 +752,18 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                           <span className="font-mono text-xs font-bold text-cyan-400 px-1.5 py-0.5 rounded bg-cyan-950 border border-cyan-800">
                             {h.codigo_regla}
                           </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectFinding(h);
+                              fetchLegalRef('control', h.control_iso27701);
+                            }}
+                            className="font-mono text-[10px] font-bold text-slate-300 hover:text-cyan-300 px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 transition-colors"
+                            title={`Abrir control oficial ${h.control_iso27701}`}
+                          >
+                            {h.control_iso27701}
+                          </button>
                           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
                             h.nivel_riesgo === 'CRÍTICO' ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' :
                             h.nivel_riesgo === 'ALTO' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
@@ -781,16 +793,16 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                           
                           const prompts = [];
                           
-                          // Siempre: Diagnóstico
+                          // Diagnóstico
                           prompts.push({
-                            label: '🔍 Diagnóstico',
+                            label: 'Diagnóstico',
                             color: 'hover:bg-cyan-950 text-cyan-300',
                             prompt: `¿Cuál es el diagnóstico pericial y fundamento jurídico de la vulnerabilidad en ${h.activo_afectado || 'el activo'} según el control ${h.control_iso27701} y la Ley 29733?`
                           });
                           
                           if (isTech) {
                             prompts.push({
-                              label: '🛠️ Remediación SQL',
+                              label: 'Remediación SQL',
                               color: 'hover:bg-emerald-950 text-emerald-300',
                               prompt: `Genera el script SQL de remediación defensiva para la brecha ${h.codigo_regla}: ${h.titulo}. Incluye ALTER TABLE con pgcrypto si aplica cifrado, o DROP/PURGE si corresponde eliminar el dato.`
                             });
@@ -798,7 +810,7 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                           
                           if (isARCO) {
                             prompts.push({
-                              label: '📝 Redacción Política',
+                              label: 'Redacción Política',
                               color: 'hover:bg-emerald-950 text-emerald-300',
                               prompt: `Redacta la cláusula correctiva para la política de privacidad que resuelva la brecha ${h.codigo_regla}: ${h.titulo}. Incluye los canales ARCO que deben habilitarse y la verificación de identidad proporcional.`
                             });
@@ -806,7 +818,7 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                           
                           if (isContract) {
                             prompts.push({
-                              label: '📋 Cláusula Contractual',
+                              label: 'Cláusula Contractual',
                               color: 'hover:bg-emerald-950 text-emerald-300',
                               prompt: `Redacta las cláusulas contractuales de blindaje legal para remediar la brecha ${h.codigo_regla}: ${h.titulo}. Incluye requisitos DPA, SLA de seguridad y obligaciones del encargado.`
                             });
@@ -814,39 +826,49 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                           
                           if (!isTech && !isARCO && !isContract) {
                             prompts.push({
-                              label: '🛠️ Remediación',
+                              label: 'Remediación',
                               color: 'hover:bg-emerald-950 text-emerald-300',
                               prompt: `Recomienda las acciones de remediación concretas (técnicas, legales y organizativas) para cerrar la brecha ${h.codigo_regla}: ${h.titulo}.`
                             });
                           }
                           
-                          // Siempre: Precedente
+                          // Precedentes ANPD
                           prompts.push({
-                            label: '⚖️ Precedente',
+                            label: 'Precedentes ANPD',
                             color: 'hover:bg-violet-950 text-violet-300',
                             prompt: `¿Cuál es el precedente sancionador de la ANPD más análogo a este caso y cómo se cuantificó la multa de ${h.multa_estimada_uit || 0} UIT? Cita la resolución directoral específica.`
                           });
                           
-                          // Siempre: Controles ISO
-                          prompts.push({
-                            label: '📖 Controles ISO',
-                            color: 'hover:bg-amber-950 text-amber-300',
-                            prompt: `¿Qué controles específicos de ISO/IEC 27701:2025 se vulneran con la brecha ${h.codigo_regla}? Detalla cada control, su objetivo y las acciones correctivas para cumplirlo.`
-                          });
-                          
-                          return prompts.map((p, i) => (
-                            <button
-                              key={i}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSelectFinding(h);
-                                handleSendMessage(p.prompt, h);
-                              }}
-                              className={`px-2 py-1 rounded bg-slate-800/90 ${p.color} border border-slate-700 text-[10px] font-semibold transition-colors`}
-                            >
-                              {p.label}
-                            </button>
-                          ));
+                          return (
+                            <>
+                              {prompts.map((p, i) => (
+                                <button
+                                  key={i}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSelectFinding(h);
+                                    handleSendMessage(p.prompt, h);
+                                  }}
+                                  className={`px-2 py-1 rounded bg-slate-800/90 ${p.color} border border-slate-700 text-[10px] font-semibold transition-colors`}
+                                >
+                                  {p.label}
+                                </button>
+                              ))}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSelectFinding(h);
+                                  fetchLegalRef('control', h.control_iso27701);
+                                }}
+                                className="px-2 py-1 rounded bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-800 text-[10px] font-semibold transition-colors"
+                                title={`Abrir ficha técnica y fundamentos del control ${h.control_iso27701}`}
+                              >
+                                Control {h.control_iso27701}
+                              </button>
+                            </>
+                          );
                         })()}
                       </div>
                     </div>
@@ -955,7 +977,7 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
             <div className="glass-card p-4 border-slate-800 flex-1 flex flex-col min-h-[460px]">
               <div className="flex items-center justify-between pb-2 border-b border-slate-800 mb-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></div>
+                  <div className="w-2 h-2 rounded-full bg-cyan-400 "></div>
                   <h4 className="text-xs font-bold text-white uppercase tracking-wider">Auditor de Cumplimiento & DSPM (ISO/IEC 27701 & Ley 29733)</h4>
                 </div>
                 <span className="text-[10px] text-cyan-400 font-mono">{status?.llm_model ? `${status.llm_model} (OpenRouter)` : "Auditor IA (OpenRouter)"}</span>
@@ -980,7 +1002,7 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                       <details className="mb-1.5 w-full text-[11px] bg-slate-950/90 rounded-lg p-2 border border-slate-800 text-slate-400">
                         <summary className="cursor-pointer font-semibold text-cyan-400 flex items-center gap-1.5 hover:text-cyan-300">
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                          Razonamiento Pericial del Modelo (Reasoning Tokens)
+                          Cadena de razonamiento pericial
                         </summary>
                         <div className="mt-2 text-slate-400 font-mono text-[10px] whitespace-pre-wrap leading-relaxed border-t border-slate-800/80 pt-2">
                           {m.reasoning}
@@ -1004,6 +1026,13 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                         />
                       )}
                     </div>
+
+                    {chatLoading && (
+                      <div className="flex items-center gap-2 p-3 rounded-2xl bg-zinc-950/90 border border-zinc-800 text-xs text-slate-400">
+                        <div className="w-3.5 h-3.5 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin"></div>
+                        <span>Generando dictamen pericial...</span>
+                      </div>
+                    )}
 
                     {/* SQL Patch Card */}
                     {m.sql_patch && (
