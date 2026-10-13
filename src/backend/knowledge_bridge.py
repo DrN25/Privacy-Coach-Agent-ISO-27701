@@ -24,7 +24,7 @@ class KnowledgeBridge:
                     break
 
         if not ctrl:
-            return {"control": control_id, "detalles": {}, "subgrafo_nodos": []}
+            return {"control": control_id, "detalles": {}, "principios": [], "sanciones_anpd": [], "subgrafo_nodos": []}
 
         principios_vinculados = []
         for p_str in ctrl.get("iso29100_principles", []):
@@ -32,6 +32,26 @@ class KnowledgeBridge:
             princ = self.engine.get_principle(p_id)
             if princ:
                 principios_vinculados.append(princ)
+
+        # Precedentes sancionadores ANPD vinculados al control
+        sanciones_raw = self.engine.find_sanctions_for_control(ctrl["id"], limit=3)
+        sanciones_anpd = []
+        for s in sanciones_raw:
+            res_list = s.get("resoluciones", [])
+            infracciones = []
+            for inf in s.get("infracciones", [])[:2]:
+                if isinstance(inf, dict):
+                    infracciones.append(f"{inf.get('articulo_referencia', '')}: {inf.get('texto_infraccion', '')[:110]}")
+                elif isinstance(inf, str):
+                    infracciones.append(inf[:110])
+            sanciones_anpd.append({
+                "id": s.get("id"),
+                "entidad": s.get("entidad"),
+                "resolucion": res_list[0] if res_list else "Resolución Directoral ANPD",
+                "sector": s.get("sector"),
+                "multa_total_uit": s.get("multa_total_uit", 0),
+                "infracciones": infracciones
+            })
 
         sub_nodos = [
             {
@@ -50,10 +70,20 @@ class KnowledgeBridge:
                 "ley29733": p.get("ley_29733_principle", "")
             })
 
+        for sc in sanciones_anpd:
+            sub_nodos.append({
+                "id": f"ANPD-{sc['id']}",
+                "tipo": "ANPD_SANCTION",
+                "label": f"ANPD: {sc['entidad']} ({sc['multa_total_uit']} UIT)",
+                "resolucion": sc["resolucion"],
+                "sector": sc["sector"]
+            })
+
         return {
             "control": control_id,
             "detalles": ctrl,
             "principios": principios_vinculados,
+            "sanciones_anpd": sanciones_anpd,
             "subgrafo_nodos": sub_nodos
         }
 

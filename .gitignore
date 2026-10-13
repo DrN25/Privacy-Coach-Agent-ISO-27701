@@ -60,3 +60,7 @@ yarn-error.log*
 
 # Carpeta local para subida a Google Drive (documentos fuente PDF)
 fuentes_normativas_pdf/
+
+# Dependencias Node.js
+node_modules/
+**/node_modules/
