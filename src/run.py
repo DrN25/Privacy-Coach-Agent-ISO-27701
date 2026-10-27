@@ -3,7 +3,10 @@ import sys
 import threading
 import time
 import webbrowser
+from dotenv import load_dotenv
 import uvicorn
+
+load_dotenv()
 
 def abrir_navegador():
     time.sleep(1.5)
@@ -16,7 +19,8 @@ def main():
     print("Normativas: ISO/IEC 27701:2025 | ISO/IEC 29100:2024 | Ley N.° 29733 (Perú)")
     print("Bases de Conocimiento: Grafo NetworkX (78 Controles) + 588 Casos ANPD (UIT)")
     print("Memoria Local: SQLite (empresa_conocimiento.db)")
-    print("Modelo LLM: deepseek/deepseek-v4.1-flash (OpenRouter)")
+    print(f"Modelo LLM: {os.getenv('OPENROUTER_MODEL', 'openai/gpt-6-luna')} (OpenRouter)")
+    print("Orquestación: LangGraph StateGraph (Multi-Agente con Reflexión)")
     print("=" * 75)
     print("Servidor web iniciado en: http://localhost:8000")
     print("Abriendo interfaz de usuario en el navegador...")

@@ -58,26 +58,55 @@ def init_db():
     );
     """)
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS hallazgos_dspm (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        codigo_regla TEXT NOT NULL UNIQUE,
-        titulo TEXT NOT NULL,
-        descripcion TEXT NOT NULL,
-        nivel_riesgo TEXT NOT NULL,
-        elemento_afectado TEXT NOT NULL,
-        origen_archivo TEXT NOT NULL,
-        control_iso27701 TEXT NOT NULL,
-        principio_iso29100 TEXT NOT NULL,
-        articulo_ley29733 TEXT NOT NULL,
-        directiva_seguridad TEXT NOT NULL,
-        multa_estimada_uit REAL NOT NULL,
-        multa_estimada_pen REAL NOT NULL,
-        precedente_anpd TEXT NOT NULL,
-        estado TEXT DEFAULT 'PENDIENTE',
-        fecha_deteccion TEXT NOT NULL
-    );
-    """)
+    # Migración de esquema: eliminar restricción obsoleta UNIQUE(codigo_regla)
+    cursor.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='hallazgos_dspm'")
+    old_schema = cursor.fetchone()
+    if old_schema and "UNIQUE" in old_schema[0]:
+        cursor.execute("ALTER TABLE hallazgos_dspm RENAME TO _hallazgos_dspm_old")
+        cursor.execute("""
+        CREATE TABLE hallazgos_dspm (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            codigo_regla TEXT NOT NULL,
+            titulo TEXT NOT NULL,
+            descripcion TEXT NOT NULL,
+            nivel_riesgo TEXT NOT NULL,
+            elemento_afectado TEXT NOT NULL,
+            origen_archivo TEXT NOT NULL,
+            control_iso27701 TEXT NOT NULL,
+            principio_iso29100 TEXT NOT NULL,
+            articulo_ley29733 TEXT NOT NULL,
+            directiva_seguridad TEXT NOT NULL,
+            multa_estimada_uit REAL NOT NULL,
+            multa_estimada_pen REAL NOT NULL,
+            precedente_anpd TEXT NOT NULL,
+            estado TEXT DEFAULT 'PENDIENTE',
+            fecha_deteccion TEXT NOT NULL
+        );
+        """)
+        cursor.execute("INSERT INTO hallazgos_dspm SELECT * FROM _hallazgos_dspm_old")
+        cursor.execute("DROP TABLE _hallazgos_dspm_old")
+    else:
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS hallazgos_dspm (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            codigo_regla TEXT NOT NULL,
+            titulo TEXT NOT NULL,
+            descripcion TEXT NOT NULL,
+            nivel_riesgo TEXT NOT NULL,
+            elemento_afectado TEXT NOT NULL,
+            origen_archivo TEXT NOT NULL,
+            control_iso27701 TEXT NOT NULL,
+            principio_iso29100 TEXT NOT NULL,
+            articulo_ley29733 TEXT NOT NULL,
+            directiva_seguridad TEXT NOT NULL,
+            multa_estimada_uit REAL NOT NULL,
+            multa_estimada_pen REAL NOT NULL,
+            precedente_anpd TEXT NOT NULL,
+            estado TEXT DEFAULT 'PENDIENTE',
+            fecha_deteccion TEXT NOT NULL
+        );
+        """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_hallazgos_codigo ON hallazgos_dspm(codigo_regla);")
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS interacciones_coach (
