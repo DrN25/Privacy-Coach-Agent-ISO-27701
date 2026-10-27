@@ -51,4 +51,13 @@ def nodo_profiler_agent(state: AuditState) -> Dict[str, Any]:
         except Exception:
             pass
 
-    return {"perfil_activos": perfiles}
+    trace = list(state.get("trazabilidad") or [])
+    trace.append({
+        "paso": len(trace) + 1,
+        "agente": "Data Profiler Agent",
+        "accion": "Perfilado y categorización de sensibilidad PII",
+        "detalle": f"Activos perfilados: {len(perfiles)} elementos. Sensibles: {len([p for p in perfiles if p.get('sensible')])}",
+        "estado": "ok"
+    })
+
+    return {"perfil_activos": perfiles, "trazabilidad": trace}

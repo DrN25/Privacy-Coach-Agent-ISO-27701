@@ -28,4 +28,13 @@ def nodo_context_agent(state: AuditState) -> Dict[str, Any]:
         "tablas_identificadas": tablas
     }
     
-    return {"contexto_empresa": contexto_empresa}
+    trace = list(state.get("trazabilidad") or [])
+    trace.append({
+        "paso": len(trace) + 1,
+        "agente": "Context Agent",
+        "accion": "Recuperación de activos y fuentes documentales",
+        "detalle": f"Archivos cargados: {len(archivos)}, Tablas: {len(tablas)}, Activo evaluado: {elemento or 'General'}",
+        "estado": "ok"
+    })
+    
+    return {"contexto_empresa": contexto_empresa, "trazabilidad": trace}

@@ -73,4 +73,14 @@ def nodo_dspm_agent(state: AuditState) -> Dict[str, Any]:
     """
     codigo = _resolver_codigo_auditoria(state)
     regla = resolver_regla_con_fallback(codigo or "R-001")
-    return {"regla_canonica": regla}
+    
+    trace = list(state.get("trazabilidad") or [])
+    trace.append({
+        "paso": len(trace) + 1,
+        "agente": "DSPM Risk Engine",
+        "accion": f"Resolución canónica de brecha ({regla.get('codigo', 'R-001')})",
+        "detalle": f"Regla: {regla.get('codigo')} - {regla.get('titulo')}. Nivel: {regla.get('nivel_riesgo')}. Multa: {regla.get('multa_estimada_uit')} UIT",
+        "estado": "ok"
+    })
+
+    return {"regla_canonica": regla, "trazabilidad": trace}

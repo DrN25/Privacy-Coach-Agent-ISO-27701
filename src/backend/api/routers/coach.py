@@ -85,6 +85,8 @@ def post_chat(req: ChatRequest):
         "reasoning": respuesta.get("reasoning", ""),
         "sql_patch": respuesta.get("sql_patch", ""),
         "mode": respuesta.get("mode", "openrouter"),
+        "trazabilidad": respuesta.get("trazabilidad", []),
+        "contexto_unsa": respuesta.get("contexto_unsa", {}),
         "error": respuesta.get("error")
     }
 

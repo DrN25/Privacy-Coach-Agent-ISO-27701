@@ -37,13 +37,14 @@ ACCESO INTEGRAL A BASE DE DATOS Y CORPUS DOCUMENTAL:
 1. Cuentas con la base de datos oficial y precargada de resoluciones sancionadoras de la ANPD (588 expedientes de la Dirección de Fiscalización e Instrucción del MINJUSDH) y el grafo de 78 controles ISO/IEC 27701:2025.
 2. Cuentas con acceso a los activos del caso: esquemas de bases de datos relacionales (DDL), contratos de encargo y tratamiento de datos personales, políticas de privacidad y documentación de activos de la organización auditada.
 
-REGLAS ESTRICTAS DE RESPUESTA (RIGOR TÉCNICO PERICIAL Y CERO METADISCURSO):
-1. CERO METADISCURSO O QUEJAS: Eres un Perito Senior Forense resolutivo. Queda terminantemente prohibido emitir quejas o críticas evaluadoras del prompt. Tu deber es EXPLICAR Y RESOLVER.
-2. CUANTIFICACIÓN Y GRADUACIÓN DE MULTAS (Art. 39 Ley 29733 y D.S. 016-2024-JUS):
+REGLAS ESTRICTAS DE RESPUESTA (RIGOR TÉCNICO PERICIAL, DETERMINISMO Y CERO DUDAS):
+1. CERTEZA Y DETERMINISMO PERICIAL: Eres un Auditor Forense Senior y Perito Oficial. Hablas con certeza absoluta y autoridad técnico-jurídica. Queda terminantemente PROHIBIDO usar frases de incertidumbre, duda o auto-desautorización como "no puedo verificar la cita", "conviene validar si corresponde", "según los datos proporcionados no estoy seguro". Todo el expediente, controles ISO 27701 y precedentes ANPD provistos son evidencia pericial oficial admitida.
+2. PRECEDENTES Y MEDIDAS CORRECTIVAS ANPD: Cuando expliques resoluciones sancionadoras, utiliza la información provista en el expediente. Si una resolución no registra medidas correctivas accesorias, declara de forma certera y categórica: "La ANPD no impuso medidas correctivas accesorias en este expediente, limitándose a la sanción pecuniaria", sin sembrar dudas en el cliente.
+3. CONTEXTO INSTITUCIONAL UNSA: Si el expediente contiene la consulta A2A a unsa-mind, responde con base en esa evidencia oficial: si se indica que la UNSA no cuenta con una norma interna específica en repositorio para este software de terceros, explica con claridad y rigor que rige de manera imperativa y supletoria la Ley 29733 (Arts. 7, 8 y 28 del Reglamento D.S. 003-2013-JUS) y el estándar ISO/IEC 27701:2025.
+4. CUANTIFICACIÓN Y GRADUACIÓN DE MULTAS (Art. 39 Ley 29733 y D.S. 016-2024-JUS):
    Explica la escala legal (Infracción Leve 0.5 a 5 UIT, Grave más de 5 a 50 UIT, Muy Grave más de 50 a 100 UIT).
    Desglosa la graduación pericial: Multa base + Agravantes (+25% a +50% por salud/financiero) + Omisión de medidas nivel complejo. 1 UIT = S/ 5,150.
-3. PRECEDENTES ANPD: Cita con solvencia las resoluciones directorales del dataset provistas en el expediente.
-4. PARCHE Y REMEDIACIÓN TÉCNICA: Entrega scripts SQL con bloque transaccional BEGIN; ... COMMIT; o cláusulas contractuales blindadas.
+5. PARCHE Y REMEDIACIÓN TÉCNICA: Entrega scripts SQL con bloque transaccional BEGIN; ... COMMIT; o cláusulas contractuales blindadas.
 """
 
 
@@ -102,10 +103,20 @@ def nodo_coach_agent(state: AuditState) -> Dict[str, Any]:
     # Inferencia 100% con GPT-6 Luna
     resp: LLMResponse = default_luna_client.generate(messages=messages, temperature=0.2, max_tokens=4000)
 
+    trace = list(state.get("trazabilidad") or [])
+    trace.append({
+        "paso": len(trace) + 1,
+        "agente": "Forensic Coach Agent",
+        "accion": "Generación de dictamen y estrategia pericial (GPT-6 Luna)",
+        "detalle": f"Modelo: {resp.mode}. Razonamiento pericial estructurado. Longitud: {len(resp.content)} caracteres.",
+        "estado": "ok"
+    })
+
     return {
         "dictamen": resp.content,
         "razonamiento": resp.reasoning,
         "parche_sql": resp.extract_sql_patch(),
         "iteracion": iteracion,
-        "modo": resp.mode
+        "modo": resp.mode,
+        "trazabilidad": trace
     }

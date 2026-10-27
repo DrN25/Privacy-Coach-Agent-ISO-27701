@@ -74,7 +74,9 @@ def ejecutar_flujo_multiagente(historial_mensajes: List[Dict[str, str]], context
         "mode": resultado_final.get("modo", "openrouter"),
         "regla_canonica": resultado_final.get("regla_canonica", {}),
         "evaluacion_critica": resultado_final.get("evaluacion_critica", {}),
-        "contexto_empresa": resultado_final.get("contexto_empresa", {})
+        "contexto_empresa": resultado_final.get("contexto_empresa", {}),
+        "contexto_unsa": resultado_final.get("contexto_unsa", {}),
+        "trazabilidad": resultado_final.get("trazabilidad", [])
     }
 
 

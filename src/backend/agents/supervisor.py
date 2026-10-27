@@ -23,4 +23,13 @@ def nodo_supervisor(state: AuditState) -> Dict[str, Any]:
     else:
         intencion = "dictamen"
 
-    return {"intencion": intencion}
+    trace = list(state.get("trazabilidad") or [])
+    trace.append({
+        "paso": len(trace) + 1,
+        "agente": "Supervisor (Orquestador)",
+        "accion": f"Enrutamiento de intención pericial ({intencion})",
+        "detalle": f"Intención clasificada: {intencion.upper()}.",
+        "estado": "ok"
+    })
+
+    return {"intencion": intencion, "trazabilidad": trace}

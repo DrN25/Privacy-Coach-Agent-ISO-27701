@@ -52,11 +52,16 @@ def get_legal_reference(tipo: str, ref_id: str):
             ley_data = json.load(f)
         articulo = ley_data.get("articulos", {}).get(ref_id)
         if not articulo:
-            for k, v in ley_data.get("articulos", {}).items():
-                if ref_id.replace("Art. ", "Art_").replace("Art ", "Art_") == k or str(v.get("articulo")) == ref_id:
-                    articulo = v
-                    ref_id = k
-                    break
+            clean_digits = "".join(filter(str.isdigit, ref_id))
+            if clean_digits and f"Art_{clean_digits}" in ley_data.get("articulos", {}):
+                articulo = ley_data["articulos"][f"Art_{clean_digits}"]
+                ref_id = f"Art_{clean_digits}"
+            else:
+                for k, v in ley_data.get("articulos", {}).items():
+                    if ref_id.replace("Art. ", "Art_").replace("Art ", "Art_") == k or str(v.get("articulo")) == ref_id:
+                        articulo = v
+                        ref_id = k
+                        break
         if not articulo:
             raise HTTPException(status_code=404, detail=f"Artículo {ref_id} no encontrado.")
         return {

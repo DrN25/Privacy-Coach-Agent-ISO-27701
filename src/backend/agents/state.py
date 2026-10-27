@@ -20,12 +20,16 @@ class AuditState(TypedDict, total=False):
     regla_canonica: Dict[str, Any]
     subgrafo_normativo: Dict[str, Any]
     precedentes_anpd: List[Dict[str, Any]]
+    contexto_unsa: Dict[str, Any]
     expediente_texto: str
     
     # Salidas periciales y código
     dictamen: str
     razonamiento: str
     parche_sql: str
+    
+    # Trazabilidad y auditoría de ejecución multi-agente
+    trazabilidad: List[Dict[str, Any]]
     
     # Control de calidad y bucle de reflexión
     evaluacion_critica: Dict[str, Any]

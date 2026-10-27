@@ -64,6 +64,16 @@ async def production_basic_auth(request, call_next):
     return await call_next(request)
 
 
+@app.middleware("http")
+async def add_no_cache_headers(request, call_next):
+    response = await call_next(request)
+    if not settings.is_production:
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
+
 @app.exception_handler(OSError)
 async def os_error_handler(request, exc):
     return JSONResponse(status_code=404, content={"error": "Ruta inválida en sistema operativo"})

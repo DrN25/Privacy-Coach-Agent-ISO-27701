@@ -39,9 +39,19 @@ def nodo_reflection(state: AuditState) -> Dict[str, Any]:
         "observaciones": "; ".join(observaciones) if observaciones else "Dictamen pericial y script conformes."
     }
 
+    trace = list(state.get("trazabilidad") or [])
+    trace.append({
+        "paso": len(trace) + 1,
+        "agente": "Senior Quality Critic (Reflection)",
+        "accion": f"Validación de rigor pericial (Iteración {iteracion})",
+        "detalle": f"Estado: {'APROBADO' if aprobado else 'REQUIRIÓ AJUSTE'}. Observación: {evaluacion['observaciones']}",
+        "estado": "ok" if aprobado else "warning"
+    })
+
     return {
         "evaluacion_critica": evaluacion,
-        "aprobado": aprobado
+        "aprobado": aprobado,
+        "trazabilidad": trace
     }
 
 
