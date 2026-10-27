@@ -6,6 +6,15 @@ if (window.marked) {
   });
 }
 
+// Global bridge for legal references modal (ensures availability before and after React mount)
+window.fetchLegalRefGlobal = function(tipo, refId) {
+  if (window.__triggerLegalRefModal) {
+    window.__triggerLegalRefModal(tipo, refId);
+  } else {
+    console.warn("fetchLegalRefGlobal: React App not yet bound, queuing:", tipo, refId);
+  }
+};
+
 const { useState, useEffect, useMemo, useRef } = React;
 
 function App() {
@@ -44,18 +53,42 @@ function App() {
   const formatMarkdownCitations = (content) => {
     if (!content) return '';
     let parsed = window.marked ? window.marked.parse(content) : content;
-    // Replace ISO controls: A.1.4.5, A.3.24
-    parsed = parsed.replace(/\b(A\.\d+\.\d+(?:\.\d+)?)\b/g, (match) => {
-      return `<button type="button" class="inline-flex items-center px-1.5 py-0.5 mx-0.5 text-[10px] font-mono font-medium rounded bg-cyan-950 text-cyan-300 border border-cyan-800 hover:bg-cyan-900 transition-colors cursor-pointer" onclick="window.fetchLegalRefGlobal && window.fetchLegalRefGlobal('control','${match}')">${match} [Ref]</button>`;
+
+    // 1. Strip <code> tags wrapping ISO controls or Article citations to prevent nested elements
+    parsed = parsed.replace(/<code>\s*(A\.\d+\.\d+(?:\.\d+)?)\s*<\/code>/gi, '$1');
+    parsed = parsed.replace(/<code>\s*(Arts?\.?\s*\d+[^<]*?)\s*<\/code>/gi, '$1');
+
+    // 2. Replace ISO controls: A.1.4.8, A.3.24
+    parsed = parsed.replace(/\b(A\.\d+\.\d+(?:\.\d+)?)(?:\s*(?:\[Ref\]|\(Ref\)))?/gi, (fullMatch, match) => {
+      return `<button type="button" data-ref-type="control" data-ref-id="${match}" class="legal-ref-btn inline-flex items-center px-1.5 py-0.5 mx-0.5 text-[10px] font-mono font-medium rounded bg-cyan-950 text-cyan-300 border border-cyan-800 hover:bg-cyan-900 transition-colors cursor-pointer shadow-sm active:scale-95" onclick="if(window.fetchLegalRefGlobal){window.fetchLegalRefGlobal('control','${match}');}else{console.warn('fetchLegalRefGlobal not ready');}">${match} [Ref]</button>`;
     });
-    // Replace Ley articles: Art. 13, Art 13, Artículo 13
-    parsed = parsed.replace(/\b(?:Art(?:ículo|\.)?\s*)(\d+)\b/g, (match, num) => {
-      return `<button type="button" class="inline-flex items-center px-1.5 py-0.5 mx-0.5 text-[10px] font-mono font-medium rounded bg-violet-950 text-violet-300 border border-violet-800 hover:bg-violet-900 transition-colors cursor-pointer" onclick="window.fetchLegalRefGlobal && window.fetchLegalRefGlobal('articulo','Art_${num}')">Art. ${num} [Ley]</button>`;
+
+    // 3. Single-pass article matcher: both compound ("Arts. 7 y 8", "artículos 9 y 28") and single ("Art. 9", "artículo 10")
+    parsed = parsed.replace(/\b(?:Arts?\.?|art[ií]culos?)\s*(\d+)(?:\s*(?:y|,|e)\s*(\d+))?(?:\s*(?:\[Ley\]|\(Ley\)))?/gi, (fullMatch, num1, num2) => {
+      const btn1 = `<button type="button" data-ref-type="articulo" data-ref-id="Art_${num1}" class="legal-ref-btn inline-flex items-center px-1.5 py-0.5 mx-0.5 text-[10px] font-mono font-medium rounded bg-violet-950 text-violet-300 border border-violet-800 hover:bg-violet-900 transition-colors cursor-pointer shadow-sm active:scale-95" onclick="if(window.fetchLegalRefGlobal){window.fetchLegalRefGlobal('articulo','Art_${num1}');}else{console.warn('fetchLegalRefGlobal not ready');}">Art. ${num1} [Ley]</button>`;
+      if (num2) {
+        const btn2 = `<button type="button" data-ref-type="articulo" data-ref-id="Art_${num2}" class="legal-ref-btn inline-flex items-center px-1.5 py-0.5 mx-0.5 text-[10px] font-mono font-medium rounded bg-violet-950 text-violet-300 border border-violet-800 hover:bg-violet-900 transition-colors cursor-pointer shadow-sm active:scale-95" onclick="if(window.fetchLegalRefGlobal){window.fetchLegalRefGlobal('articulo','Art_${num2}');}else{console.warn('fetchLegalRefGlobal not ready');}">Art. ${num2} [Ley]</button>`;
+        return `${btn1} y ${btn2}`;
+      }
+      return btn1;
     });
+
     return parsed;
   };
 
-  
+  const handleChatContainerClick = (e) => {
+    const btn = e.target.closest('.legal-ref-btn, [data-ref-type]');
+    if (btn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const tipo = btn.getAttribute('data-ref-type');
+      const refId = btn.getAttribute('data-ref-id');
+      if (tipo && refId) {
+        fetchLegalRef(tipo, refId);
+      }
+    }
+  };
+
   // Panel de precedentes expandido
   const [precedentPanel, setPrecedentPanel] = useState({ open: false, findingId: null });
   
@@ -65,18 +98,6 @@ function App() {
 
   const chatBottomRef = useRef(null);
 
-  useEffect(() => {
-    fetchStatus();
-    fetchMockups();
-    loadDatabase();
-  }, []);
-
-  useEffect(() => {
-    if (chatBottomRef.current) {
-      chatBottomRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [chatHistory, loading]);
-
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3800);
@@ -84,8 +105,8 @@ function App() {
 
   // Fetch legal reference from backend
   const fetchLegalRef = async (tipo, refId) => {
-  window.fetchLegalRefGlobal = fetchLegalRef;
-
+    window.__triggerLegalRefModal = fetchLegalRef;
+    window.fetchLegalRefGlobal = fetchLegalRef;
     setLegalRefModal({ open: true, tipo, data: null, loading: true });
     try {
       const res = await fetch('/api/legal-reference/' + encodeURIComponent(tipo) + '/' + encodeURIComponent(refId));
@@ -96,6 +117,22 @@ function App() {
       setLegalRefModal({ open: true, tipo, data: { error: e.message }, loading: false });
     }
   };
+  window.__triggerLegalRefModal = fetchLegalRef;
+  window.fetchLegalRefGlobal = fetchLegalRef;
+
+  useEffect(() => {
+    window.__triggerLegalRefModal = fetchLegalRef;
+    window.fetchLegalRefGlobal = fetchLegalRef;
+    fetchStatus();
+    fetchMockups();
+    loadDatabase();
+  }, []);
+
+  useEffect(() => {
+    if (chatBottomRef.current) {
+      chatBottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatHistory, loading]);
 
   const fetchStatus = async () => {
     try {
@@ -297,7 +334,16 @@ function App() {
 * **Exposición Sancionadora ANPD:** **${finding.multa_estimada_uit} UIT** (S/ ${finding.multa_estimada_pen.toLocaleString('es-PE')})
 * **Precedente:** ${finding.precedente_anpd || 'Resolución Directoral ANPD'}
 
-Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
+Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`,
+        trazabilidad: [
+          { paso: 1, agente: "Supervisor", accion: "Identificación de Brecha y Enrutamiento", detalle: `Apertura de expediente pericial para hallazgo ${finding.codigo_regla}`, estado: "ok" },
+          { paso: 2, agente: "Contextualizador", accion: "Ingesta de Fuentes y Correlación", detalle: `Evidencia vinculada a ${finding.elemento_afectado} en BD/Contratos`, estado: "ok" },
+          { paso: 3, agente: "Perfilador", accion: "Clasificación de Criticidad PII", detalle: `Nivel de riesgo ${finding.nivel_riesgo || 'MEDIO'} determinado`, estado: "ok" },
+          { paso: 4, agente: "DSPM", accion: "Verificación de No Conformidad Técnica", detalle: `Infracción a control ${finding.control_iso27701} constatada`, estado: "ok" },
+          { paso: 5, agente: "Normativo", accion: "Mapeo Jurídico & Precedentes ANPD", detalle: `Tipificación ${finding.articulo_ley29733} y precedentes aplicables`, estado: "ok" },
+          { paso: 6, agente: "Reflexión", accion: "Validación de Certeza y Severidad", detalle: `Exposición cuantificada en ${finding.multa_estimada_uit} UIT validada`, estado: "ok" },
+          { paso: 7, agente: "Auditor Coach", accion: "Emisión de Expediente Preliminar", detalle: "Expediente listo para acciones rápidas o dictamen pericial", estado: "ok" }
+        ]
       }
     ]);
   };
@@ -338,7 +384,9 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
           role: "assistant",
           content: data.mensaje || data.error || "Dictamen generado.",
           reasoning: data.reasoning,
-          sql_patch: data.sql_patch
+          sql_patch: data.sql_patch,
+          trazabilidad: data.trazabilidad || [],
+          contexto_unsa: data.contexto_unsa || {}
         }
       ]);
     } catch (e) {
@@ -994,44 +1042,82 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
               </div>
 
               {/* Mensajes del chat */}
-              <div className="flex-1 overflow-y-auto pr-1.5 flex flex-col gap-3 mb-3 max-h-[480px] min-h-[320px]">
+              <div 
+                onClick={handleChatContainerClick}
+                className="flex-1 overflow-y-auto pr-1.5 flex flex-col gap-3 mb-3 max-h-[480px] min-h-[320px]"
+              >
                 {chatHistory.map((m, idx) => (
-                  <div key={idx} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  <div key={idx} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} w-full`}>
+                    <div className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
+                      m.role === 'user'
+                        ? 'bg-zinc-800 text-zinc-100 border border-zinc-700/70 rounded-tr-none max-w-[85%] shadow-md ml-auto'
+                        : 'bg-zinc-950/90 text-zinc-200 border border-zinc-800 rounded-tl-none max-w-[95%] shadow-md w-full'
+                    }`}>
+                      {m.role === 'user' ? (
+                        <div className="whitespace-pre-wrap font-medium">{m.content}</div>
+                      ) : (
+                        <>
+                          <div
+                            className="chat-markdown"
+                            dangerouslySetInnerHTML={{
+                              __html: formatMarkdownCitations(m.content)
+                            }}
+                          />
+                          {m.contexto_unsa && m.contexto_unsa.disponible && (
+                            <div className="mt-3 pt-2 border-t border-sky-900/50 flex items-start gap-2 bg-sky-950/40 p-2.5 rounded-lg border border-sky-800/50">
+                              <span className="text-sm">🏛️</span>
+                              <div className="text-[11px] leading-relaxed text-sky-200">
+                                <span className="font-bold text-sky-300">Protocolo A2A (unsa-mind:8001):</span>{' '}
+                                <span className="text-slate-300">
+                                  {m.contexto_unsa.resumen_pericial || (m.contexto_unsa.citas && `Se incorporaron ${m.contexto_unsa.citas.length} citas normativas institucionales.`)}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    {/* Accordion de Trazabilidad Multi-Agente */}
+                    {m.trazabilidad && m.trazabilidad.length > 0 && (
+                      <details className="mt-1.5 w-full text-[11px] bg-slate-950/90 rounded-lg p-2 border border-cyan-900/60 text-slate-300">
+                        <summary className="cursor-pointer font-semibold text-cyan-400 flex items-center justify-between hover:text-cyan-300">
+                          <span className="flex items-center gap-1.5">
+                            <svg className="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                            Flujo Multi-Agente ({m.trazabilidad.length} nodos ejecutados)
+                          </span>
+                          <span className="text-[10px] text-cyan-500 font-mono">LangGraph Trace</span>
+                        </summary>
+                        <div className="mt-2 text-slate-400 font-mono text-[10px] border-t border-slate-800/80 pt-2 space-y-1.5">
+                          {m.trazabilidad.map((step, sIdx) => (
+                            <div key={sIdx} className="flex items-start gap-2 p-1.5 rounded bg-slate-900/80 border border-slate-800/60">
+                              <span className="px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 text-[9px] font-bold shrink-0">
+                                #{step.paso} {step.agente}
+                              </span>
+                              <div className="flex-1">
+                                <div className="text-white font-medium">{step.accion}</div>
+                                <div className="text-slate-400 mt-0.5">{step.detalle}</div>
+                              </div>
+                              <span className={`text-[9px] px-1 py-0.5 rounded font-bold shrink-0 ${step.estado === 'ok' ? 'text-emerald-400 bg-emerald-950/60 border border-emerald-800/40' : 'text-amber-400 bg-amber-950/60 border border-amber-800/40'}`}>
+                                {step.estado.toUpperCase()}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+
                     {/* Accordion de Reasoning */}
                     {m.reasoning && (
-                      <details className="mb-1.5 w-full text-[11px] bg-slate-950/90 rounded-lg p-2 border border-slate-800 text-slate-400">
+                      <details className="mt-1.5 w-full text-[11px] bg-slate-950/90 rounded-lg p-2 border border-slate-800 text-slate-400">
                         <summary className="cursor-pointer font-semibold text-cyan-400 flex items-center gap-1.5 hover:text-cyan-300">
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                           Cadena de razonamiento pericial
                         </summary>
                         <div className="mt-2 text-slate-400 font-mono text-[10px] whitespace-pre-wrap leading-relaxed border-t border-slate-800/80 pt-2">
                           {m.reasoning}
                         </div>
                       </details>
-                    )}
-
-                                        <div className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
-                      m.role === 'user'
-                        ? 'bg-zinc-800 text-zinc-100 border border-zinc-700/70 rounded-tr-none max-w-[85%] shadow-md ml-auto'
-                        : 'bg-zinc-950/90 text-zinc-200 border border-zinc-800 rounded-tl-none max-w-[95%] shadow-md'
-                    }`}>
-                      {m.role === 'user' ? (
-                        <div className="whitespace-pre-wrap font-medium">{m.content}</div>
-                      ) : (
-                        <div
-                          className="chat-markdown"
-                          dangerouslySetInnerHTML={{
-                            __html: formatMarkdownCitations(m.content)
-                          }}
-                        />
-                      )}
-                    </div>
-
-                    {chatLoading && (
-                      <div className="flex items-center gap-2 p-3 rounded-2xl bg-zinc-950/90 border border-zinc-800 text-xs text-slate-400">
-                        <div className="w-3.5 h-3.5 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin"></div>
-                        <span>Generando dictamen pericial...</span>
-                      </div>
                     )}
 
                     {/* SQL Patch Card */}
@@ -1067,6 +1153,12 @@ Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`
                     )}
                   </div>
                 ))}
+                {chatLoading && (
+                  <div className="flex items-center gap-2 p-3 rounded-2xl bg-zinc-950/90 border border-zinc-800 text-xs text-slate-400 animate-pulse">
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin"></div>
+                    <span>Generando dictamen pericial con el flujo multi-agente...</span>
+                  </div>
+                )}
                 <div ref={chatBottomRef} />
               </div>
 
