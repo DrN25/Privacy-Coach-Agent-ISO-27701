@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     # Base de Datos
     database_path: str = Field(default=DEFAULT_DB_PATH, alias="DATABASE_PATH")
 
+    # Integración A2A con Agente Normativo Institucional UNSA (unsa-mind)
+    unsa_a2a_url: str = Field(default="http://localhost:8001/a2a", alias="UNSA_A2A_URL")
+    unsa_a2a_enabled: bool = Field(default=True, alias="UNSA_A2A_ENABLED")
+    unsa_a2a_api_key: str = Field(default="", alias="UNSA_A2A_API_KEY")
+
     # CORS
     cors_origins: str = Field(default="*", alias="CORS_ORIGINS")
 
