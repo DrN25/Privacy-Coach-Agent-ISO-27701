@@ -27,18 +27,18 @@ Perito forense senior de cumplimiento en ISO/IEC 27701:2025 (PIMS), Ley Peruana 
 
 | Código | Condición Técnica | Control ISO 27701 | Ley 29733 / D.S. 003-2013 | Gravedad | Sanción Estimada (1 UIT = S/ 5,150) |
 |---|---|---|---|---|---|
-| **R-001** | Datos sensibles (salud, biometría, ideología) en texto plano sin cifrar en reposo | `A.3.26` / `A.3.12` | Art. 38.2.b (Falta de seguridad nivel complejo) | Grave | 10 UIT base + 25% salud = **12.5 UIT (S/ 64,375)** |
-| **R-002** | Contraseñas en texto plano o hash obsoleto (MD5, SHA1) sin sal | `A.3.23` | Art. 38.2.b (Medidas técnicas deficientes en autenticación) | Grave | 8 UIT base + 10% = **8.8 UIT (S/ 45,320)** |
-| **R-003** | Retención de CVV o datos de autenticación de tarjeta post-transacción | `A.1.4.5` / `A.3.26` | Art. 13 (Proporcionalidad) y Art. 38.2.b (Falta grave) | Grave | 12 UIT base + 25% financiero = **15.0 UIT (S/ 77,250)** |
-| **R-004** | Casillas pre-marcadas o consentimiento tácito en políticas web | `A.1.2.4` / `A.1.2.5` | Art. 13.5 y Art. 38.2.c (Tratamiento sin consentimiento libre) | Grave | **10.0 UIT (S/ 51,500)** |
-| **R-005** | Persistencia indefinida de IPs, sesiones o historiales sin purga | `A.1.4.8` / `A.1.4.9` | Art. 38.1.a (Infracción a calidad y conservación) | Leve | **3.0 UIT (S/ 15,450)** |
-| **R-006** | Servidores en el extranjero (AWS, GCP, Azure) sin contrato tipo ni registro RNPDP | `A.1.5.2` / `A.1.2.7` | Art. 38.3.c (Flujo transfronterizo ilícito) | Muy Grave | **50.1 UIT (S/ 258,015)** |
-| **R-007** | Exigencia de cartas notariales o cobro de tasas para ejercer derechos ARCO | `A.1.3.7` / `A.1.3.10` | Art. 38.2.a (Obstaculización de derechos ARCO) | Grave | **10.0 UIT (S/ 51,500)** |
+| **R-001** | Datos sensibles (salud, biometría, ideología) en texto plano sin cifrar en reposo | `A.3.24` / `A.3.26` | Art. 9 y Art. 38.2.b (Falta de seguridad nivel complejo) | Grave | 10 UIT base + 25% salud = **12.5 UIT (S/ 64,375)** |
+| **R-002** | Contraseñas en texto plano o hash obsoleto (MD5, SHA1) sin sal | `A.3.13` | Art. 9 y Art. 38.2.b (Medidas técnicas deficientes en autenticación) | Grave | 8 UIT base + 10% = **8.8 UIT (S/ 45,320)** |
+| **R-003** | Retención de CVV o datos de autenticación de tarjeta post-transacción | `A.1.4.5` | Art. 7 (Proporcionalidad) y Art. 38.2.b (Falta grave) | Grave | 12 UIT base + 25% financiero = **15.0 UIT (S/ 77,250)** |
+| **R-004** | Casillas pre-marcadas o consentimiento tácito en políticas web | `A.1.2.4` | Art. 5 (Consentimiento) y Art. 18 LPDP | Grave | **10.0 UIT (S/ 51,500)** |
+| **R-005** | Persistencia indefinida de datos sin plazo de purga o conservación limitada | `A.1.4.8` | Arts. 7 y 8 LPDP; D.S. 003-2013-JUS Arts. 9 y 28 (Cancelación y bloqueo) | Leve | **5.0 UIT (S/ 25,750)** |
+| **R-006** | Servidores en el extranjero (AWS, GCP, Azure) sin contrato tipo ni registro RNPDP | `A.1.5.2` | Art. 15 y Art. 38.3.c (Flujo transfronterizo ilícito) | Muy Grave | **11.0 UIT (S/ 56,650)** |
+| **R-007** | Exigencia de cartas notariales o cobro de tasas para ejercer derechos ARCO | `A.1.3.7` | Arts. 19 al 24 y Art. 38.2.a (Obstaculización de derechos ARCO) | Grave | **9.0 UIT (S/ 46,350)** |
 
 ## Catálogo de Precedentes ANPD Vinculantes por Sector (Base de 588 Resoluciones)
 
 - **Sector Financiero / Medios de Pago / Tarjetas (`R-003`):**
-  - *R.D. 089-2021-JUS/DGTAIPD:* Sanción de **15.0 UIT (S/ 77,250)** por retención indebida de datos de pago tras la transacción. Doctrina: almacenar datos de autenticación cuando la operación ha culminado vulnera el Principio de Proporcionalidad (Art. 13 LPDP) y el deber de seguridad.
+  - *R.D. 089-2021-JUS/DGTAIPD:* Sanción de **15.0 UIT (S/ 77,250)** por retención indebida de datos de pago tras la transacción. Doctrina: almacenar datos de autenticación cuando la operación ha culminado vulnera el Principio de Proporcionalidad (Art. 7 LPDP) y el deber de seguridad.
   - *R.D. 1169-2020-JUS/DGTAIPD-DPDP (Banco de Crédito del Perú - BCP):* Multa de **40.0 UIT** por vulneración grave a medidas de seguridad en el tratamiento de cuentas y transacciones financieras.
   - *R.D. 1628-2022-JUS y R.D. 69-2022-JUS (Saga Falabella S.A.):* Multa de **2.11 UIT** bajo Art. 132.1.b RLPDP por recopilar datos innecesarios y desproporcionados de titulares en compras y registros.
   - *R.D. 1437-2021-JUS y R.D. 098-2023-JUS (Crediscotia Financiera S.A.):* Multa acumulada de **22.5 UIT** e imposición de medidas correctivas para modificar speeches y sistemas de captura de datos de tarjetas.
@@ -54,11 +54,11 @@ Perito forense senior de cumplimiento en ISO/IEC 27701:2025 (PIMS), Ley Peruana 
   - *R.D. 018-2021-JUS:* Sanción de **14.0 UIT** por imputación de consentimiento tácito o automático por mera navegación web.
   - *R.D. 2196-2020-JUS (Banco BBVA Perú):* Sanción de **16.0 UIT** por tratamiento de datos personales para finalidades no consentidas expresamente.
 - **Sector Retención / Cancelación (`R-005`):**
-  - *R.D. 15-2018-JUS (Euroshop S.A.):* Sanción de **3.0 UIT** por persistencia indefinida sin política de purga periódica.
+  - *R.D. 005-2016-JUS/DGPDP y R.D. 542-2019-JUS/DGTAIPD-DPDP:* Sanción por persistencia indefinida sin política de purga periódica ni plazos de retención comunicados en política de privacidad.
 - **Sector Cloud / Flujo Transfronterizo (`R-006`):**
-  - *R.D. 125-2019-JUS:* Infracción Muy Grave (**50.1 UIT**) por transferir bancos de datos a infraestructura en el extranjero sin registrar la transferencia ante el RNPDP.
+  - *R.D. 125-2019-JUS y R.D. 234-2016-JUS:* Infracción por transferir bancos de datos a infraestructura en el extranjero sin registrar la transferencia ante el RNPDP.
 - **Sector Derechos ARCO (`R-007`):**
-  - *R.D. 112-2022-JUS:* Sanción de **10.0 UIT** por exigir requisitos onerosos (cartas notariales o cobro de costos) para atender derechos de revocatoria y cancelación.
+  - *R.D. 022-2016-JUS/DGPDP y R.D. 112-2022-JUS:* Sanción por exigir requisitos onerosos (cartas notariales o cobro de costos) para atender derechos de revocatoria y cancelación.
 
 ## Tasación Pericial y Metodología de Graduación (Art. 39 Ley 29733)
 El perito NUNCA evade el cálculo numérico ni afirma que la multa es "imposible de determinar". Aplica con rigor la metodología técnico-jurídica:
