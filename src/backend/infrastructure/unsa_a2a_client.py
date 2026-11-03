@@ -11,8 +11,8 @@ import httpx
 
 from ..core.config import settings
 
+logger = logging.getLogger("pims.unsa_a2a_client")
 DEFAULT_UNSA_A2A_URL = "http://localhost:8001/a2a"
-logger = logging.getLogger(__name__)
 
 
 class UNSAA2AClient:
@@ -38,8 +38,10 @@ class UNSAA2AClient:
 
     def verificar_conexion(self) -> bool:
         """Comprueba si el agente unsa-mind está disponible mediante su Agent Card."""
+        if not getattr(settings, "unsa_a2a_enabled", True) or os.getenv("UNSA_A2A_ENABLED", "").lower() in ("false", "0", "no"):
+            return False
         try:
-            with httpx.Client(timeout=3.0) as client:
+            with httpx.Client(timeout=1.5) as client:
                 res = client.get(self.agent_card_url, headers=self.headers)
                 return res.status_code == 200 and "Asistente" in res.text
         except Exception:
@@ -51,6 +53,14 @@ class UNSAA2AClient:
         Retorna la respuesta oficial con citas normativas y vigencia.
         """
         cid = context_id or f"tif-audit-{uuid.uuid4().hex[:8]}"
+        if not getattr(settings, "unsa_a2a_enabled", True) or os.getenv("UNSA_A2A_ENABLED", "").lower() in ("false", "0", "no"):
+            return {
+                "disponible": False,
+                "abstained": True,
+                "respuesta": "Agente UNSA desactivado.",
+                "citas": [],
+                "context_id": cid
+            }
         payload = {
             "jsonrpc": "2.0",
             "id": 1,
