@@ -19,6 +19,7 @@ from .routers.audit import router as audit_router
 from .routers.files import router as files_router
 from .routers.coach import router as coach_router
 from .routers.normative import router as normative_router
+from .routers.incidents import router as incidents_router
 
 
 @asynccontextmanager
@@ -93,6 +94,7 @@ app.include_router(audit_router)
 app.include_router(files_router)
 app.include_router(coach_router)
 app.include_router(normative_router)
+app.include_router(incidents_router)
 
 # Montaje de Frontend estático (React 18)
 base_backend = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

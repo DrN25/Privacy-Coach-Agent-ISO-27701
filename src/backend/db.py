@@ -4,6 +4,13 @@ import sqlite3
 DEFAULT_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "empresa_conocimiento.db")
 DB_PATH = os.path.abspath(os.getenv("DATABASE_PATH", DEFAULT_DB_PATH))
 
+# Autosemilla para entornos contenerizados (VPS / Docker volume)
+if DB_PATH != DEFAULT_DB_PATH and os.path.exists(DEFAULT_DB_PATH):
+    if not os.path.exists(DB_PATH) or os.path.getsize(DB_PATH) == 0:
+        import shutil
+        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+        shutil.copy2(DEFAULT_DB_PATH, DB_PATH)
+
 def get_db_connection():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH)

@@ -4,7 +4,7 @@ Endpoints: /api/chat, /api/remediate, /api/export-dictamen/{hallazgo_id}.
 """
 
 import datetime
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel, Field
 
@@ -16,9 +16,14 @@ router = APIRouter(tags=["Coach"])
 
 
 class ChatRequest(BaseModel):
-    hallazgo_id: int
-    mensaje_usuario: str
+    hallazgo_id: int = 0
+    mensaje_usuario: Optional[str] = None
+    mensaje: Optional[str] = None
     historial: List[dict] = Field(default_factory=list)
+
+    @property
+    def texto_pregunta(self) -> str:
+        return (self.mensaje_usuario or self.mensaje or "").strip()
 
 
 class RemediacionRequest(BaseModel):
@@ -39,13 +44,31 @@ def get_dialogar_coach():
 
 @router.post("/api/chat")
 def post_chat(req: ChatRequest):
+    texto_usuario = req.texto_pregunta
+    if not texto_usuario:
+        raise HTTPException(status_code=400, detail="El mensaje no puede estar vacío.")
+
     brecha = repository.obtener_hallazgo_por_id(req.hallazgo_id)
     if not brecha:
-        raise HTTPException(status_code=404, detail="Hallazgo no encontrado.")
+        # Consulta general de auditoría o normativa institucional
+        brecha = {
+            "id": req.hallazgo_id or 0,
+            "codigo_regla": "CONSULTA_GENERAL",
+            "titulo": "Consulta Institucional de Privacidad y Normativa UNSA",
+            "control_iso27701": "A.5.25",
+            "principio_iso29100": "P1_CONSENTIMIENTO",
+            "articulo_ley29733": "Art. 13",
+            "elemento_afectado": "Sistemas y Procesos UNSA",
+            "origen_archivo": "Corpus Normativo Institucional UNSA",
+            "directiva_seguridad": "Directiva General OTI / RCU 0103-2026",
+            "multa_estimada_uit": 5.0,
+            "multa_estimada_pen": 25750.0,
+            "precedente_anpd": "Jurisprudencia General de Fiscalización ANPD"
+        }
 
     # Enriquecer con contexto normativo
     brecha["contexto_normativo"] = knowledge_bridge.extraer_subgrafo_control(
-        brecha["control_iso27701"]
+        brecha.get("control_iso27701", "A.5.25")
     )
 
     # Cláusulas vinculadas
@@ -65,7 +88,7 @@ def post_chat(req: ChatRequest):
     conn.close()
 
     mensajes = req.historial or []
-    mensajes.append({"role": "user", "content": req.mensaje_usuario})
+    mensajes.append({"role": "user", "content": texto_usuario})
 
     # Invocación al Coach / Grafo Multi-Agente
     dialogar_fn = get_dialogar_coach()

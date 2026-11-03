@@ -1,4 +1,8 @@
-// Setup marked options for clean GitHub-Flavored Markdown
+// ==============================================================================
+// SISTEMA DE AUDITORÍA DSPM & GESTOR DE BRECHAS PII (ISO 27701 & LEY 29733)
+// Interfaz de Peritaje Forense Institucional • No-AI-Slop Architecture
+// ==============================================================================
+
 if (window.marked) {
   window.marked.setOptions({
     gfm: true,
@@ -6,1350 +10,1615 @@ if (window.marked) {
   });
 }
 
-// Global bridge for legal references modal (ensures availability before and after React mount)
+// Puente global para citas legales interactivas
 window.fetchLegalRefGlobal = function(tipo, refId) {
   if (window.__triggerLegalRefModal) {
     window.__triggerLegalRefModal(tipo, refId);
   } else {
-    console.warn("fetchLegalRefGlobal: React App not yet bound, queuing:", tipo, refId);
+    console.warn("fetchLegalRefGlobal: React App no enlazada aún:", tipo, refId);
   }
 };
 
 const { useState, useEffect, useMemo, useRef } = React;
 
+// ==============================================================================
+// ICONOGRAFÍA VECTORIAL ESPECÍFICA (SIN EMOJIS, LÍNEA SOBRIA 1.5PX)
+// ==============================================================================
+
+function IconShield({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  );
+}
+
+function IconFolder({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
+    </svg>
+  );
+}
+
+function IconFileText({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+      <line x1="10" y1="9" x2="8" y2="9" />
+    </svg>
+  );
+}
+
+function IconSearch({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  );
+}
+
+function IconExternalLink({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+  );
+}
+
+function IconDownload({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
+function IconTrash({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    </svg>
+  );
+}
+
+function IconCheck({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function IconX({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
+function IconUpload({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" y1="3" x2="12" y2="15" />
+    </svg>
+  );
+}
+
+function IconCpu({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="4" width="16" height="16" rx="2" />
+      <rect x="9" y="9" width="6" height="6" />
+      <line x1="9" y1="1" x2="9" y2="4" />
+      <line x1="15" y1="1" x2="15" y2="4" />
+      <line x1="9" y1="20" x2="9" y2="23" />
+      <line x1="15" y1="20" x2="15" y2="23" />
+      <line x1="20" y1="9" x2="23" y2="9" />
+      <line x1="20" y1="14" x2="23" y2="14" />
+      <line x1="1" y1="9" x2="4" y2="9" />
+      <line x1="1" y1="14" x2="4" y2="14" />
+    </svg>
+  );
+}
+
+function IconSend({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="22" y1="2" x2="11" y2="13" />
+      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+    </svg>
+  );
+}
+
+function IconMessageSquare({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
+// ==============================================================================
+// COMPONENTE PRINCIPAL
+// ==============================================================================
+
 function App() {
-  const [status, setStatus] = useState(null);
-  const [archivos, setArchivos] = useState([]);
-  const [inventario, setInventario] = useState([]);
-  const [clausulas, setClausulas] = useState([]);
-  const [hallazgos, setHallazgos] = useState([]);
-  const [resumen, setResumen] = useState({});
-  const [mockupsDisponibles, setMockupsDisponibles] = useState([]);
+  // Navegación principal de módulos: 'expedientes' | 'repositorio'
+  const [activeModule, setActiveModule] = useState('expedientes');
   
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'documents', 'database'
-  const [selectedFinding, setSelectedFinding] = useState(null);
-  const [subgraphData, setSubgraphData] = useState(null);
-  const [chatHistory, setChatHistory] = useState([]);
+  // Tema visual institucional (3 variantes Sillar Claro)
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('pims_unsa_theme');
+    if (saved === 'sillar') return 'sillar-lacre';
+    return saved || 'sillar-lacre';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('pims_unsa_theme', theme);
+  }, [theme]);
+
+  // Drawer lateral del Consultor DPO / Chatbot
+  const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
+
+  // Datos del backend
+  const [incidents, setIncidents] = useState([]);
+  const [selectedIncident, setSelectedIncident] = useState(null);
+  const [documents, setDocuments] = useState([]);
+  const [loadedDocuments, setLoadedDocuments] = useState([]);
+  const [systemStatus, setSystemStatus] = useState(null);
+  
+  // Filtros
+  const [searchIncident, setSearchIncident] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL'); // 'ALL' | 'OPEN' | 'RESOLVED'
+  const [searchDoc, setSearchDoc] = useState('');
+
+  // Modales
+  const [inspectDocModal, setInspectDocModal] = useState({ open: false, loading: false, data: null });
+  const [legalModal, setLegalModal] = useState({ open: false, loading: false, tipo: '', data: null });
+  const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', danger: false, onConfirm: null });
+  
+  // Consultor DPO y Chat
+  const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
-  
-  const [loading, setLoading] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
-  const [loadingMsg, setLoadingMsg] = useState('');
-  const [reanalysisNeeded, setReanalysisNeeded] = useState(false);
-  const [toast, setToast] = useState(null);
-  
-  // Custom React Confirmation Modal (replaces window.confirm)
-  const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null });
-  
-  // Modal de referencia legal (controles ISO, artículos Ley, sanciones ANPD)
-  const [legalRefModal, setLegalRefModal] = useState({ open: false, tipo: '', data: null, loading: false });
+  const [expandedFlows, setExpandedFlows] = useState({});
+  const [uploading, setUploading] = useState(false);
 
-  const handleExportDictamen = (finding) => {
-    if (!finding) return;
-    const fid = finding.codigo_regla || finding.id;
-    window.open(`/api/export-dictamen/${encodeURIComponent(fid)}`, '_blank');
+  const toggleFlowMessage = (index) => {
+    setExpandedFlows(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
   };
 
-  const formatMarkdownCitations = (content) => {
-    if (!content) return '';
-    let parsed = window.marked ? window.marked.parse(content) : content;
+  // Notificaciones Toast
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
 
-    // 1. Strip <code> tags wrapping ISO controls or Article citations to prevent nested elements
-    parsed = parsed.replace(/<code>\s*(A\.\d+\.\d+(?:\.\d+)?)\s*<\/code>/gi, '$1');
-    parsed = parsed.replace(/<code>\s*(Arts?\.?\s*\d+[^<]*?)\s*<\/code>/gi, '$1');
-
-    // 2. Replace ISO controls: A.1.4.8, A.3.24
-    parsed = parsed.replace(/\b(A\.\d+\.\d+(?:\.\d+)?)(?:\s*(?:\[Ref\]|\(Ref\)))?/gi, (fullMatch, match) => {
-      return `<button type="button" data-ref-type="control" data-ref-id="${match}" class="legal-ref-btn inline-flex items-center px-1.5 py-0.5 mx-0.5 text-[10px] font-mono font-medium rounded bg-cyan-950 text-cyan-300 border border-cyan-800 hover:bg-cyan-900 transition-colors cursor-pointer shadow-sm active:scale-95" onclick="if(window.fetchLegalRefGlobal){window.fetchLegalRefGlobal('control','${match}');}else{console.warn('fetchLegalRefGlobal not ready');}">${match} [Ref]</button>`;
-    });
-
-    // 3. Single-pass article matcher: both compound ("Arts. 7 y 8", "artículos 9 y 28") and single ("Art. 9", "artículo 10")
-    parsed = parsed.replace(/\b(?:Arts?\.?|art[ií]culos?)\s*(\d+)(?:\s*(?:y|,|e)\s*(\d+))?(?:\s*(?:\[Ley\]|\(Ley\)))?/gi, (fullMatch, num1, num2) => {
-      const btn1 = `<button type="button" data-ref-type="articulo" data-ref-id="Art_${num1}" class="legal-ref-btn inline-flex items-center px-1.5 py-0.5 mx-0.5 text-[10px] font-mono font-medium rounded bg-violet-950 text-violet-300 border border-violet-800 hover:bg-violet-900 transition-colors cursor-pointer shadow-sm active:scale-95" onclick="if(window.fetchLegalRefGlobal){window.fetchLegalRefGlobal('articulo','Art_${num1}');}else{console.warn('fetchLegalRefGlobal not ready');}">Art. ${num1} [Ley]</button>`;
-      if (num2) {
-        const btn2 = `<button type="button" data-ref-type="articulo" data-ref-id="Art_${num2}" class="legal-ref-btn inline-flex items-center px-1.5 py-0.5 mx-0.5 text-[10px] font-mono font-medium rounded bg-violet-950 text-violet-300 border border-violet-800 hover:bg-violet-900 transition-colors cursor-pointer shadow-sm active:scale-95" onclick="if(window.fetchLegalRefGlobal){window.fetchLegalRefGlobal('articulo','Art_${num2}');}else{console.warn('fetchLegalRefGlobal not ready');}">Art. ${num2} [Ley]</button>`;
-        return `${btn1} y ${btn2}`;
-      }
-      return btn1;
-    });
-
-    return parsed;
-  };
-
-  const handleChatContainerClick = (e) => {
-    const btn = e.target.closest('.legal-ref-btn, [data-ref-type]');
-    if (btn) {
-      e.preventDefault();
-      e.stopPropagation();
-      const tipo = btn.getAttribute('data-ref-type');
-      const refId = btn.getAttribute('data-ref-id');
-      if (tipo && refId) {
-        fetchLegalRef(tipo, refId);
-      }
-    }
-  };
-
-  // Panel de precedentes expandido
-  const [precedentPanel, setPrecedentPanel] = useState({ open: false, findingId: null });
-  
-  // Filtros de búsqueda en BD
-  const [searchColumna, setSearchColumna] = useState('');
-  const [filterCategoria, setFilterCategoria] = useState('ALL');
-
+  const fileInputRef = useRef(null);
   const chatBottomRef = useRef(null);
 
   const showToast = (message, type = 'info') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3800);
+    setToast({ visible: true, message, type });
+    setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 4500);
   };
 
-  // Fetch legal reference from backend
-  const fetchLegalRef = async (tipo, refId) => {
-    window.__triggerLegalRefModal = fetchLegalRef;
-    window.fetchLegalRefGlobal = fetchLegalRef;
-    setLegalRefModal({ open: true, tipo, data: null, loading: true });
-    try {
-      const res = await fetch('/api/legal-reference/' + encodeURIComponent(tipo) + '/' + encodeURIComponent(refId));
-      if (!res.ok) throw new Error('Referencia no encontrada');
-      const data = await res.json();
-      setLegalRefModal({ open: true, tipo, data, loading: false });
-    } catch (e) {
-      setLegalRefModal({ open: true, tipo, data: { error: e.message }, loading: false });
-    }
-  };
-  window.__triggerLegalRefModal = fetchLegalRef;
-  window.fetchLegalRefGlobal = fetchLegalRef;
-
+  // Enlace para citas normativas
   useEffect(() => {
-    window.__triggerLegalRefModal = fetchLegalRef;
-    window.fetchLegalRefGlobal = fetchLegalRef;
+    const handler = (tipo, refId) => {
+      fetchLegalReference(tipo, refId);
+    };
+    window.fetchLegalRefGlobal = handler;
+    window.__triggerLegalRefModal = handler;
+    return () => {
+      window.fetchLegalRefGlobal = null;
+      window.__triggerLegalRefModal = null;
+    };
+  }, []);
+
+  // Carga inicial de datos
+  useEffect(() => {
     fetchStatus();
-    fetchMockups();
-    loadDatabase();
+    fetchIncidents();
+    fetchDocumentsCorpus();
+    fetchLoadedDocuments();
   }, []);
 
   useEffect(() => {
     if (chatBottomRef.current) {
       chatBottomRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [chatHistory, loading]);
+  }, [chatMessages, chatLoading]);
+
+  // Sincronizar chat inicial al seleccionar incidente
+  useEffect(() => {
+    if (selectedIncident) {
+      setChatMessages([
+        {
+          role: 'assistant',
+          content: `**Expediente Activo:** \`${selectedIncident.incident_code}\`  \n**Sistema Auditado:** ${selectedIncident.compromised_system}  \n**Instrumento de Origen:** \`${selectedIncident.documento_fuente_pdf || 'Normativa institucional'}\`  \n**Norma Primaria:** [Ref: ISO 27701 ${selectedIncident.regla?.control_iso27701 || 'A.3.24'}] y [Ley 29733 Art. ${selectedIncident.regla?.articulo_lpdp || '28'}].\n\n¿Desea evaluar el nexo causal de esta brecha, revisar la cuantía en UIT (${selectedIncident.multa_estimada_uit || 12.5} UIT) o consultar los precedentes sancionadores de la ANPD?`,
+          provenance: 'local',
+          trazabilidad: [
+            { agente: 'Supervisor', estado: 'ok', accion: `Inicialización de expediente ${selectedIncident.incident_code}` },
+            { agente: 'Context Agent', estado: 'ok', accion: `Carga de activo ${selectedIncident.compromised_system}` },
+            { agente: 'DSPM Risk Engine', estado: 'ok', accion: `Cuantía preliminar de ${selectedIncident.multa_estimada_uit || 12.5} UIT` },
+            { agente: 'Normative Agent', estado: 'ok', accion: `Enlace normativo ISO 27701 (${selectedIncident.regla?.control_iso27701 || 'A.3.24'}) y Ley 29733` },
+            { agente: 'Oficial DPO', estado: 'ok', accion: 'Canal pericial interactivo activo' }
+          ]
+        }
+      ]);
+    }
+  }, [selectedIncident?.id]);
+
+  // ============================================================================
+  // SERVICIOS API
+  // ============================================================================
 
   const fetchStatus = async () => {
     try {
       const res = await fetch('/api/status');
-      const data = await res.json();
-      setStatus(data);
+      if (res.ok) setSystemStatus(await res.json());
     } catch (e) {
-      console.error(e);
+      console.warn("Estado backend no disponible:", e);
     }
   };
 
-  const fetchMockups = async () => {
+  const fetchIncidents = async () => {
     try {
-      const res = await fetch('/api/mockups');
-      const data = await res.json();
-      setMockupsDisponibles(data.mockups || []);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const loadDatabase = async () => {
-    try {
-      const res = await fetch('/api/database-view');
-      const data = await res.json();
-      setArchivos(data.archivos || []);
-      setInventario(data.inventario || []);
-      setClausulas(data.clausulas || []);
-      setHallazgos(data.hallazgos || []);
-      setResumen(data.resumen_impacto || {});
-
-      if (data.hallazgos && data.hallazgos.length > 0 && !selectedFinding) {
-        handleSelectFinding(data.hallazgos[0]);
+      const res = await fetch('/api/incidents');
+      if (res.ok) {
+        const data = await res.json();
+        const list = data.incidents || data.incidentes || [];
+        setIncidents(list);
+        if (list.length > 0 && !selectedIncident) {
+          fetchIncidentDetail(list[0].id);
+        }
       }
     } catch (e) {
-      console.error(e);
+      showToast('No se pudo conectar con el registro de incidentes', 'error');
     }
   };
 
-  // 1. REINICIAR DESDE CERO (Nueva Empresa)
-  const requestReset = () => {
+  const fetchIncidentDetail = async (id) => {
+    try {
+      const res = await fetch(`/api/incidents/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedIncident(data);
+      }
+    } catch (e) {
+      showToast('Error al obtener expediente', 'error');
+    }
+  };
+
+  const fetchDocumentsCorpus = async () => {
+    try {
+      const res = await fetch('/api/mockups');
+      if (res.ok) {
+        const data = await res.json();
+        setDocuments(data.mockups || []);
+      }
+    } catch (e) {
+      console.warn("Error al listar documentos:", e);
+    }
+  };
+
+  const fetchLoadedDocuments = async () => {
+    try {
+      const res = await fetch('/api/database-view');
+      if (res.ok) {
+        const data = await res.json();
+        setLoadedDocuments(data.archivos || []);
+      }
+    } catch (e) {
+      console.warn("Error al obtener archivos indexados:", e);
+    }
+  };
+
+  const handleCloseIncident = async (incidentId) => {
     setConfirmModal({
       open: true,
-      title: "Comenzar Auditoría desde Cero",
-      message: "¿Deseas borrar los documentos e inventario de la empresa? Tu espacio quedará limpio para una prueba desde cero.",
-      confirmText: "Reiniciar Todo",
-      confirmColor: "bg-rose-600 hover:bg-rose-500",
+      title: 'Cierre Formal de Expediente de Brecha',
+      message: `¿Confirma el cierre formal del expediente INC-UNSA-${incidentId}? El estado se actualizará a RESUELTO en el registro institucional y se registrará al auditor responsable.`,
+      danger: false,
       onConfirm: async () => {
-        setLoading(true);
-        setLoadingMsg("Limpiando base de datos y memoria SQLite...");
         try {
-          const res = await fetch('/api/reset', { method: 'POST' });
-          const data = await res.json();
-          setSelectedFinding(null);
-          setSubgraphData(null);
-          setChatHistory([]);
-          setReanalysisNeeded(false);
-          await loadDatabase();
-          await fetchStatus();
-          showToast(data.mensaje, "success");
+          const res = await fetch(`/api/incidents/${incidentId}/close`, { method: 'POST' });
+          if (res.ok) {
+            showToast(`Expediente INC-UNSA-${incidentId} cerrado formalmente.`, 'success');
+            await fetchIncidents();
+            await fetchIncidentDetail(incidentId);
+          } else {
+            showToast('No se pudo completar el cierre del expediente.', 'error');
+          }
         } catch (e) {
-          showToast("Error al reiniciar: " + e.message, "error");
+          showToast('Error de conexión al cerrar expediente', 'error');
         } finally {
-          setLoading(false);
-          setConfirmModal({ open: false });
+          setConfirmModal({ open: false, title: '', message: '', onConfirm: null });
         }
       }
     });
   };
 
-  // 2. CARGAR CASO COMPLETO SALUDTOTAL
-  const handleLoadFullCase = async () => {
-    setLoading(true);
-    setLoadingMsg("Cargando caso completo: DDL SQL, Políticas PDF, SLA Cloud y Diccionario...");
-    try {
-      const res = await fetch('/api/load-mockups', { method: 'POST' });
-      const data = await res.json();
-      setReanalysisNeeded(false);
-      await loadDatabase();
-      await fetchStatus();
-      showToast(data.mensaje, "success");
-    } catch (e) {
-      showToast("Error: " + e.message, "error");
-    } finally {
-      setLoading(false);
-    }
+  const handleExportDictamen = (incidentId) => {
+    window.open(`/api/incidents/${incidentId}/export-dictamen`, '_blank');
   };
 
-  // 3. CARGAR UN MOCKUP INDIVIDUAL
-  const handleLoadSingleMockup = async (filename) => {
-    setLoading(true);
-    setLoadingMsg(`Cargando e incorporando ${filename} a la BD...`);
-    try {
-      const res = await fetch(`/api/load-single-mockup/${filename}`, { method: 'POST' });
-      const data = await res.json();
-      setReanalysisNeeded(true);
-      await loadDatabase();
-      await fetchStatus();
-      showToast(data.mensaje, "success");
-    } catch (e) {
-      showToast("Error: " + e.message, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 4. SUBIR ARCHIVO MANUAL
-  const handleUploadFile = async (e) => {
-    const file = e.target.files[0];
+  const handleUploadDocument = async (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
     const formData = new FormData();
     formData.append('file', file);
 
-    setLoading(true);
-    setLoadingMsg(`Parseando ${file.name} con AST sqlglot / PyMuPDF...`);
+    setUploading(true);
+    showToast(`Procesando '${file.name}' con OCR y AST...`, 'info');
+
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
         body: formData
       });
-      const data = await res.json();
-      setReanalysisNeeded(true);
-      await loadDatabase();
-      await fetchStatus();
-      showToast(data.mensaje, "success");
-    } catch (e) {
-      showToast("Error: " + e.message, "error");
+
+      if (res.ok) {
+        showToast(`Documento '${file.name}' incorporado al inventario activo.`, 'success');
+        await Promise.all([fetchDocumentsCorpus(), fetchLoadedDocuments(), fetchIncidents()]);
+      } else {
+        const err = await res.json();
+        showToast(err.detail || 'Error al procesar el archivo', 'error');
+      }
+    } catch (err) {
+      showToast('Error de red al subir el documento', 'error');
     } finally {
-      setLoading(false);
+      setUploading(false);
       e.target.value = '';
     }
   };
 
-  // 5. ELIMINAR DOCUMENTO (Con modal propio de React)
-  const requestDeleteDocument = (id, nombre) => {
+  const handleExcludeDocument = (archivoId, nombreArchivo) => {
     setConfirmModal({
       open: true,
-      title: "Eliminar Documento del Repositorio",
-      message: `¿Seguro que deseas eliminar '${nombre}'? Se removerán sus columnas asociadas de SQLite y se requerirá un reanálisis.`,
-      confirmText: "Eliminar",
-      confirmColor: "bg-rose-600 hover:bg-rose-500",
+      title: 'Excluir Instrumento del Alcance Activo',
+      message: `¿Desea excluir '${nombreArchivo}' del inventario de auditoría? Se desvincularán sus cláusulas y columnas sensibles.`,
+      danger: true,
       onConfirm: async () => {
-        setLoading(true);
-        setLoadingMsg(`Removiendo ${nombre} de la base de datos...`);
         try {
-          const res = await fetch(`/api/documents/${id}`, { method: 'DELETE' });
-          const data = await res.json();
-          setReanalysisNeeded(true);
-          await loadDatabase();
-          await fetchStatus();
-          showToast(data.mensaje, "success");
+          const res = await fetch(`/api/documents/${archivoId}`, { method: 'DELETE' });
+          if (res.ok) {
+            showToast(`Instrumento '${nombreArchivo}' excluido.`, 'info');
+            await Promise.all([fetchLoadedDocuments(), fetchDocumentsCorpus()]);
+            if (inspectDocModal.open && inspectDocModal.data?.archivo?.id === archivoId) {
+              setInspectDocModal({ open: false, loading: false, data: null });
+            }
+          }
         } catch (e) {
-          showToast("Error al eliminar: " + e.message, "error");
+          showToast('Error al excluir el documento', 'error');
         } finally {
-          setLoading(false);
-          setConfirmModal({ open: false });
+          setConfirmModal({ open: false, title: '', message: '', onConfirm: null });
         }
       }
     });
   };
 
-  // 6. EJECUTAR REANÁLISIS
-  const handleReanalyze = async () => {
-    setLoading(true);
-    setLoadingMsg("Ejecutando Reanálisis de Privacidad (DSPM + Router O(1))...");
+  const handleInspectDocument = async (archivoIdOrName) => {
+    setInspectDocModal({ open: true, loading: true, data: null });
     try {
-      const res = await fetch('/api/reanalyze', { method: 'POST' });
-      const data = await res.json();
-      setReanalysisNeeded(false);
-      await loadDatabase();
-      showToast(data.mensaje, "success");
-    } catch (e) {
-      showToast("Error en reanálisis: " + e.message, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 7. SELECCIONAR HALLAZGO Y EXTRAER SUBGRAFO
-  const handleSelectFinding = async (finding) => {
-    setSelectedFinding(finding);
-    try {
-      const res = await fetch(`/api/subgraph/${finding.control_iso27701}`);
-      const data = await res.json();
-      setSubgraphData(data);
-    } catch (e) {
-      console.error(e);
-    }
-
-    setChatHistory([
-      {
-        role: "assistant",
-        content: `### Expediente de Auditoría: No Conformidad ${finding.codigo_regla}
-
-* **Activo / Elemento:** \`${finding.elemento_afectado}\`
-* **Control ISO/IEC 27701:2025:** \`${finding.control_iso27701}\` (${finding.control_nombre || 'Seguridad en Tratamiento'})
-* **Tipificación Ley 29733:** ${finding.articulo_ley29733}
-* **Exposición Sancionadora ANPD:** **${finding.multa_estimada_uit} UIT** (S/ ${finding.multa_estimada_pen.toLocaleString('es-PE')})
-* **Precedente:** ${finding.precedente_anpd || 'Resolución Directoral ANPD'}
-
-Selecciona una acción técnica rápida o ingresa un requerimiento pericial.`,
-        trazabilidad: [
-          { paso: 1, agente: "Supervisor", accion: "Identificación de Brecha y Enrutamiento", detalle: `Apertura de expediente pericial para hallazgo ${finding.codigo_regla}`, estado: "ok" },
-          { paso: 2, agente: "Contextualizador", accion: "Ingesta de Fuentes y Correlación", detalle: `Evidencia vinculada a ${finding.elemento_afectado} en BD/Contratos`, estado: "ok" },
-          { paso: 3, agente: "Perfilador", accion: "Clasificación de Criticidad PII", detalle: `Nivel de riesgo ${finding.nivel_riesgo || 'MEDIO'} determinado`, estado: "ok" },
-          { paso: 4, agente: "DSPM", accion: "Verificación de No Conformidad Técnica", detalle: `Infracción a control ${finding.control_iso27701} constatada`, estado: "ok" },
-          { paso: 5, agente: "Normativo", accion: "Mapeo Jurídico & Precedentes ANPD", detalle: `Tipificación ${finding.articulo_ley29733} y precedentes aplicables`, estado: "ok" },
-          { paso: 6, agente: "Reflexión", accion: "Validación de Certeza y Severidad", detalle: `Exposición cuantificada en ${finding.multa_estimada_uit} UIT validada`, estado: "ok" },
-          { paso: 7, agente: "Auditor Coach", accion: "Emisión de Expediente Preliminar", detalle: "Expediente listo para acciones rápidas o dictamen pericial", estado: "ok" }
-        ]
+      const res = await fetch(`/api/documents/${encodeURIComponent(archivoIdOrName)}/preview`);
+      if (res.ok) {
+        const data = await res.json();
+        setInspectDocModal({ open: true, loading: false, data });
+        if (!documents.some(d => d.id === data?.archivo?.id)) {
+          fetchLoadedDocuments();
+          fetchDocumentsCorpus();
+        }
+      } else {
+        showToast('No se pudo cargar la vista previa del instrumento', 'error');
+        setInspectDocModal({ open: false, loading: false, data: null });
       }
-    ]);
+    } catch (e) {
+      showToast('Error al inspeccionar documento', 'error');
+      setInspectDocModal({ open: false, loading: false, data: null });
+    }
   };
 
-  // 8. ENVIAR MENSAJE AL COACH (OpenRouter DeepSeek v4.1 Flash)
-  const handleSendMessage = async (promptOverride = null, findingOverride = null) => {
-    const currentFinding = findingOverride || selectedFinding;
-    const textToSend = promptOverride || chatInput.trim();
-    if (!textToSend || !currentFinding) return;
-
-    if (findingOverride && (!selectedFinding || selectedFinding.id !== findingOverride.id)) {
-      setSelectedFinding(findingOverride);
-    }
-
-    const newHistory = [...chatHistory, { role: "user", content: textToSend }];
-    setChatHistory(newHistory);
-    if (!promptOverride) setChatInput('');
-
-    setChatLoading(true);
+  const fetchLegalReference = async (tipo, refId) => {
+    setLegalModal({ open: true, loading: true, tipo, data: null });
     try {
+      const res = await fetch(`/api/legal-reference/${tipo}/${encodeURIComponent(refId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setLegalModal({ open: true, loading: false, tipo, data });
+      } else {
+        showToast('Referencia legal no encontrada en el corpus normativo', 'error');
+        setLegalModal({ open: false, loading: false, tipo, data: null });
+      }
+    } catch (e) {
+      showToast('Error al consultar referencia legal', 'error');
+      setLegalModal({ open: false, loading: false, tipo, data: null });
+    }
+  };
+
+  const handleSendChat = async (promptTexto) => {
+    const texto = (promptTexto || chatInput).trim();
+    if (!texto || chatLoading) return;
+
+    const nuevoMsgUser = { role: 'user', content: texto };
+    setChatMessages(prev => [...prev, nuevoMsgUser]);
+    if (!promptTexto) setChatInput('');
+    setChatLoading(true);
+
+    try {
+      const payload = {
+        hallazgo_id: selectedIncident?.id || 1,
+        mensaje: texto,
+        mensaje_usuario: texto,
+        historial: chatMessages.slice(-6).map(m => ({ role: m.role, content: m.content }))
+      };
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          hallazgo_id: currentFinding.id,
-          mensaje_usuario: textToSend,
-          historial: newHistory.slice(-6)
-        })
+        body: JSON.stringify(payload)
       });
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Servidor devolvió código ${res.status}: ${errorText.slice(0, 100)}`);
+
+      if (res.ok) {
+        const data = await res.json();
+        setChatMessages(prev => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: data.mensaje || data.respuesta || 'Dictamen pericial emitido.',
+            provenance: data.mode || (data.contexto_unsa?.a2a_disponible ? 'a2a' : 'local'),
+            trazabilidad: data.trazabilidad || [],
+            reasoning: data.reasoning || '',
+            sql_patch: data.sql_patch || '',
+            citas: data.citas || []
+          }
+        ]);
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        showToast(errData.detail || 'Error al consultar al motor pericial', 'error');
       }
-      const data = await res.json();
-      setChatHistory(prev => [
-        ...prev,
-        {
-          role: "assistant",
-          content: data.mensaje || data.error || "Dictamen generado.",
-          reasoning: data.reasoning,
-          sql_patch: data.sql_patch,
-          trazabilidad: data.trazabilidad || [],
-          contexto_unsa: data.contexto_unsa || {}
-        }
-      ]);
-    } catch (e) {
-      setChatHistory(prev => [
-        ...prev,
-        { role: "assistant", content: "Error al consultar al Auditor de Cumplimiento: " + e.message }
-      ]);
+    } catch (err) {
+      showToast('Error de comunicación con el consultor', 'error');
     } finally {
       setChatLoading(false);
+      setTimeout(() => {
+        chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
     }
   };
 
-  // 9. MARCAR COMO REMEDIADO
-  const handleRemediate = async () => {
-    if (!selectedFinding) return;
-    try {
-      const res = await fetch('/api/remediate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          hallazgo_id: selectedFinding.id,
-          parche_sql: "-- Remediado"
-        })
-      });
-      const data = await res.json();
-      showToast(data.mensaje, "success");
-      await loadDatabase();
-    } catch (e) {
-      showToast("Error: " + e.message, "error");
-    }
-  };
+  // Filtrado de incidentes
+  const filteredIncidents = useMemo(() => {
+    return incidents.filter(inc => {
+      const matchSearch = !searchIncident || 
+        inc.title?.toLowerCase().includes(searchIncident.toLowerCase()) ||
+        inc.incident_code?.toLowerCase().includes(searchIncident.toLowerCase()) ||
+        inc.compromised_system?.toLowerCase().includes(searchIncident.toLowerCase());
 
-  // Filtros de inventario
-  const inventarioFiltrado = useMemo(() => {
-    return inventario.filter(item => {
-      const matchesSearch = item.nombre_columna.toLowerCase().includes(searchColumna.toLowerCase()) ||
-                            item.nombre_tabla.toLowerCase().includes(searchColumna.toLowerCase());
-      const matchesCat = filterCategoria === 'ALL' || item.categoria_sensible === filterCategoria;
-      return matchesSearch && matchesCat;
+      const matchStatus = 
+        statusFilter === 'ALL' ? true :
+        statusFilter === 'OPEN' ? inc.status !== 'RESUELTO' :
+        inc.status === 'RESUELTO';
+
+      return matchSearch && matchStatus;
     });
-  }, [inventario, searchColumna, filterCategoria]);
+  }, [incidents, searchIncident, statusFilter]);
+
+  // Filtrado de documentos
+  const filteredDocs = useMemo(() => {
+    return documents.filter(doc => {
+      return !searchDoc ||
+        doc.nombre?.toLowerCase().includes(searchDoc.toLowerCase()) ||
+        doc.descripcion?.toLowerCase().includes(searchDoc.toLowerCase());
+    });
+  }, [documents, searchDoc]);
+
+  // Renderizador de Markdown con citas interactivas profesionales (sin emojis ni colisiones)
+  const renderLegalMarkdown = (text) => {
+    if (!text) return '';
+    // Sanitizar posibles fragmentos de HTML corrupto previo o emojis
+    let clean = text
+      .replace(/<button[^>]*>.*?<\/button>/gi, '')
+      .replace(/[📜⚖️]/gu, '');
+
+    // Paso 1: Convertir referencias normativas a tokens únicos seguros
+    let processed = clean
+      .replace(/\[(?:Ref:\s*)?ISO\s*27701\s*([0-9a-zA-Z\.]+)\]/gi, '@@@TOKEN_ISO_$1@@@')
+      .replace(/\[(?:Ref:\s*)?Ley\s*29733\s*Art\.?\s*([0-9\w\-]+)\]/gi, '@@@TOKEN_LEY_$1@@@')
+      .replace(/\bISO(?:\/IEC)?\s*27701(?:\s*:\s*2025)?\s+(?:control\s+)?([A-Za-z]\.[0-9]+(?:\.[0-9]+)?)\b/gi, '@@@TOKEN_ISO_$1@@@')
+      .replace(/\bLey\s*(?:N°\s*)?29733(?:\s*,\s*|\s+)Art(?:ículo|\.)?\s*([0-9\w\-]+)\b/gi, '@@@TOKEN_LEY_$1@@@')
+      .replace(/\bArt(?:ículo|\.)?\s*([0-9\w\-]+)\s+de\s+la\s+Ley\s*(?:N°\s*)?29733\b/gi, '@@@TOKEN_LEY_$1@@@');
+
+    // Paso 2: Reemplazar tokens con botones tipográficos limpios y accesibles
+    processed = processed
+      .replace(/@@@TOKEN_ISO_([0-9a-zA-Z\.]+)@@@/g, (m, p) => {
+        return `<button type="button" onclick="window.fetchLegalRefGlobal('iso27701', '${p}')" class="inline-flex items-center px-1.5 py-0.5 rounded bg-rose-50 hover:bg-rose-100 text-rose-900 border border-rose-300 text-xs font-mono font-semibold cursor-pointer transition-colors shadow-2xs mx-0.5" title="Ver control ISO/IEC 27701 ${p}">ISO 27701 ${p}</button>`;
+      })
+      .replace(/@@@TOKEN_LEY_([0-9\w\-]+)@@@/g, (m, p) => {
+        return `<button type="button" onclick="window.fetchLegalRefGlobal('ley29733', '${p}')" class="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-mono font-semibold cursor-pointer transition-colors shadow-2xs mx-0.5" title="Ver Artículo ${p} de la Ley N° 29733">Ley 29733 Art. ${p}</button>`;
+      });
+
+    if (window.marked) {
+      return { __html: window.marked.parse(processed) };
+    }
+    return { __html: processed };
+  };
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-[#070a12] text-slate-100 font-sans">
+    <div className="min-h-screen flex flex-col bg-surface-ground text-ink-primary font-sans relative">
       
-      {/* NAVBAR DE INGENIERÍA */}
-      <header className="glass-header sticky top-0 z-40 px-6 py-3 border-b border-slate-800/80 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-violet-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm font-bold tracking-tight text-white">Privacy & DSPM Multi-Agent System</h1>
-              <span className="text-[10px] bg-cyan-950/90 text-cyan-300 font-mono px-2 py-0.5 rounded-full border border-cyan-800/60 font-semibold">
-                ISO 27701:2025 • Ley 29733
-              </span>
+      {/* ==================================================================== */}
+      {/* 1. CABECERA INSTITUCIONAL Y SELECTOR DE MÓDULOS                      */}
+      {/* ==================================================================== */}
+      <header className="h-14 app-header px-5 flex items-center justify-between shrink-0 select-none shadow-xs">
+        
+        {/* Identidad de la Plataforma */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-white/15 text-white font-serif font-bold text-sm flex items-center justify-center border border-white/20 shadow-xs">
+              U
             </div>
-            <p className="text-[11px] text-slate-400">Trabajo de Investigación Formativa — Auditoría de Sistemas (UNSA)</p>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-serif font-bold text-sm text-white tracking-tight">
+                  SISTEMA DE AUDITORÍA DSPM & GESTOR DE BRECHAS PII
+                </span>
+                <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-white/15 text-white/90 border border-white/20">
+                  ISO 27701 • LEY 29733
+                </span>
+              </div>
+              <div className="text-[11px] text-white/80">
+                Entidad Auditada: <strong className="text-white font-semibold">Universidad Nacional de San Agustín de Arequipa (UNSA)</strong>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Action Center in Header */}
-        <div className="flex items-center gap-3">
+        {/* Selector de Módulos Principales (Desacoplado y Evidente) */}
+        <div className="flex items-center gap-1 bg-black/20 p-1 rounded border border-white/15">
           <button
-            onClick={requestReset}
-            className="px-3 py-1.5 rounded-lg bg-slate-900/90 hover:bg-rose-950/60 hover:text-rose-300 hover:border-rose-800/80 border border-slate-800 text-xs font-semibold text-slate-300 transition-all flex items-center gap-1.5"
-            title="Borra la base de datos de la empresa para empezar una prueba limpia"
+            onClick={() => setActiveModule('expedientes')}
+            className={`px-3 py-1.5 rounded text-xs font-medium transition-colors inline-flex items-center gap-1.5 ${
+              activeModule === 'expedientes'
+                ? 'bg-white text-slate-900 font-bold shadow-xs'
+                : 'text-white/80 hover:text-white'
+            }`}
           >
-            <svg className="w-3.5 h-3.5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            <span>Nueva Empresa (Reset 0)</span>
+            <IconShield className="w-3.5 h-3.5" />
+            <span>Expedientes de Brechas ({incidents.length})</span>
           </button>
 
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs font-mono">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-slate-400">LLM:</span>
-            <span className="text-cyan-300 font-bold">{status?.llm_model || 'deepseek/deepseek-v4.1-flash'}</span>
+          <button
+            onClick={() => setActiveModule('repositorio')}
+            className={`px-3 py-1.5 rounded text-xs font-medium transition-colors inline-flex items-center gap-1.5 ${
+              activeModule === 'repositorio'
+                ? 'bg-white text-slate-900 font-bold shadow-xs'
+                : 'text-white/80 hover:text-white'
+            }`}
+          >
+            <IconFolder className="w-3.5 h-3.5" />
+            <span>Repositorio de Instrumentos ({documents.length})</span>
+          </button>
+        </div>
+
+        {/* Acciones, Variantes Sillar Claro y Copilot Trigger */}
+        <div className="flex items-center gap-2.5">
+          
+          {/* Selector de 3 Variantes Sillar Claro */}
+          <div className="flex items-center gap-1 bg-black/20 p-1 rounded border border-white/15">
+            <button
+              onClick={() => setTheme('sillar-lacre')}
+              className={`px-2 py-1 rounded text-[11px] font-medium transition-all inline-flex items-center gap-1.5 ${
+                theme === 'sillar-lacre' || theme === 'sillar'
+                  ? 'bg-white text-slate-900 font-bold shadow-xs'
+                  : 'text-white/80 hover:text-white'
+              }`}
+              title="Variante 1: Sillar Lacre Cardenal UNSA (Heráldico)"
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-[#881337] border border-white/80 shadow-2xs"></span>
+              <span>Lacre Cardenal</span>
+            </button>
+
+            <button
+              onClick={() => setTheme('sillar-cobalto')}
+              className={`px-2 py-1 rounded text-[11px] font-medium transition-all inline-flex items-center gap-1.5 ${
+                theme === 'sillar-cobalto'
+                  ? 'bg-white text-slate-900 font-bold shadow-xs'
+                  : 'text-white/80 hover:text-white'
+              }`}
+              title="Variante 2: Sillar Cobalto Forense & DSPM (Gobernanza)"
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-[#0284c7] border border-white/80 shadow-2xs"></span>
+              <span>Cobalto Pericial</span>
+            </button>
+
+            <button
+              onClick={() => setTheme('sillar-terracota')}
+              className={`px-2 py-1 rounded text-[11px] font-medium transition-all inline-flex items-center gap-1.5 ${
+                theme === 'sillar-terracota'
+                  ? 'bg-white text-slate-900 font-bold shadow-xs'
+                  : 'text-white/80 hover:text-white'
+              }`}
+              title="Variante 3: Sillar Terracota Andino & Olivo (Editorial)"
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-[#c2410c] border border-white/80 shadow-2xs"></span>
+              <span>Terracota Andino</span>
+            </button>
           </div>
+
+          <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 border border-white/20 cursor-pointer transition-colors text-xs font-medium text-white">
+            <IconUpload className="w-3.5 h-3.5" />
+            <span>{uploading ? "Indexando..." : "Cargar Instrumento"}</span>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept=".pdf,.sql,.md,.txt" 
+              onChange={handleUploadDocument}
+              disabled={uploading}
+            />
+          </label>
+
+          <button
+            onClick={() => setChatDrawerOpen(prev => !prev)}
+            className={`px-3 py-1.5 rounded text-xs font-medium inline-flex items-center gap-1.5 border transition-colors ${
+              chatDrawerOpen
+                ? 'bg-white text-slate-900 font-bold border-white shadow-sm'
+                : 'bg-white/10 hover:bg-white/20 text-white border-white/20'
+            }`}
+            title="Abrir Asistente DPO y Jurisprudencia ANPD"
+          >
+            <IconMessageSquare className="w-3.5 h-3.5" />
+            <span>Consultor DPO</span>
+          </button>
         </div>
       </header>
 
-      {/* BARRA DE PROGRESO DE REMEDIACIÓN */}
-      {hallazgos.length > 0 && (
-        <div className="mx-6 mt-3 flex items-center gap-3">
-          <div className="flex-1 h-2 rounded-full bg-slate-800 overflow-hidden">
-            <div 
-              className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 transition-all duration-700"
-              style={{ width: `${hallazgos.length > 0 ? (hallazgos.filter(h => h.estado === 'REMEDIADO').length / hallazgos.length * 100) : 0}%` }}
-            />
-          </div>
-          <span className="text-[11px] font-mono text-slate-400 whitespace-nowrap">
-            {hallazgos.filter(h => h.estado === 'REMEDIADO').length}/{hallazgos.length} remediados
-          </span>
-          {hallazgos.filter(h => h.estado === 'REMEDIADO').length === hallazgos.length && hallazgos.length > 0 && (
-            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-700">✓ Completo</span>
-          )}
-        </div>
-      )}
-
-      {/* POPUP / MODAL DE REANÁLISIS OBLIGATORIO (TRIGGER REACTIVO) */}
-      {reanalysisNeeded && (
-        <div className="mx-6 mt-3 p-3 rounded-xl bg-gradient-to-r from-amber-950/90 to-slate-900 border border-amber-500/70 shadow-2xl flex items-center justify-between gap-4 animate-pulse-slow">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/20 text-amber-400">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-            </div>
-            <div>
-              <h4 className="text-xs font-bold text-amber-200">Repositorio Documental Modificado</h4>
-              <p className="text-[11px] text-amber-300/80">Se añadieron o eliminaron documentos de la empresa. Se requiere un reanálisis para sincronizar las brechas y multas.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleReanalyze}
-              className="py-1.5 px-4 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-md shadow-amber-500/20 transition-all flex items-center gap-1.5"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-              <span>Ejecutar reanálisis</span>
-            </button>
-            <button
-              onClick={() => setReanalysisNeeded(false)}
-              className="py-1.5 px-3 rounded-lg bg-slate-800 text-slate-400 hover:text-slate-200 text-xs"
-            >
-              Descartar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* BANNER DEL EMBUDO QUIRÚRGICO */}
-      <div className="mx-6 mt-3 p-3 rounded-xl glass-card flex flex-col md:flex-row items-center justify-between gap-3 text-xs border border-slate-800">
-        <div className="flex items-center gap-2">
-          <span className="text-violet-400 font-bold flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
-            Embudo de Reducción:
-          </span>
-          <span className="text-slate-400 text-[11px]">De 150,000 tokens normativos a 850 tokens quirúrgicos para el Auditor</span>
-        </div>
-        <div className="flex items-center gap-1.5 font-mono text-[10px]">
-          <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400">150k Normas</span>
-          <span className="text-slate-600">→</span>
-          <span className="px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-800 text-cyan-300">AST & 3 Candados</span>
-          <span className="text-slate-600">→</span>
-          <span className="px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-800 text-emerald-300">Router O(1) 0.2ms</span>
-          <span className="text-slate-600">→</span>
-          <span className="px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800 text-rose-300 font-bold">850t Payload Auditor</span>
-        </div>
-      </div>
-
-      {/* METRICAS DE IMPACTO FINANCIERO */}
-      <div className="mx-6 mt-3 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="glass-card p-3 border-slate-800">
-          <span className="text-[11px] text-slate-400">Documentos Activos</span>
-          <div className="flex items-baseline justify-between mt-1">
-            <span className="text-xl font-bold font-mono text-white">{archivos.length}</span>
-            <span className="text-[10px] text-slate-500 font-mono">{inventario.length} columnas en BD</span>
-          </div>
-        </div>
-        <div className="glass-card p-3 border-slate-800">
-          <span className="text-[11px] text-slate-400">Brechas Detectadas</span>
-          <div className="flex items-baseline justify-between mt-1">
-            <span className="text-xl font-bold font-mono text-rose-400">{resumen.total_brechas || 0}</span>
-            <span className="text-[10px] text-rose-400/80 font-bold font-mono">{resumen.brechas_criticas || 0} críticas</span>
-          </div>
-        </div>
-        <div className="glass-card p-3 border-slate-800">
-          <span className="text-[11px] text-slate-400">Multa Total ANPD</span>
-          <div className="flex items-baseline justify-between mt-1">
-            <span className="text-xl font-bold font-mono text-amber-400">{resumen.multa_total_uit || 0} UIT</span>
-            <span className="text-[10px] text-slate-400 font-mono">Ley N.° 29733</span>
-          </div>
-        </div>
-        <div className="glass-card p-3 border-slate-800">
-          <span className="text-[11px] text-slate-400">Exposición en Soles</span>
-          <div className="flex items-baseline justify-between mt-1">
-            <span className="text-lg font-bold font-mono text-emerald-400">
-              S/ {(resumen.multa_total_pen || 0).toLocaleString('es-PE', { minimumFractionDigits: 2 })}
-            </span>
-            <span className="text-[10px] text-slate-500">Estimación ANPD</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ESTADO VACÍO: PROBAR DESDE CERO */}
-      {archivos.length === 0 ? (
-        <div className="mx-6 my-8 p-12 glass-card border-dashed border-2 border-slate-800 rounded-2xl flex flex-col items-center justify-center text-center">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-600/20 to-violet-600/20 border border-cyan-500/30 flex items-center justify-center mb-4 shadow-lg shadow-cyan-500/10">
-            <svg className="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-          </div>
-          <h2 className="text-lg font-bold text-white mb-2">Comienza la Auditoría de tu Empresa desde Cero</h2>
-          <p className="text-xs text-slate-400 max-w-lg mb-6 leading-relaxed">
-            Actualmente no hay ningún documento cargado en la base de datos interna SQLite (KB-3). Sube los archivos reales de tu empresa o carga el pack de prueba de la clínica "SaludTotal S.A.C." para comprobar el funcionamiento.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <button
-              onClick={handleLoadFullCase}
-              className="py-3 px-6 rounded-xl bg-gradient-to-r from-cyan-600 to-violet-600 hover:from-cyan-500 hover:to-violet-500 font-bold text-xs text-white shadow-lg shadow-cyan-600/20 transition-all flex items-center gap-2"
-            >
-              <svg className="w-4 h-4 text-cyan-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-              <span>Cargar caso SaludTotal (4 archivos)</span>
-            </button>
-
-            <label className="py-3 px-6 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-xs font-semibold text-slate-200 cursor-pointer transition-all flex items-center gap-2">
-              <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-              <span>Subir Archivo Propio (SQL, PDF, MD, TXT)</span>
-              <input type="file" className="hidden" onChange={handleUploadFile} accept=".sql,.pdf,.md,.txt" />
-            </label>
-          </div>
-
-          {/* Carga Selectiva de Archivos Individuales */}
-          <div className="mt-8 pt-6 border-t border-slate-800/80 w-full max-w-2xl text-left">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-3 text-center">O añade archivos individuales para probar la ingesta progresiva:</span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {mockupsDisponibles.map(m => (
-                <button
-                  key={m.nombre}
-                  onClick={() => handleLoadSingleMockup(m.nombre)}
-                  className="p-3 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 text-left text-xs transition-all flex items-center justify-between"
-                >
-                  <div>
-                    <span className="text-[10px] font-mono text-cyan-400 font-bold block">{m.tipo}</span>
-                    <span className="text-slate-200 font-medium truncate block max-w-xs">{m.nombre}</span>
-                    <span className="text-[10px] text-slate-500 block">{m.descripcion}</span>
-                  </div>
-                  <span className="text-xs text-cyan-400 font-bold px-2 py-1 bg-cyan-950/60 rounded border border-cyan-800">+ Cargar</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* WORKSPACE COMPLETO CUANDO HAY DOCUMENTOS */
-        <main className="flex-1 px-6 py-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
-          
-          {/* COLUMNA IZQUIERDA (7 cols): DOCUMENTOS + BD SQLITE + BRECHAS */}
-          <div className="lg:col-span-7 flex flex-col gap-4">
-            
-            {/* GESTOR DOCUMENTAL CON AGREGAR Y ELIMINAR */}
-            <div className="glass-card p-4 border-slate-800">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                    Documentos en Repositorio de la Empresa ({archivos.length})
-                  </h3>
+      {/* ==================================================================== */}
+      {/* 2. ESPACIO DE TRABAJO DINÁMICO                                       */}
+      {/* ==================================================================== */}
+      <div className="flex-1 flex overflow-hidden">
+        
+        {/* ================================================================== */}
+        {/* VISTA A: EXPEDIENTES DE BRECHAS (SPLIT-VIEW DE ALTA DENSIDAD)      */}
+        {/* ================================================================== */}
+        {activeModule === 'expedientes' && (
+          <>
+            {/* Lista Lateral de Expedientes */}
+            <aside className="w-full md:w-[350px] border-r border-surface-border bg-surface-sidebar flex flex-col shrink-0">
+              <div className="p-3 border-b border-surface-border space-y-2">
+                <div className="relative">
+                  <IconSearch className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-ink-muted" />
+                  <input
+                    type="text"
+                    value={searchIncident}
+                    onChange={(e) => setSearchIncident(e.target.value)}
+                    placeholder="Filtrar por código o sistema..."
+                    className="w-full bg-surface-ground border border-surface-border rounded pl-8 pr-3 py-1.5 text-xs text-ink-primary placeholder-ink-muted focus:outline-none focus:border-unsa-700"
+                  />
                 </div>
-                <div className="flex items-center gap-2">
-                  <label className="py-1 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 cursor-pointer transition-all flex items-center gap-1.5">
-                    <svg className="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    <span>Agregar Archivo</span>
-                    <input type="file" className="hidden" onChange={handleUploadFile} accept=".sql,.pdf,.md,.txt" />
-                  </label>
-                </div>
-              </div>
-
-              {/* Grid de documentos */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3 max-h-48 overflow-y-auto pr-1">
-                {archivos.map(doc => (
-                  <div key={doc.id} className="p-3 rounded-xl bg-slate-900/90 border border-slate-800/80 flex items-center justify-between gap-2 hover:border-slate-700 transition-all">
-                    <div className="flex items-center gap-2.5 overflow-hidden">
-                      <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center font-mono text-[10px] font-bold text-cyan-300 shrink-0">
-                        {doc.tipo_archivo}
-                      </div>
-                      <div className="overflow-hidden">
-                        <span className="text-xs font-semibold text-slate-200 block truncate" title={doc.nombre_archivo}>{doc.nombre_archivo}</span>
-                        <span className="text-[10px] text-slate-500 font-mono">{(doc.tamano_bytes / 1024).toFixed(1)} KB • {doc.fecha_carga.split(' ')[0]}</span>
-                      </div>
-                    </div>
+                
+                <div className="flex items-center gap-1 text-[11px] font-mono">
+                  {['ALL', 'OPEN', 'RESOLVED'].map(st => (
                     <button
-                      onClick={() => requestDeleteDocument(doc.id, doc.nombre_archivo)}
-                      className="text-slate-500 hover:text-rose-400 p-1.5 rounded hover:bg-slate-800 transition-colors"
-                      title="Eliminar documento del repositorio"
+                      key={st}
+                      onClick={() => setStatusFilter(st)}
+                      className={`px-2 py-0.5 rounded transition-colors ${
+                        statusFilter === st
+                          ? 'bg-unsa-800 text-white font-semibold'
+                          : 'text-ink-secondary hover:bg-surface-card'
+                      }`}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                      {st === 'ALL' ? 'Todos' : st === 'OPEN' ? 'Abiertos' : 'Resueltos'}
                     </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* BASE DE DATOS DE LA EMPRESA (INVENTARIO Y CLÁUSULAS SQLITE) */}
-            <div className="glass-card p-4 border-slate-800 flex flex-col h-72">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setActiveTab('overview')}
-                    className={`text-xs font-bold uppercase tracking-wider pb-1 transition-colors ${activeTab === 'overview' ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-400 hover:text-slate-200'}`}
-                  >
-                    Inventario de Columnas ({inventario.length})
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('clauses')}
-                    className={`text-xs font-bold uppercase tracking-wider pb-1 transition-colors ${activeTab === 'clauses' ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-400 hover:text-slate-200'}`}
-                  >
-                    Cláusulas Legales ({clausulas.length})
-                  </button>
+                  ))}
                 </div>
-
-                {/* Filtro rápido */}
-                {activeTab === 'overview' && (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      placeholder="Buscar columna o tabla..."
-                      value={searchColumna}
-                      onChange={(e) => setSearchColumna(e.target.value)}
-                      className="bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1 text-[11px] text-white focus:outline-none focus:border-cyan-500 w-36"
-                    />
-                    <select
-                      value={filterCategoria}
-                      onChange={(e) => setFilterCategoria(e.target.value)}
-                      className="bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 text-[11px] text-slate-300 focus:outline-none"
-                    >
-                      <option value="ALL">Todas</option>
-                      <option value="DATOS_SALUD">Salud</option>
-                      <option value="CREDENCIALES_ACCESO">Credenciales</option>
-                      <option value="DATOS_ECONOMICOS">Económicos</option>
-                      <option value="DATOS_IDENTIFICACION">Identificación</option>
-                    </select>
-                  </div>
-                )}
               </div>
 
-              {activeTab === 'clauses' ? (
-                <div className="flex-1 overflow-y-auto mt-2">
-                  <table className="w-full text-left border-collapse text-xs">
-                    <thead className="sticky top-0 bg-slate-900 text-[10px] text-slate-400 uppercase">
-                      <tr>
-                        <th className="p-2">Documento</th>
-                        <th className="p-2">Cláusula</th>
-                        <th className="p-2">Tipo</th>
-                        <th className="p-2">Texto Extraído</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {clausulas.map(c => (
-                        <tr key={c.id} className="border-b border-slate-800/60 hover:bg-slate-800/30">
-                          <td className="p-2 font-mono text-violet-400 text-[11px]">{c.documento}</td>
-                          <td className="p-2 font-semibold text-slate-200">{c.numero_clausula}: {c.titulo_clausula}</td>
-                          <td className="p-2"><span className="px-1.5 py-0.5 rounded text-[9px] bg-amber-500/20 text-amber-300">{c.tipo_clausula}</span></td>
-                          <td className="p-2 text-slate-400 truncate max-w-xs">{c.texto_clausula}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="flex-1 overflow-y-auto mt-2">
-                  <table className="w-full text-left border-collapse text-xs">
-                    <thead className="sticky top-0 bg-slate-900 text-[10px] text-slate-400 uppercase">
-                      <tr>
-                        <th className="p-2">Tabla</th>
-                        <th className="p-2">Columna</th>
-                        <th className="p-2">Tipo SQL</th>
-                        <th className="p-2">Categoría LPDP</th>
-                        <th className="p-2">Confianza</th>
-                        <th className="p-2">Recomendación</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {inventarioFiltrado.map(item => (
-                        <tr key={item.id} className="border-b border-slate-800/60 hover:bg-slate-800/30">
-                          <td className="p-2 font-mono text-cyan-400 font-semibold">{item.nombre_tabla}</td>
-                          <td className="p-2 font-mono text-slate-200">{item.nombre_columna}</td>
-                          <td className="p-2 font-mono text-slate-400">{item.tipo_sql}</td>
-                          <td className="p-2">
-                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${
-                              item.categoria_sensible === 'DATOS_SALUD' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
-                              item.categoria_sensible === 'DATOS_ECONOMICOS' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
-                              item.categoria_sensible === 'CREDENCIALES_ACCESO' ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30' :
-                              'bg-slate-800 text-slate-300'
-                            }`}>
-                              {item.categoria_sensible}
-                            </span>
-                          </td>
-                          <td className="p-2 text-emerald-400 font-mono">{(item.nivel_confianza * 100).toFixed(0)}%</td>
-                          <td className="p-2 text-slate-400 truncate max-w-xs">{item.recomendacion_seguridad}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {/* LISTA DE BRECHAS CON BOTONES RÁPIDOS DE CONTEXTO */}
-            <div className="glass-card p-4 border-slate-800 flex-1">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                  Brechas Identificadas ({hallazgos.length})
-                </h3>
-                <span className="text-[11px] text-slate-400">Pulsa los botones rápidos para consultar directamente al Auditor</span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[380px] overflow-y-auto pr-1">
-                {hallazgos.map(h => {
-                  const isSelected = selectedFinding?.id === h.id;
-                  const isRemediated = h.estado === 'REMEDIADO';
+              {/* Listado de Casos */}
+              <div className="flex-1 overflow-y-auto divide-y divide-surface-border">
+                {filteredIncidents.map(inc => {
+                  const isSelected = selectedIncident?.id === inc.id;
+                  const isClosed = inc.status === 'RESUELTO';
+                  
                   return (
                     <div
-                      key={h.id}
-                      onClick={() => handleSelectFinding(h)}
-                      className={`p-3.5 rounded-xl glass-card cursor-pointer border transition-all ${
-                        isSelected ? 'border-cyan-500 shadow-lg shadow-cyan-500/10 ring-1 ring-cyan-500/50' : 'border-slate-800 hover:border-slate-700'
-                      } ${isRemediated ? 'opacity-60 border-emerald-700' : ''}`}
+                      key={inc.id}
+                      onClick={() => fetchIncidentDetail(inc.id)}
+                      className={`p-3.5 cursor-pointer transition-all border-l-3 ${
+                        isSelected
+                          ? 'bg-[var(--active-card-bg)] border-l-[var(--active-card-border)] shadow-xs'
+                          : 'hover:bg-surface-elevated border-l-transparent'
+                      }`}
                     >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono text-xs font-bold text-cyan-400 px-1.5 py-0.5 rounded bg-cyan-950 border border-cyan-800">
-                            {h.codigo_regla}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSelectFinding(h);
-                              fetchLegalRef('control', h.control_iso27701);
-                            }}
-                            className="font-mono text-[10px] font-bold text-slate-300 hover:text-cyan-300 px-1.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 transition-colors"
-                            title={`Abrir control oficial ${h.control_iso27701}`}
-                          >
-                            {h.control_iso27701}
-                          </button>
-                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                            h.nivel_riesgo === 'CRÍTICO' ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' :
-                            h.nivel_riesgo === 'ALTO' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
-                            'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                          }`}>
-                            {h.nivel_riesgo}
-                          </span>
-                        </div>
-                        <div className="text-right font-mono">
-                          <span className="text-xs font-bold text-rose-400">{h.multa_estimada_uit} UIT</span>
-                          <span className="text-[9px] text-slate-500 block">S/ {h.multa_estimada_pen.toLocaleString('es-PE')}</span>
-                        </div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-mono text-[11px] font-bold text-ink-primary">
+                          {inc.incident_code}
+                        </span>
+                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                          isClosed
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-semibold'
+                            : inc.severity === 'CRÍTICA' || inc.severity === 'MUY GRAVE'
+                            ? 'bg-rose-50 text-rose-800 border-rose-300 font-bold'
+                            : 'bg-amber-50 text-amber-800 border-amber-300 font-semibold'
+                        }`}>
+                          {isClosed ? 'RESUELTO' : inc.severity || 'ALTA'}
+                        </span>
                       </div>
 
-                      <h4 className="text-xs font-semibold text-slate-100 mb-1">{h.titulo}</h4>
-                      <p className="text-[11px] text-slate-400 line-clamp-2 mb-2.5">{h.descripcion}</p>
+                      <div className="text-xs font-medium text-ink-primary line-clamp-2 mb-1 leading-snug">
+                        {inc.title}
+                      </div>
 
-                      {/* ACCIONES CONTEXTUALES DINÁMICAS */}
-                      <div className="pt-2 border-t border-slate-800/80 flex flex-wrap items-center gap-1">
-                        {(() => {
-                          const cat = (h.codigo_regla || '').toUpperCase();
-                          const isTech = ['R-001','R-002','R-003','R-004','R-005'].some(r => cat.includes(r)) || 
-                                         (h.origen_archivo || '').endsWith('.sql');
-                          const isARCO = cat.includes('R-007') || (h.titulo || '').toLowerCase().includes('arco');
-                          const isContract = cat.includes('R-006') || (h.titulo || '').toLowerCase().includes('contrato') || 
-                                             (h.titulo || '').toLowerCase().includes('sla');
-                          
-                          const prompts = [];
-                          
-                          // Diagnóstico
-                          prompts.push({
-                            label: 'Diagnóstico',
-                            color: 'hover:bg-cyan-950 text-cyan-300',
-                            prompt: `¿Cuál es el diagnóstico pericial y fundamento jurídico de la vulnerabilidad en ${h.activo_afectado || 'el activo'} según el control ${h.control_iso27701} y la Ley 29733?`
-                          });
-                          
-                          if (isTech) {
-                            prompts.push({
-                              label: 'Remediación SQL',
-                              color: 'hover:bg-emerald-950 text-emerald-300',
-                              prompt: `Genera el script SQL de remediación defensiva para la brecha ${h.codigo_regla}: ${h.titulo}. Incluye ALTER TABLE con pgcrypto si aplica cifrado, o DROP/PURGE si corresponde eliminar el dato.`
-                            });
-                          }
-                          
-                          if (isARCO) {
-                            prompts.push({
-                              label: 'Redacción Política',
-                              color: 'hover:bg-emerald-950 text-emerald-300',
-                              prompt: `Redacta la cláusula correctiva para la política de privacidad que resuelva la brecha ${h.codigo_regla}: ${h.titulo}. Incluye los canales ARCO que deben habilitarse y la verificación de identidad proporcional.`
-                            });
-                          }
-                          
-                          if (isContract) {
-                            prompts.push({
-                              label: 'Cláusula Contractual',
-                              color: 'hover:bg-emerald-950 text-emerald-300',
-                              prompt: `Redacta las cláusulas contractuales de blindaje legal para remediar la brecha ${h.codigo_regla}: ${h.titulo}. Incluye requisitos DPA, SLA de seguridad y obligaciones del encargado.`
-                            });
-                          }
-                          
-                          if (!isTech && !isARCO && !isContract) {
-                            prompts.push({
-                              label: 'Remediación',
-                              color: 'hover:bg-emerald-950 text-emerald-300',
-                              prompt: `Recomienda las acciones de remediación concretas (técnicas, legales y organizativas) para cerrar la brecha ${h.codigo_regla}: ${h.titulo}.`
-                            });
-                          }
-                          
-                          // Precedentes ANPD
-                          prompts.push({
-                            label: 'Precedentes ANPD',
-                            color: 'hover:bg-violet-950 text-violet-300',
-                            prompt: `¿Cuál es el precedente sancionador de la ANPD más análogo a este caso y cómo se cuantificó la multa de ${h.multa_estimada_uit || 0} UIT? Cita la resolución directoral específica.`
-                          });
-                          
-                          return (
-                            <>
-                              {prompts.map((p, i) => (
-                                <button
-                                  key={i}
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleSelectFinding(h);
-                                    handleSendMessage(p.prompt, h);
-                                  }}
-                                  className={`px-2 py-1 rounded bg-slate-800/90 ${p.color} border border-slate-700 text-[10px] font-semibold transition-colors`}
-                                >
-                                  {p.label}
-                                </button>
-                              ))}
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSelectFinding(h);
-                                  fetchLegalRef('control', h.control_iso27701);
-                                }}
-                                className="px-2 py-1 rounded bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-800 text-[10px] font-semibold transition-colors"
-                                title={`Abrir ficha técnica y fundamentos del control ${h.control_iso27701}`}
-                              >
-                                Control {h.control_iso27701}
-                              </button>
-                            </>
-                          );
-                        })()}
+                      <div className="flex items-center justify-between text-[11px] text-ink-muted font-mono">
+                        <span className="truncate max-w-[180px]">{inc.compromised_system || 'Sistema UNSA'}</span>
+                        <span className="text-[var(--unsa-primary)] font-bold shrink-0">
+                          {inc.multa_estimada_uit ? `${inc.multa_estimada_uit} UIT` : 'Sanción'}
+                        </span>
                       </div>
                     </div>
                   );
                 })}
               </div>
-            </div>
+            </aside>
 
-          </div>
-
-          {/* COLUMNA DERECHA (5 cols): AUDITOR DE CUMPLIMIENTO & REMEDIACIÓN + SUBGRAFO */}
-          <div className="lg:col-span-5 flex flex-col gap-4">
-            
-            {/* SUBGRAFO NORMATIVO */}
-            {selectedFinding && (
-              <div className="glass-card p-4 border-slate-800">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-cyan-400">{selectedFinding.codigo_regla}</span>
-                    <h4 className="text-xs font-bold text-white truncate max-w-xs">{selectedFinding.titulo}</h4>
-                  </div>
-                  <span className="text-xs font-bold text-rose-400 font-mono">{selectedFinding.multa_estimada_uit} UIT</span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-[11px] bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 my-2">
-                  <div>
-                    <span className="text-slate-500 block">Elemento:</span>
-                    <strong className="text-slate-200 font-mono truncate block">{selectedFinding.elemento_afectado}</strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block">Riesgo Económico:</span>
-                    <strong className="text-amber-400 font-mono">S/ {selectedFinding.multa_estimada_pen.toLocaleString('es-PE')}</strong>
-                  </div>
-                </div>
-
-                <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                  <svg className="w-3 h-3 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-                  <span>Subgrafo Normativo (ISO 27701 ↔ ISO 29100 ↔ Ley 29733)</span>
-                </h5>
-                <div className="max-h-28 overflow-y-auto space-y-1.5 pr-1">
-                  {subgraphData?.subgrafo_nodos?.map(n => (
-                    <div 
-                      key={n.id} 
-                      className="p-2 rounded bg-slate-900 border border-slate-800 text-[11px] cursor-pointer hover:border-cyan-600 hover:bg-slate-800/80 transition-all group"
-                      onClick={() => {
-                        if (n.tipo === 'ISO27701_CONTROL') fetchLegalRef('control', n.id);
-                        else if (n.tipo === 'ANPD_SANCTION') fetchLegalRef('sancion', String(n.id).replace('ANPD-',''));
-                        else if (n.tipo === 'ISO29100_PRINCIPLE') showToast('Principio ' + n.id + ': ' + n.label, 'info');
-                      }}
-                      title="Click para ver contenido original"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-cyan-400 font-bold group-hover:text-cyan-300">{n.id}</span>
-                        <span className="text-[9px] bg-slate-800 text-slate-300 px-1 rounded">{n.tipo}</span>
+            {/* Dossier Pericial Integral (Llena el espacio con evidencia real y remediación) */}
+            <main className="flex-1 overflow-y-auto bg-surface-ground p-6">
+              {selectedIncident ? (
+                <div className="max-w-5xl mx-auto space-y-6">
+                  
+                  {/* Encabezado del Dossier */}
+                  <div className="p-5 rounded border border-surface-border bg-surface-card flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded bg-[var(--unsa-badge-bg)] text-[var(--unsa-badge-text)] border border-[var(--unsa-badge-border)]">
+                          {selectedIncident.incident_code}
+                        </span>
+                        <span className={`text-[10px] font-mono px-2.5 py-0.5 rounded border ${
+                          selectedIncident.status === 'RESUELTO'
+                            ? 'bg-emerald-50 text-emerald-900 border-emerald-300 font-bold'
+                            : 'bg-rose-50 text-rose-900 border-rose-300 font-bold'
+                        }`}>
+                          {selectedIncident.status === 'RESUELTO' ? 'EXPEDIENTE RESUELTO' : 'EN INVESTIGACIÓN PERICIAL'}
+                        </span>
+                        <span className="text-xs text-ink-muted font-mono font-medium">
+                          {selectedIncident.compromised_system}
+                        </span>
                       </div>
-                      <p className="text-slate-200 font-medium mt-0.5 group-hover:text-white">{n.label}</p>
-                      {n.peru_bridge && (
-                        <p className="text-slate-400 text-[10px] mt-1 border-t border-slate-800/80 pt-0.5">
-                          <span className="text-emerald-400 font-medium">Perú:</span>{' '}
-                          <span 
-                            className="underline decoration-dotted cursor-pointer hover:text-emerald-300"
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
-                              const match = n.peru_bridge.ley_29733.match(/Art\.?\s*(\d+)/);
-                              if (match) fetchLegalRef('articulo', 'Art_' + match[1]);
-                            }}
-                          >{n.peru_bridge.ley_29733}</span>
-                        </p>
+                      
+                      <h1 className="font-serif font-bold text-lg text-ink-primary leading-snug">
+                        {selectedIncident.title}
+                      </h1>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => handleExportDictamen(selectedIncident.id)}
+                        className="px-3.5 py-1.5 rounded bg-white hover:bg-slate-100 text-slate-800 hover:text-slate-950 border border-slate-300 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-2xs"
+                        title="Exportar Dictamen Pericial Oficial bajo ISO/IEC 27035 y Ley 29733"
+                      >
+                        <IconDownload className="w-3.5 h-3.5 text-slate-700" />
+                        <span>Dictamen Oficial (.txt)</span>
+                      </button>
+
+                      {selectedIncident.status !== 'RESUELTO' && (
+                        <button
+                          onClick={() => handleCloseIncident(selectedIncident.id)}
+                          className="px-3.5 py-1.5 rounded bg-[var(--unsa-primary)] hover:bg-[var(--unsa-hover)] text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-xs"
+                        >
+                          <IconCheck className="w-3.5 h-3.5" />
+                          <span>Cerrar Expediente</span>
+                        </button>
                       )}
                     </div>
-                  ))}
-                </div>
-                
-                {/* PRECEDENTES ANPD DEL GRAFO (datos duros sin LLM) */}
-                {subgraphData?.sanciones_anpd?.length > 0 && (
-                  <div className="mt-3">
-                    <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                      <svg className="w-3 h-3 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
-                      Precedentes ANPD Vinculados
-                    </h5>
-                    <div className="space-y-1.5">
-                      {subgraphData.sanciones_anpd.map((s, i) => (
-                        <div 
-                          key={i} 
-                          className="p-2 rounded bg-violet-950/30 border border-violet-800/40 text-[11px] cursor-pointer hover:border-violet-600 transition-all"
-                          onClick={() => fetchLegalRef('sancion', String(s.id))}
-                          title="Click para ver detalle completo"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-violet-300 font-semibold">{s.entidad}</span>
-                            <span className="text-rose-400 font-mono font-bold">{s.multa_total_uit} UIT</span>
+                  </div>
+
+                  {/* BLOQUE 1: EVIDENCIA DOCUMENTAL Y TRAZABILIDAD FÍSICA (Resuelve 'parece inventado') */}
+                  <div className="p-5 rounded border border-surface-border bg-surface-card space-y-4">
+                    <div className="flex items-center justify-between border-b border-surface-border pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <IconFileText className="w-4 h-4 text-[var(--unsa-primary)]" />
+                        <span className="font-serif font-bold text-sm text-ink-primary">
+                          Instrumentos Documentales y Evidencia de Respaldo en Custodia
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-mono text-ink-muted">
+                        Trazabilidad Verificada en Disco
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Documento PDF Fuente */}
+                      {selectedIncident.documento_fuente_pdf && (
+                        <div className="p-3.5 bg-surface-ground rounded border border-surface-border space-y-2">
+                          <div className="text-[10px] font-mono text-ink-muted uppercase tracking-wider font-semibold">
+                            Normativa / Reglamento Oficial Afectado
                           </div>
-                          <p className="text-slate-400 text-[10px] mt-0.5 font-mono">{s.resolucion}</p>
-                          {s.infracciones && s.infracciones.slice(0, 1).map((inf, j) => (
-                            <p key={j} className="text-slate-500 text-[10px] mt-0.5 truncate">{inf}</p>
-                          ))}
+                          <div className="font-semibold text-xs text-ink-primary">
+                            {selectedIncident.descripcion_documento || selectedIncident.documento_fuente_pdf}
+                          </div>
+                          <div className="font-mono text-[11px] text-ink-secondary truncate">
+                            {selectedIncident.documento_fuente_pdf}
+                          </div>
+                          <div className="pt-1 flex items-center gap-2">
+                            <a
+                              href={selectedIncident.url_pdf_raw || `/api/documents/raw?filename=${encodeURIComponent(selectedIncident.documento_fuente_pdf)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-3 py-1.5 rounded bg-rose-50 hover:bg-rose-100 text-rose-950 text-xs font-semibold border border-rose-300 inline-flex items-center gap-1.5 transition-colors shadow-2xs"
+                              title="Abrir PDF original en pestaña nueva"
+                            >
+                              <IconExternalLink className="w-3.5 h-3.5 text-rose-700" />
+                              <span>Abrir PDF Original</span>
+                            </a>
+                            <button
+                              onClick={() => handleInspectDocument(selectedIncident.documento_fuente_pdf)}
+                              className="px-3 py-1.5 rounded bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs font-semibold border border-slate-300 inline-flex items-center gap-1.5 transition-colors shadow-2xs"
+                              title="Inspeccionar cláusulas extraídas y alertas legales"
+                            >
+                              <IconSearch className="w-3.5 h-3.5 text-slate-600" />
+                              <span>Inspeccionar Cláusula</span>
+                            </button>
+                          </div>
                         </div>
-                      ))}
+                      )}
+
+                      {/* Esquema SQL Fuente */}
+                      {selectedIncident.esquema_fuente_sql && (
+                        <div className="p-3.5 bg-surface-ground rounded border border-surface-border space-y-2">
+                          <div className="text-[10px] font-mono text-ink-muted uppercase tracking-wider font-semibold">
+                            Esquema de Base de Datos y Tabla Comprometida
+                          </div>
+                          <div className="font-semibold text-xs text-ink-primary font-mono">
+                            Tabla: {selectedIncident.tabla_afectada || 'db_servicios_centrales'}
+                          </div>
+                          <div className="font-mono text-[11px] text-ink-secondary">
+                            Columnas: {Array.isArray(selectedIncident.columnas_afectadas) ? selectedIncident.columnas_afectadas.join(', ') : 'columnas sensibles'}
+                          </div>
+                          <div className="pt-1 flex items-center gap-2">
+                            <a
+                              href={selectedIncident.url_sql_raw || `/api/documents/raw?filename=${encodeURIComponent(selectedIncident.esquema_fuente_sql)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-3 py-1.5 rounded bg-sky-50 hover:bg-sky-100 text-sky-950 text-xs font-semibold border border-sky-300 inline-flex items-center gap-1.5 transition-colors shadow-2xs font-mono"
+                              title="Ver script DDL SQL completo"
+                            >
+                              <IconExternalLink className="w-3.5 h-3.5 text-sky-700" />
+                              <span>Ver DDL SQL Completo</span>
+                            </a>
+                            <button
+                              onClick={() => handleInspectDocument(selectedIncident.esquema_fuente_sql)}
+                              className="px-3 py-1.5 rounded bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs font-semibold border border-slate-300 inline-flex items-center gap-1.5 transition-colors shadow-2xs"
+                              title="Inspeccionar análisis AST de columnas sensibles"
+                            >
+                              <IconSearch className="w-3.5 h-3.5 text-slate-600" />
+                              <span>Inspeccionar AST</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Texto de la Evidencia o Cláusula Observada */}
+                    {selectedIncident.clausula_observada && (
+                      <div className="p-3.5 rounded clause-callout space-y-1 shadow-2xs">
+                        <div className="text-[10px] font-mono uppercase font-bold" style={{ color: 'var(--clause-bar)' }}>
+                          Cláusula / Hallazgo Observado en Peritaje:
+                        </div>
+                        <div className="font-serif text-xs text-ink-primary italic leading-relaxed">
+                          "{selectedIncident.clausula_observada}"
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* BLOQUE 2: CALIFICACIÓN JURÍDICA Y EXPOSICIÓN SANCIONADORA ANPD */}
+                  <div className="p-5 rounded border border-surface-border bg-surface-card space-y-4">
+                    <div className="flex items-center justify-between border-b border-surface-border pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <IconShield className="w-4 h-4 text-amber-500" />
+                        <span className="font-serif font-bold text-sm text-ink-primary">
+                          Calificación Jurídica y Exposición Sancionadora ANPD
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-mono text-ink-muted">
+                        D.S. N° 016-2024-JUS
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="p-3.5 rounded kpi-card-multa shadow-2xs">
+                        <div className="text-[10px] text-ink-muted font-mono uppercase font-semibold">Multa Máxima Estimada</div>
+                        <div className="font-mono text-xl font-bold kpi-num tabular-nums mt-0.5">
+                          {selectedIncident.multa_estimada_uit || 12.5} UIT
+                        </div>
+                        <div className="text-[11px] text-ink-secondary font-mono mt-0.5 font-medium">
+                          ~ S/. {((selectedIncident.multa_estimada_uit || 12.5) * 5150).toLocaleString()} PEN
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded kpi-card-titulares shadow-2xs">
+                        <div className="text-[10px] text-ink-muted font-mono uppercase font-semibold">Titulares Comprometidos</div>
+                        <div className="font-mono text-xl font-bold kpi-num tabular-nums mt-0.5">
+                          {(selectedIncident.num_affected_subjects || 0).toLocaleString()}
+                        </div>
+                        <div className="text-[11px] text-ink-secondary font-medium">Estudiantes y ciudadanos</div>
+                      </div>
+
+                      <div className="p-3.5 rounded kpi-card-anpd shadow-2xs">
+                        <div className="text-[10px] text-ink-muted font-mono uppercase font-semibold">Precedente Vinculante ANPD</div>
+                        <div className="font-mono text-xs font-bold kpi-num mt-1 line-clamp-1">
+                          {selectedIncident.precedente_anpd || "Res. 045-2023-JUS/DGPDP"}
+                        </div>
+                        <div className="text-[11px] text-ink-muted mt-0.5">Infracción calificada como Grave</div>
+                      </div>
+                    </div>
+
+                    {/* Nexo Causal y Citas Normativas Interactivas */}
+                    <div className="p-3.5 bg-surface-ground rounded border border-surface-border space-y-2">
+                      <div className="text-xs text-ink-primary leading-relaxed">
+                        <strong>Nexo Causal Técnico-Legal:</strong> Vulneración directa al principio de seguridad y confidencialidad en el tratamiento de datos sensibles. El tratamiento operó sin medidas técnicas ni organizativas proporcionadas al riesgo de los titulares.
+                      </div>
+
+                      <div className="pt-2 flex flex-wrap items-center gap-2.5">
+                        <button
+                          onClick={() => fetchLegalReference('iso27701', selectedIncident.regla?.control_iso27701 || 'A.3.24')}
+                          className="px-3 py-1.5 rounded bg-rose-50 hover:bg-rose-100 text-rose-950 text-xs font-mono font-semibold border border-rose-300 transition-colors inline-flex items-center gap-1.5 shadow-2xs"
+                        >
+                          <span>Ver Norma: ISO/IEC 27701 {selectedIncident.regla?.control_iso27701 || 'A.3.24'}</span>
+                          <IconExternalLink className="w-3.5 h-3.5 text-rose-800" />
+                        </button>
+
+                        <button
+                          onClick={() => fetchLegalReference('ley29733', selectedIncident.regla?.articulo_lpdp || '28')}
+                          className="px-3 py-1.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-950 text-xs font-mono font-semibold border border-amber-300 transition-colors inline-flex items-center gap-1.5 shadow-2xs"
+                        >
+                          <span>Ver Ley 29733: Art. {selectedIncident.regla?.articulo_lpdp || '28'}</span>
+                          <IconExternalLink className="w-3.5 h-3.5 text-amber-800" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                )}
-              </div>
-            )}
 
-            {/* CONSOLA DE AUDITORÍA & REMEDIACIÓN (DeepSeek v4.1 Flash) */}
-            <div className="glass-card p-4 border-slate-800 flex-1 flex flex-col min-h-[460px]">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800 mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-cyan-400 "></div>
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Auditor de Cumplimiento & DSPM (ISO/IEC 27701 & Ley 29733)</h4>
+                  {/* BLOQUE 3: PLAN PERICIAL DE REMEDIACIÓN CUADRIDIMENSIONAL (VISIBLE EN EL DOSSIER) */}
+                  <div className="p-5 rounded border border-surface-border bg-surface-card space-y-4">
+                    <div className="flex items-center justify-between border-b border-surface-border pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <IconCpu className="w-4 h-4 text-emerald-500" />
+                        <span className="font-serif font-bold text-sm text-ink-primary">
+                          Plan de Remediación Integral Multidimensional (4 Ejes Mandatorios)
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-mono text-ink-muted">
+                        No Reducción a SQL
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Eje 1: Directiva */}
+                      <div className="p-4 rounded remediation-axis-1 space-y-2 shadow-2xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-xs font-bold axis-title">Eje I: Directiva Institucional</span>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded axis-tag font-bold">Organizativa</span>
+                        </div>
+                        <p className="text-xs text-ink-secondary leading-relaxed">
+                          {selectedIncident.remediacion_organizativa || 
+                           "Emisión de Resolución Rectoral que reforme la Directiva de Seguridad TI, estableciendo protocolos mandatorios de cifrado en reposo para datos sensibles y roles periciales del CSIRT."}
+                        </p>
+                      </div>
+
+                      {/* Eje 2: Software / UX */}
+                      <div className="p-4 rounded remediation-axis-2 space-y-2 shadow-2xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-xs font-bold axis-title">Eje II: Reingeniería Software & UX</span>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded axis-tag font-bold">Aplicación</span>
+                        </div>
+                        <p className="text-xs text-ink-secondary leading-relaxed">
+                          {selectedIncident.remediacion_software_nosql || 
+                           "Actualización de microservicios y portales web para eliminar casillas pre-marcadas, forzar consentimiento libre y expreso, y deshabilitar almacenamiento local no autorizado."}
+                        </p>
+                      </div>
+
+                      {/* Eje 3: Contractual / DPA */}
+                      <div className="p-4 rounded remediation-axis-3 space-y-2 shadow-2xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-xs font-bold axis-title">Eje III: Blindaje Contractual & DPA</span>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded axis-tag font-bold">Legal / Proveedor</span>
+                        </div>
+                        <p className="text-xs text-ink-secondary leading-relaxed">
+                          {selectedIncident.remediacion_juridica || 
+                           "Suscripción de Acuerdos de Tratamiento de Datos (DPA) con proveedores de nube y pasarelas de pago bajo D.S. 016-2024-JUS, restringiendo transferencias transfronterizas sin autorización."}
+                        </p>
+                      </div>
+
+                      {/* Eje 4: Técnica / SQL */}
+                      <div className="p-4 rounded remediation-axis-4 space-y-2 shadow-2xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-xs font-bold axis-title">Eje IV: Medidas Técnicas en Repositorio</span>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded axis-tag font-bold">Criptografía DDL</span>
+                        </div>
+                        <p className="text-xs text-ink-secondary leading-relaxed">
+                          {selectedIncident.remediacion_db_sql || 
+                           "Aplicación de algoritmo AES-256-GCM para columnas sensibles, migración de contraseñas de MD5 a Argon2id con salt único, y purga periódica de CVV."}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
-                <span className="text-[10px] text-cyan-400 font-mono">{status?.llm_model ? `${status.llm_model} (OpenRouter)` : "Auditor IA (OpenRouter)"}</span>
-                  {selectedFinding && (
-                    <button 
-                      onClick={() => handleExportDictamen(selectedFinding)}
-                      title="Descargar dictamen pericial completo en Markdown"
-                      className="inline-flex items-center gap-1 px-2 py-0.5 ml-2 rounded bg-cyan-950/80 hover:bg-cyan-900 text-[10px] font-medium text-cyan-300 border border-cyan-800 transition-colors shadow-sm"
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                      Dictamen .MD
-                    </button>
-                  )}
+              ) : (
+                <div className="flex items-center justify-center h-full text-xs text-ink-muted">
+                  Seleccione un expediente de la lista para cargar su dossier.
+                </div>
+              )}
+            </main>
+          </>
+        )}
+
+        {/* ================================================================== */}
+        {/* VISTA B: REPOSITORIO DE DOCUMENTOS Y ACTIVOS (TABLA COMPLETA)      */}
+        {/* ================================================================== */}
+        {activeModule === 'repositorio' && (
+          <div className="flex-1 flex flex-col bg-surface-ground p-6 overflow-hidden">
+            <div className="max-w-6xl w-full mx-auto flex-1 flex flex-col space-y-4">
+              
+              {/* Encabezado del Repositorio */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                <div>
+                  <h2 className="font-serif font-bold text-lg text-ink-primary">
+                    Repositorio de Instrumentos Documentales y Esquemas DDL
+                  </h2>
+                  <p className="text-xs text-ink-muted">
+                    Inventario central de {documents.length} documentos institucionales auditados bajo ISO/IEC 27701 y Ley 29733.
+                  </p>
+                </div>
+
+                <div className="relative w-72">
+                  <IconSearch className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-ink-muted" />
+                  <input
+                    type="text"
+                    value={searchDoc}
+                    onChange={(e) => setSearchDoc(e.target.value)}
+                    placeholder="Filtrar instrumentos..."
+                    className="w-full bg-surface-card border border-surface-border rounded pl-8 pr-3 py-1.5 text-xs text-ink-primary placeholder-ink-muted focus:outline-none focus:border-unsa-700"
+                  />
+                </div>
               </div>
 
-              {/* Mensajes del chat */}
-              <div 
-                onClick={handleChatContainerClick}
-                className="flex-1 overflow-y-auto pr-1.5 flex flex-col gap-3 mb-3 max-h-[480px] min-h-[320px]"
+              {/* Tabla de Documentos */}
+              <div className="flex-1 bg-surface-card border border-surface-border rounded overflow-hidden flex flex-col">
+                <div className="overflow-x-auto flex-1">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="bg-surface-sidebar border-b border-surface-border font-mono text-ink-muted">
+                      <tr>
+                        <th className="py-2.5 px-4 font-semibold">Instrumento / Archivo</th>
+                        <th className="py-2.5 px-4 font-semibold">Tipo</th>
+                        <th className="py-2.5 px-4 font-semibold">Tamaño</th>
+                        <th className="py-2.5 px-4 font-semibold">Descripción del Alcance</th>
+                        <th className="py-2.5 px-4 font-semibold text-right">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-surface-border text-ink-primary">
+                      {filteredDocs.map((doc, idx) => {
+                        const matchLoaded = loadedDocuments.find(ld => ld.nombre_archivo === doc.nombre);
+                        const isOriginal = doc.es_original_unsa;
+
+                        return (
+                          <tr key={idx} className="hover:bg-surface-elevated transition-colors">
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2.5">
+                                <IconFileText className={`w-4 h-4 shrink-0 ${doc.tipo === 'SQL' ? 'text-sky-700' : 'text-rose-700'}`} />
+                                <div>
+                                  <a
+                                    href={doc.raw_url || `/api/documents/raw?filename=${encodeURIComponent(doc.nombre)}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="font-semibold text-slate-900 hover:text-[var(--unsa-primary)] transition-colors inline-flex items-center gap-1.5 leading-snug"
+                                    title="Abrir archivo nativo en nueva pestaña"
+                                  >
+                                    <span>{doc.nombre}</span>
+                                    <IconExternalLink className="w-3 h-3 text-slate-500 hover:text-slate-900" />
+                                  </a>
+                                  {isOriginal && (
+                                    <span className="block text-[11px] font-mono text-emerald-800 dark:text-emerald-400 font-bold mt-0.5">
+                                      ✓ Documento Oficial UNSA en Custodia
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+
+                            <td className="py-3 px-4 font-mono text-xs">
+                              <span className={`px-2 py-0.5 rounded font-bold border ${
+                                doc.tipo === 'SQL'
+                                  ? 'bg-sky-50 text-sky-900 border-sky-300'
+                                  : 'bg-rose-50 text-rose-900 border-rose-300'
+                              }`}>
+                                {doc.tipo}
+                              </span>
+                            </td>
+
+                            <td className="py-3 px-4 font-mono text-[11px] text-ink-muted">
+                              {(doc.tamano / 1024).toFixed(0)} KB
+                            </td>
+
+                            <td className="py-3 px-4 text-ink-secondary max-w-md line-clamp-1">
+                              {doc.descripcion}
+                            </td>
+
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => handleInspectDocument(doc.id || matchLoaded?.id || doc.nombre)}
+                                  className="px-2.5 py-1 rounded bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs font-semibold border border-slate-300 inline-flex items-center gap-1.5 transition-colors shadow-2xs"
+                                  title="Ver cláusulas y columnas extraídas"
+                                >
+                                  <IconSearch className="w-3.5 h-3.5 text-slate-700" />
+                                  <span>Inspeccionar</span>
+                                </button>
+                                
+                                <a
+                                  href={doc.raw_url || `/api/documents/raw?filename=${encodeURIComponent(doc.nombre)}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="p-1.5 rounded bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-900 transition-colors border border-slate-300 shadow-2xs"
+                                  title="Abrir archivo original en pestaña"
+                                >
+                                  <IconExternalLink className="w-3.5 h-3.5" />
+                                </a>
+
+                                {(doc.id || matchLoaded?.id) && (
+                                  <button
+                                    onClick={() => handleExcludeDocument(doc.id || matchLoaded.id, doc.nombre)}
+                                    className="p-1.5 rounded bg-white hover:bg-rose-50 text-slate-500 hover:text-red-700 transition-colors border border-slate-300 shadow-2xs"
+                                    title="Excluir del inventario activo"
+                                  >
+                                    <IconTrash className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* ==================================================================== */}
+      {/* 3. DRAWER LATERAL: CONSULTOR DPO & JURISPRUDENCIA ANPD (SLIDE-OVER)  */}
+      {/* ==================================================================== */}
+      {chatDrawerOpen && (
+        <div className="fixed inset-y-0 right-0 w-full sm:w-[440px] bg-surface-card border-l border-surface-border z-40 flex flex-col shadow-2xl">
+          
+          {/* Cabecera del Drawer */}
+          <div className="p-3.5 border-b border-surface-border bg-surface-sidebar flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <IconCpu className="w-4 h-4 text-[var(--unsa-primary)]" />
+              <div>
+                <span className="font-serif font-bold text-sm text-ink-primary block">
+                  Consultor DPO & Tribunal ANPD
+                </span>
+                <span className="text-[10px] font-mono text-ink-muted">
+                  Grafo ISO 27701 • 588 Casos de Sanción • Protocolo A2A
+                </span>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => setChatDrawerOpen(false)}
+              className="p-1 rounded text-ink-muted hover:text-ink-primary transition-colors"
+              title="Cerrar panel lateral"
+            >
+              <IconX className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Contexto del Expediente Activo */}
+          {selectedIncident && (
+            <div className="p-3 bg-surface-sidebar border-b border-surface-border text-xs font-mono text-ink-primary flex items-center justify-between">
+              <span className="truncate">Contexto: <strong className="text-slate-900 font-bold bg-white px-2 py-0.5 rounded border border-slate-300 shadow-2xs">{selectedIncident.incident_code}</strong></span>
+              <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-300 font-bold text-[11px] shrink-0">{selectedIncident.multa_estimada_uit} UIT máx</span>
+            </div>
+          )}
+
+          {/* Mensajes del Chat */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {chatMessages.map((msg, i) => (
+              <div
+                key={i}
+                className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start w-full'}`}
               >
-                {chatHistory.map((m, idx) => (
-                  <div key={idx} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} w-full`}>
-                    <div className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
-                      m.role === 'user'
-                        ? 'bg-zinc-800 text-zinc-100 border border-zinc-700/70 rounded-tr-none max-w-[85%] shadow-md ml-auto'
-                        : 'bg-zinc-950/90 text-zinc-200 border border-zinc-800 rounded-tl-none max-w-[95%] shadow-md w-full'
-                    }`}>
-                      {m.role === 'user' ? (
-                        <div className="whitespace-pre-wrap font-medium">{m.content}</div>
-                      ) : (
-                        <>
-                          <div
-                            className="chat-markdown"
-                            dangerouslySetInnerHTML={{
-                              __html: formatMarkdownCitations(m.content)
-                            }}
-                          />
-                          {m.contexto_unsa && m.contexto_unsa.disponible && (
-                            <div className="mt-3 pt-2 border-t border-sky-900/50 flex items-start gap-2 bg-sky-950/40 p-2.5 rounded-lg border border-sky-800/50">
-                              <span className="text-sm">🏛️</span>
-                              <div className="text-[11px] leading-relaxed text-sky-200">
-                                <span className="font-bold text-sky-300">Protocolo A2A (unsa-mind:8001):</span>{' '}
-                                <span className="text-slate-300">
-                                  {m.contexto_unsa.resumen_pericial || (m.contexto_unsa.citas && `Se incorporaron ${m.contexto_unsa.citas.length} citas normativas institucionales.`)}
-                                </span>
+                <div className="text-[10px] font-mono text-ink-muted mb-1 px-1 flex items-center gap-1.5">
+                  <span>{msg.role === 'user' ? 'Auditor' : 'Oficial de Privacidad (DPO / CSIRT)'}</span>
+                  {msg.role === 'assistant' && msg.provenance && (
+                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-surface-sidebar border border-surface-border text-ink-secondary font-mono">
+                      {msg.provenance === 'a2a' ? 'A2A • VPS UNSA' : 'LangGraph • Multi-Agente'}
+                    </span>
+                  )}
+                </div>
+                
+                <div className={`p-3.5 rounded text-xs leading-relaxed ${
+                  msg.role === 'user'
+                    ? 'chat-user-bubble rounded-br-none max-w-[370px]'
+                    : 'chat-assistant-bubble rounded-bl-none max-w-[400px] w-full'
+                }`}>
+                  {msg.role === 'user' ? (
+                    <div className="text-white font-sans text-xs whitespace-pre-wrap leading-relaxed select-text font-medium">
+                      {msg.content}
+                    </div>
+                  ) : (
+                    <>
+                      <div
+                        className="legal-markdown text-ink-primary"
+                        dangerouslySetInnerHTML={renderLegalMarkdown(msg.content)}
+                      />
+
+                      {/* BOTÓN DISCRETO: FLUJO DE AGENTES Y TRAZABILIDAD MULTI-AGENTE */}
+                      {msg.trazabilidad && msg.trazabilidad.length > 0 && (
+                        <div className="mt-3 pt-2.5 border-t border-surface-border">
+                          <button
+                            type="button"
+                            onClick={() => toggleFlowMessage(i)}
+                            className="w-full flex items-center justify-between text-[11px] font-mono px-2.5 py-1.5 rounded bg-surface-ground hover:bg-surface-elevated text-ink-secondary hover:text-ink-primary border border-surface-border transition-colors cursor-pointer select-none"
+                            title="Inspeccionar la tubería multi-agente y nodos que intervinieron"
+                          >
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                              <strong className="text-ink-primary">Flujo de Agentes ({msg.trazabilidad.length} nodos)</strong>
+                            </span>
+                            <span className="text-[10px] text-ink-muted font-medium">
+                              {expandedFlows[i] ? '▲ Ocultar' : '▼ Ver Nodos'}
+                            </span>
+                          </button>
+
+                          {expandedFlows[i] && (
+                            <div className="mt-2 p-2.5 rounded bg-surface-ground border border-surface-border space-y-1.5 text-[11px] font-mono">
+                              <div className="text-[10px] uppercase font-bold text-ink-muted tracking-wider pb-1 border-b border-surface-border flex items-center justify-between">
+                                <span>Orquestación Pericial:</span>
+                                <span className="text-emerald-700 font-bold">100% Auditado</span>
+                              </div>
+                              <div className="space-y-1 pt-0.5">
+                                {msg.trazabilidad.map((t, tidx) => (
+                                  <div key={tidx} className="flex items-start gap-1.5 py-0.5 border-b border-surface-border/50 last:border-b-0">
+                                    <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold shrink-0 mt-0.5 font-mono ${
+                                      t.estado === 'ok' ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' :
+                                      t.estado === 'warn' ? 'bg-amber-100 text-amber-900 border border-amber-300' :
+                                      'bg-sky-100 text-sky-900 border border-sky-300'
+                                    }`}>
+                                      {t.agente || `Nodo ${tidx+1}`}
+                                    </span>
+                                    <span className="text-[10px] text-ink-secondary leading-tight">
+                                      {t.accion || t.detalle || 'Ejecución pericial completada'}
+                                    </span>
+                                  </div>
+                                ))}
                               </div>
                             </div>
                           )}
-                        </>
+                        </div>
                       )}
-                    </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
 
-                    {/* Accordion de Trazabilidad Multi-Agente */}
-                    {m.trazabilidad && m.trazabilidad.length > 0 && (
-                      <details className="mt-1.5 w-full text-[11px] bg-slate-950/90 rounded-lg p-2 border border-cyan-900/60 text-slate-300">
-                        <summary className="cursor-pointer font-semibold text-cyan-400 flex items-center justify-between hover:text-cyan-300">
-                          <span className="flex items-center gap-1.5">
-                            <svg className="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                            Flujo Multi-Agente ({m.trazabilidad.length} nodos ejecutados)
-                          </span>
-                          <span className="text-[10px] text-cyan-500 font-mono">LangGraph Trace</span>
-                        </summary>
-                        <div className="mt-2 text-slate-400 font-mono text-[10px] border-t border-slate-800/80 pt-2 space-y-1.5">
-                          {m.trazabilidad.map((step, sIdx) => (
-                            <div key={sIdx} className="flex items-start gap-2 p-1.5 rounded bg-slate-900/80 border border-slate-800/60">
-                              <span className="px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 text-[9px] font-bold shrink-0">
-                                #{step.paso} {step.agente}
-                              </span>
-                              <div className="flex-1">
-                                <div className="text-white font-medium">{step.accion}</div>
-                                <div className="text-slate-400 mt-0.5">{step.detalle}</div>
-                              </div>
-                              <span className={`text-[9px] px-1 py-0.5 rounded font-bold shrink-0 ${step.estado === 'ok' ? 'text-emerald-400 bg-emerald-950/60 border border-emerald-800/40' : 'text-amber-400 bg-amber-950/60 border border-amber-800/40'}`}>
-                                {step.estado.toUpperCase()}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </details>
-                    )}
+            {/* ESTADO DE CARGA REAL CON FEEDBACK MULTI-AGENTE */}
+            {chatLoading && (
+              <div className="flex flex-col items-start w-full">
+                <div className="text-[10px] font-mono text-ink-muted mb-1 px-1">
+                  Oficial de Privacidad (DPO / CSIRT)
+                </div>
+                <div className="p-3.5 rounded bg-surface-card border border-surface-border max-w-[390px] w-full rounded-bl-none shadow-sm space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-serif font-bold text-ink-primary">
+                    <div className="w-4 h-4 border-2 border-[var(--unsa-primary)] border-t-transparent rounded-full animate-spin shrink-0"></div>
+                    <span>Procesando consulta en Grafo Multi-Agente...</span>
+                  </div>
+                  <div className="text-[10px] font-mono text-ink-muted leading-relaxed pl-6">
+                    Supervisor ➔ DSPM Risk ➔ Precedentes ANPD ➔ GPT-6 Luna ➔ Reflection
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={chatBottomRef} />
+          </div>
 
-                    {/* Accordion de Reasoning */}
-                    {m.reasoning && (
-                      <details className="mt-1.5 w-full text-[11px] bg-slate-950/90 rounded-lg p-2 border border-slate-800 text-slate-400">
-                        <summary className="cursor-pointer font-semibold text-cyan-400 flex items-center gap-1.5 hover:text-cyan-300">
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                          Cadena de razonamiento pericial
-                        </summary>
-                        <div className="mt-2 text-slate-400 font-mono text-[10px] whitespace-pre-wrap leading-relaxed border-t border-slate-800/80 pt-2">
-                          {m.reasoning}
-                        </div>
-                      </details>
-                    )}
+          {/* Preguntas Sugeridas */}
+          <div className="p-2.5 border-t border-surface-border bg-surface-ground flex flex-wrap gap-2">
+            {[
+              "¿Cuál es el nexo causal con la Ley 29733?",
+              "¿Qué sanción aplica la ANPD según D.S. 016-2024?",
+              "¿Qué adenda DPA se exige a Google Workspace?"
+            ].map((sug, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSendChat(sug)}
+                disabled={chatLoading}
+                className="px-2.5 py-1 rounded bg-white hover:bg-rose-50 text-slate-800 hover:text-rose-900 border border-slate-300 text-xs font-medium transition-colors shadow-2xs disabled:opacity-50"
+              >
+                {sug}
+              </button>
+            ))}
+          </div>
 
-                    {/* SQL Patch Card */}
-                    {m.sql_patch && (
-                      <div className="w-full mt-2 p-3 bg-[#060911] border border-cyan-800/60 rounded-xl">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[10px] font-bold text-cyan-300 font-mono flex items-center gap-1">
-                            <svg className="w-3 h-3 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                            Código de Remediación
-                          </span>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(m.sql_patch);
-                                showToast("Código copiado al portapapeles.", "success");
-                              }}
-                              className="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-0.5 rounded border border-slate-700"
-                            >
-                              Copiar
-                            </button>
-                            <button
-                              onClick={handleRemediate}
-                              className="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2 py-0.5 rounded"
-                            >
-                              Marcar Resuelto
-                            </button>
-                          </div>
-                        </div>
-                        <pre className="text-[11px] font-mono text-cyan-200 overflow-x-auto p-2 bg-slate-950 rounded border border-slate-900 leading-tight">
-                          <code>{m.sql_patch}</code>
-                        </pre>
+          {/* Input de Consulta */}
+          <div className="p-3 border-t border-surface-border bg-surface-sidebar flex items-center gap-2">
+            <input
+              type="text"
+              value={chatInput}
+              disabled={chatLoading}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !chatLoading && handleSendChat()}
+              placeholder={chatLoading ? "El orquestador multi-agente está procesando..." : "Preguntar al DPO o consultar sanciones..."}
+              className="flex-1 bg-white border border-surface-border rounded px-3 py-1.5 text-xs text-ink-primary placeholder-ink-muted focus:outline-none focus:border-unsa-700 shadow-2xs disabled:bg-slate-100 disabled:opacity-75"
+            />
+            <button
+              onClick={() => handleSendChat()}
+              disabled={chatLoading || !chatInput.trim()}
+              className="px-3.5 py-1.5 rounded bg-[var(--unsa-primary)] hover:bg-[var(--unsa-hover)] disabled:opacity-50 text-white text-xs font-semibold transition-colors inline-flex items-center gap-1.5 shadow-2xs cursor-pointer disabled:cursor-not-allowed"
+            >
+              {chatLoading ? (
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <IconSend className="w-3.5 h-3.5" />
+              )}
+            </button>
+          </div>
+
+        </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* 4. MODALES: INSPECCIÓN DOCUMENTAL, CITAS LEGALES Y CONFIRMACIÓN      */}
+      {/* ==================================================================== */}
+
+      {/* MODAL DE INSPECCIÓN DE DOCUMENTO */}
+      {inspectDocModal.open && (
+        <div className="fixed inset-0 backdrop-blur-xs z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'var(--modal-overlay)' }}>
+          <div className="bg-surface-card border border-surface-border rounded max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            
+            <div className="p-4 border-b border-surface-border bg-surface-sidebar flex items-center justify-between">
+              <div>
+                <h3 className="font-serif font-bold text-sm text-ink-primary">
+                  Inspección de Instrumento: {inspectDocModal.data?.archivo?.nombre_archivo}
+                </h3>
+                <span className="text-[11px] font-mono text-ink-secondary">
+                  ID: {inspectDocModal.data?.archivo?.id} • Tipo: {inspectDocModal.data?.archivo?.tipo_archivo}
+                </span>
+              </div>
+              <button
+                onClick={() => setInspectDocModal({ open: false, loading: false, data: null })}
+                className="text-ink-muted hover:text-ink-primary"
+              >
+                <IconX className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 flex-1 overflow-y-auto space-y-4 text-xs">
+              {inspectDocModal.loading ? (
+                <div className="p-8 text-center text-ink-muted font-mono">
+                  Cargando análisis de cláusulas y columnas AST...
+                </div>
+              ) : (
+                <>
+                  <div className="p-3 bg-surface-ground rounded border border-surface-border font-mono text-[11px] space-y-1">
+                    <div>Resumen: {inspectDocModal.data?.archivo?.resumen_analisis}</div>
+                    <div>Fecha de Ingesta: {inspectDocModal.data?.archivo?.fecha_carga}</div>
+                    {inspectDocModal.data?.raw_url && (
+                      <div className="pt-2">
+                        <a
+                          href={inspectDocModal.data.raw_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-950 font-semibold rounded border border-rose-300 font-sans text-xs transition-colors shadow-2xs"
+                        >
+                          <IconExternalLink className="w-3.5 h-3.5 text-rose-700" />
+                          <span>Abrir Instrumento Nativo (PDF/SQL)</span>
+                        </a>
                       </div>
                     )}
                   </div>
-                ))}
-                {chatLoading && (
-                  <div className="flex items-center gap-2 p-3 rounded-2xl bg-zinc-950/90 border border-zinc-800 text-xs text-slate-400 animate-pulse">
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin"></div>
-                    <span>Generando dictamen pericial con el flujo multi-agente...</span>
-                  </div>
-                )}
-                <div ref={chatBottomRef} />
-              </div>
 
-              {/* Input de chat */}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSendMessage();
-                }}
-                className="flex gap-2"
+                  {/* Cláusulas extraídas */}
+                  {inspectDocModal.data?.clausulas?.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="font-serif font-bold text-sm text-ink-primary">
+                        Cláusulas y Artículos Normativos ({inspectDocModal.data.clausulas.length})
+                      </div>
+                      <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                        {inspectDocModal.data.clausulas.map((c, i) => (
+                          <div key={i} className="p-3 bg-surface-ground rounded border border-surface-border text-[11px] space-y-1">
+                            <div className="flex items-center justify-between font-mono">
+                              <span className="font-bold text-ink-primary">{c.numero_clausula || `Artículo ${i+1}`}</span>
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                                c.estado_cumplimiento === 'OBSERVADO'
+                                  ? 'bg-rose-50 text-rose-900 border border-rose-300'
+                                  : 'bg-emerald-50 text-emerald-900 border border-emerald-300'
+                              }`}>
+                                {c.estado_cumplimiento}
+                              </span>
+                            </div>
+                            <p className="text-ink-secondary">{c.texto_clausula}</p>
+                            {c.alerta_legal && (
+                              <div className="text-amber-800 font-bold text-[10px] font-mono">
+                                Alerta Legal: {c.alerta_legal}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Columnas si es esquema SQL */}
+                  {inspectDocModal.data?.columnas_sensibles?.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="font-serif font-bold text-sm text-ink-primary">
+                        Columnas Sensibles Identificadas por AST ({inspectDocModal.data.columnas_sensibles.length})
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+                        {inspectDocModal.data.columnas_sensibles.map((col, i) => (
+                          <div key={i} className="p-2.5 bg-surface-ground rounded border border-surface-border text-[11px] font-mono space-y-1">
+                            <div className="font-bold text-ink-primary">{col.nombre_tabla}.{col.nombre_columna}</div>
+                            <div className="text-rose-500 font-medium">{col.categoria_sensible}</div>
+                            <div className="text-ink-muted text-[10px]">{col.recomendacion_seguridad}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="p-3 border-t border-surface-border bg-surface-sidebar flex justify-end">
+              <button
+                onClick={() => setInspectDocModal({ open: false, loading: false, data: null })}
+                className="px-4 py-1.5 rounded bg-surface-card hover:bg-surface-elevated text-ink-primary text-xs font-medium border border-surface-border"
               >
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Consulta al Auditor: diagnóstico, remediación, precedentes ANPD, fundamento legal...'Genera parche SQL', 'Fundamento legal')..."
-                  className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
-                />
-                <button
-                  type="submit"
-                  disabled={loading || !chatInput.trim()}
-                  className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-bold text-xs shadow-md shadow-cyan-600/20"
-                >
-                  Enviar
-                </button>
-              </form>
+                Cerrar
+              </button>
             </div>
 
           </div>
-
-        </main>
+        </div>
       )}
 
-      {/* REACT CONFIRMATION MODAL (Replaces browser window.confirm) */}
-      {confirmModal.open && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-card max-w-md w-full p-6 border border-slate-700 shadow-2xl animate-scale-up">
-            <h3 className="text-base font-bold text-white mb-2">{confirmModal.title}</h3>
-            <p className="text-xs text-slate-300 mb-6 leading-relaxed">{confirmModal.message}</p>
-            <div className="flex items-center justify-end gap-3">
+      {/* MODAL DE REFERENCIA LEGAL Y NORMATIVA (REPARADO Y CONECTADO) */}
+      {legalModal.open && (
+        <div className="fixed inset-0 backdrop-blur-xs z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'var(--modal-overlay)' }}>
+          <div className="bg-surface-card border border-surface-border rounded max-w-2xl w-full max-h-[80vh] flex flex-col shadow-2xl overflow-hidden">
+            
+            <div className="p-4 border-b border-surface-border bg-surface-sidebar flex items-center justify-between">
+              <div>
+                <h3 className="font-serif font-bold text-sm text-ink-primary">
+                  {legalModal.tipo === 'iso27701' || legalModal.tipo === 'control' ? 'Control ISO/IEC 27701:2025' : 'Artículo de la Ley N° 29733 (ANPD)'}
+                </h3>
+                <span className="text-xs font-mono font-bold text-rose-900 dark:text-rose-300">
+                  {legalModal.data?.control_id ? `Control: ${legalModal.data.control_id}` : legalModal.data?.articulo ? `Artículo: ${legalModal.data.articulo}` : 'Referencia Normativa Oficial'}
+                </span>
+              </div>
               <button
-                onClick={() => setConfirmModal({ open: false })}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300"
+                onClick={() => setLegalModal({ open: false, loading: false, tipo: '', data: null })}
+                className="text-ink-muted hover:text-ink-primary"
+              >
+                <IconX className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 flex-1 overflow-y-auto space-y-3 text-xs leading-relaxed text-ink-primary">
+              {legalModal.loading ? (
+                <div className="p-8 text-center text-ink-muted font-mono">Consultando repositorio normativo...</div>
+              ) : (
+                <>
+                  <div className="font-serif font-bold text-sm text-ink-primary">
+                    {legalModal.data?.titulo || legalModal.data?.nombre || 'Norma Oficial'}
+                  </div>
+                  
+                  <div className="p-3.5 bg-surface-ground rounded border border-surface-border font-serif text-ink-secondary italic leading-relaxed whitespace-pre-line">
+                    "{legalModal.data?.texto_oficial || legalModal.data?.descripcion}"
+                  </div>
+
+                  {legalModal.data?.guia_implementacion && (
+                    <div className="p-3.5 bg-amber-50 rounded border border-amber-300 space-y-1">
+                      <div className="font-mono text-xs text-amber-900 uppercase font-bold tracking-wide">Exigibilidad y Supervisión ANPD:</div>
+                      <p className="text-amber-950 font-sans text-xs leading-relaxed">{legalModal.data.guia_implementacion}</p>
+                    </div>
+                  )}
+
+                  {legalModal.data?.principios_vinculados?.length > 0 && (
+                    <div className="space-y-1.5 pt-1">
+                      <div className="font-mono text-[10px] text-ink-muted uppercase font-semibold">Principios ISO/IEC 29100 Vinculados:</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {legalModal.data.principios_vinculados.map((p, i) => (
+                          <span key={i} className="px-2.5 py-0.5 rounded bg-sky-50 border border-sky-300 text-xs font-mono font-semibold text-sky-900">
+                            {p.name || p.id}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="p-3 border-t border-surface-border bg-surface-sidebar flex justify-end">
+              <button
+                onClick={() => setLegalModal({ open: false, loading: false, tipo: '', data: null })}
+                className="px-4 py-1.5 rounded bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs font-semibold border border-slate-300 shadow-2xs"
+              >
+                Entendido
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE CONFIRMACIÓN */}
+      {confirmModal.open && (
+        <div className="fixed inset-0 backdrop-blur-xs z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'var(--modal-overlay)' }}>
+          <div className="bg-surface-card border border-surface-border rounded max-w-md w-full p-5 space-y-4 shadow-2xl">
+            <div className="font-serif font-bold text-sm text-ink-primary">
+              {confirmModal.title}
+            </div>
+            <p className="text-xs text-ink-secondary leading-relaxed">
+              {confirmModal.message}
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                onClick={() => setConfirmModal({ open: false, title: '', message: '', onConfirm: null })}
+                className="px-3 py-1.5 rounded bg-surface-card hover:bg-surface-elevated text-ink-secondary text-xs font-medium border border-surface-border"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmModal.onConfirm}
-                className={`px-4 py-2 rounded-xl text-xs font-bold text-white shadow-lg ${confirmModal.confirmColor || 'bg-cyan-600 hover:bg-cyan-500'}`}
+                className={`px-3 py-1.5 rounded text-white text-xs font-medium ${
+                  confirmModal.danger
+                    ? 'bg-rose-700 hover:bg-rose-600'
+                    : 'bg-unsa-800 hover:bg-unsa-700'
+                }`}
               >
-                {confirmModal.confirmText || 'Confirmar'}
+                Confirmar Acción
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* SPINNER OVERLAY */}
-      {loading && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
-          <div className="w-12 h-12 rounded-full border-4 border-cyan-500 border-t-transparent animate-spin mb-3"></div>
-          <p className="text-xs font-semibold text-slate-200">{loadingMsg || 'Procesando...'}</p>
-        </div>
-      )}
-
-      {/* MODAL DE REFERENCIA LEGAL */}
-      {legalRefModal.open && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setLegalRefModal({ open: false })}>
-          <div className="glass-card max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6 border border-slate-700 shadow-2xl animate-scale-up" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
-                {legalRefModal.tipo === 'control' && 'Control ISO/IEC 27701:2025'}
-                {legalRefModal.tipo === 'articulo' && 'Ley N.° 29733 - Protección de Datos Personales'}
-                {legalRefModal.tipo === 'sancion' && 'Precedente Sancionador ANPD'}
-              </h3>
-              <button onClick={() => setLegalRefModal({ open: false })} className="text-slate-400 hover:text-white text-lg">✕</button>
-            </div>
-            
-            {legalRefModal.loading && (
-              <div className="flex items-center justify-center py-8">
-                <div className="w-6 h-6 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin"></div>
-                <span className="ml-2 text-xs text-slate-400">Cargando referencia...</span>
-              </div>
-            )}
-            
-            {legalRefModal.data && !legalRefModal.loading && (
-              <div className="space-y-3 text-xs">
-                {legalRefModal.data.error && (
-                  <p className="text-rose-400">{legalRefModal.data.error}</p>
-                )}
-                
-                {/* CONTROL ISO */}
-                {legalRefModal.tipo === 'control' && legalRefModal.data.data && (
-                  <>
-                    <div className="bg-slate-900 rounded-lg p-3 border border-slate-800">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-mono text-cyan-400 font-bold text-sm">{legalRefModal.data.data.id}</span>
-                        <span className="text-[10px] bg-cyan-950 text-cyan-300 px-2 py-0.5 rounded-full border border-cyan-800">{legalRefModal.data.data.role}</span>
-                      </div>
-                      <h4 className="text-white font-semibold mb-1">{legalRefModal.data.data.title}</h4>
-                      <p className="text-slate-400 text-[11px]">Categoría: {legalRefModal.data.data.category}</p>
-                    </div>
-                    
-                    {legalRefModal.data.data.peru_legal_bridge && (
-                      <div className="bg-emerald-950/40 rounded-lg p-3 border border-emerald-800/50">
-                        <h5 className="text-emerald-400 font-bold text-[11px] mb-2">Mapeo Legal Peruano</h5>
-                        <div className="space-y-1.5">
-                          <p className="text-slate-300"><span className="text-emerald-400 font-medium">Ley 29733:</span> {legalRefModal.data.data.peru_legal_bridge.ley_29733}</p>
-                          <p className="text-slate-300"><span className="text-emerald-400 font-medium">D.S. 003-2013:</span> {legalRefModal.data.data.peru_legal_bridge.ds_003_2013_jus}</p>
-                          <p className="text-slate-300"><span className="text-emerald-400 font-medium">Directiva:</span> {legalRefModal.data.data.peru_legal_bridge.directiva_seguridad}</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {legalRefModal.data.principios_vinculados && legalRefModal.data.principios_vinculados.length > 0 && (
-                      <div className="bg-violet-950/30 rounded-lg p-3 border border-violet-800/40">
-                        <h5 className="text-violet-400 font-bold text-[11px] mb-2">Principios ISO 29100 Vinculados</h5>
-                        {legalRefModal.data.principios_vinculados.map((p, i) => (
-                          <p key={i} className="text-slate-300 text-[11px] mb-1">• {p.name || p.id}: {p.ley_29733_principle || ''}</p>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-                
-                {/* ARTÍCULO LEY 29733 */}
-                {legalRefModal.tipo === 'articulo' && legalRefModal.data.data && (
-                  <div className="bg-slate-900 rounded-lg p-4 border border-slate-800">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="font-mono text-emerald-400 font-bold">Art. {legalRefModal.data.data.articulo}</span>
-                      <span className="text-white font-semibold">{legalRefModal.data.data.titulo}</span>
-                    </div>
-                    <p className="text-slate-300 leading-relaxed whitespace-pre-wrap text-[11px]">{legalRefModal.data.data.texto}</p>
-                  </div>
-                )}
-                
-                {/* SANCIÓN ANPD */}
-                {legalRefModal.tipo === 'sancion' && legalRefModal.data.data && (
-                  <>
-                    <div className="bg-slate-900 rounded-lg p-3 border border-slate-800">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-white font-bold">{legalRefModal.data.data.entidad}</span>
-                        <span className="text-rose-400 font-mono font-bold">{legalRefModal.data.data.multa_total_uit} UIT</span>
-                      </div>
-                      <p className="text-slate-400 text-[11px]">Sector: {legalRefModal.data.data.sector}</p>
-                      {legalRefModal.data.data.resoluciones && legalRefModal.data.data.resoluciones.map((r, i) => (
-                        <p key={i} className="text-cyan-400 text-[11px] font-mono mt-1">{r}</p>
-                      ))}
-                    </div>
-                    
-                    {legalRefModal.data.data.infracciones && legalRefModal.data.data.infracciones.length > 0 && (
-                      <div className="bg-rose-950/30 rounded-lg p-3 border border-rose-800/40">
-                        <h5 className="text-rose-400 font-bold text-[11px] mb-2">Infracciones Tipificadas</h5>
-                        {legalRefModal.data.data.infracciones.map((inf, i) => (
-                          <div key={i} className="text-slate-300 text-[11px] mb-2 pl-2 border-l-2 border-rose-800/50">
-                            {typeof inf === 'object' ? (
-                              <><span className="text-rose-300 font-medium">{inf.articulo_referencia}:</span> {inf.texto_infraccion}</>
-                            ) : inf}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {legalRefModal.data.data.medidas_correctivas && legalRefModal.data.data.medidas_correctivas.length > 0 && (
-                      <div className="bg-amber-950/30 rounded-lg p-3 border border-amber-800/40">
-                        <h5 className="text-amber-400 font-bold text-[11px] mb-2">Medidas Correctivas Ordenadas</h5>
-                        {legalRefModal.data.data.medidas_correctivas.map((m, i) => (
-                          <p key={i} className="text-slate-300 text-[11px] mb-1">• {m}</p>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* TOAST NOTIFICATION */}
-      {toast && (
-        <div className={`fixed bottom-5 right-5 z-50 max-w-sm glass-card p-3.5 border shadow-2xl flex items-center gap-2.5 text-xs animate-slide-up ${
-          toast.type === 'success' ? 'border-emerald-500 text-emerald-200' :
-          toast.type === 'error' ? 'border-rose-500 text-rose-200' :
-          'border-cyan-500 text-cyan-200'
-        }`}>
-          <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+      {/* NOTIFICACIÓN TOAST */}
+      {toast.visible && (
+        <div className="fixed bottom-4 left-4 z-50 px-4 py-2.5 rounded bg-surface-card border border-surface-borderLight text-xs text-ink-primary shadow-xl flex items-center gap-2 font-mono">
+          <span className={`w-2.5 h-2.5 rounded-full ${toast.type === 'error' ? 'bg-rose-500' : toast.type === 'success' ? 'bg-emerald-500' : 'bg-[var(--unsa-primary)]'}`}></span>
           <span>{toast.message}</span>
         </div>
       )}
+
     </div>
   );
 }

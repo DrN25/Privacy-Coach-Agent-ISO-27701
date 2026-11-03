@@ -11,6 +11,7 @@ from ...infrastructure.repository import repository
 from ...knowledge_bridge import knowledge_bridge
 from ...services.audit_service import audit_service
 from ...services.ingestion_service import ingestion_service
+from ...services.document_processor import document_processor
 
 router = APIRouter(tags=["Audit"])
 
@@ -72,18 +73,24 @@ def reanalyze_audit():
     }
 
 
+def obtener_base_dir() -> str:
+    p = os.path.abspath(__file__)
+    for _ in range(5):
+        p = os.path.dirname(p)
+    return p
+
+
 @router.post("/api/load-mockups")
 def load_mockups():
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    mockups_dir = os.path.join(base_dir, "mockups")
-    if not os.path.exists(mockups_dir):
-        # Fallback a src/mockups
-        mockups_dir = os.path.join(os.path.dirname(base_dir), "src", "mockups")
+    base_dir = obtener_base_dir()
+    mockups_dir = os.path.join(base_dir, "media", "documents")
+    if not os.path.exists(mockups_dir) or not os.listdir(mockups_dir):
+        mockups_dir = os.path.join(base_dir, "mockups")
         if not os.path.exists(mockups_dir):
             mockups_dir = os.path.join(base_dir, "src", "mockups")
 
     if not os.path.exists(mockups_dir):
-        raise HTTPException(status_code=404, detail="Directorio de mockups no encontrado.")
+        raise HTTPException(status_code=404, detail="Directorio de documentos institucionales no encontrado.")
 
     procesados = []
     todos = sorted(os.listdir(mockups_dir))
@@ -93,7 +100,6 @@ def load_mockups():
         ext = ext.lower()
         if ext not in [".sql", ".pdf", ".md", ".txt"]:
             continue
-        # Evitar duplicar documento si ya existe la versión PDF
         if ext == ".md" and f"{stem}.pdf" in todos:
             continue
         archivos_unicos.append(f)
@@ -102,17 +108,23 @@ def load_mockups():
         fpath = os.path.join(mockups_dir, f)
         if not os.path.isfile(fpath):
             continue
-        ext = os.path.splitext(f)[1].lower()
-        if ext == ".sql":
-            ingestion_service.procesar_sql(fpath, f)
+        try:
+            document_processor.procesar_archivo(fpath, f)
             procesados.append(f)
-        elif ext in [".pdf", ".txt", ".md"]:
-            ingestion_service.procesar_documento(fpath, f)
-            procesados.append(f)
+        except Exception as e:
+            logger_err = str(e)
+            # Fallback legacy si document_processor reporta error
+            ext = os.path.splitext(f)[1].lower()
+            if ext == ".sql":
+                ingestion_service.procesar_sql(fpath, f)
+                procesados.append(f)
+            elif ext in [".pdf", ".txt", ".md"]:
+                ingestion_service.procesar_documento(fpath, f)
+                procesados.append(f)
 
     hallazgos = audit_service.ejecutar_auditoria_completa()
     return {
-        "mensaje": f"Se cargaron y auditaron {len(procesados)} archivos de prueba con éxito.",
+        "mensaje": f"Se cargaron y auditaron {len(procesados)} documentos institucionales de la UNSA con éxito.",
         "archivos_procesados": procesados,
         "total_brechas": len(hallazgos)
     }
@@ -123,21 +135,28 @@ def load_single_mockup(filename: str):
     if filename != os.path.basename(filename):
         raise HTTPException(status_code=400, detail="Nombre de archivo inválido.")
 
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    mockups_dir = os.path.join(base_dir, "mockups")
-    if not os.path.exists(mockups_dir):
-        mockups_dir = os.path.join(base_dir, "src", "mockups")
-
+    base_dir = obtener_base_dir()
+    mockups_dir = os.path.join(base_dir, "media", "documents")
     file_path = os.path.join(mockups_dir, filename)
     if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail=f"Mockup {filename} no encontrado.")
+        mockups_dir = os.path.join(base_dir, "mockups")
+        file_path = os.path.join(mockups_dir, filename)
+        if not os.path.exists(file_path):
+            mockups_dir = os.path.join(base_dir, "src", "mockups")
+            file_path = os.path.join(mockups_dir, filename)
 
-    if filename.endswith(".sql"):
-        ingestion_service.procesar_sql(file_path, filename)
-    else:
-        ingestion_service.procesar_documento(file_path, filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail=f"Documento {filename} no encontrado.")
+
+    try:
+        document_processor.procesar_archivo(file_path, filename)
+    except Exception:
+        if filename.endswith(".sql"):
+            ingestion_service.procesar_sql(file_path, filename)
+        else:
+            ingestion_service.procesar_documento(file_path, filename)
 
     return {
-        "mensaje": f"Archivo '{filename}' ingresado a la base de datos de la empresa.",
+        "mensaje": f"Documento institucional '{filename}' ingresado al repositorio.",
         "necesita_reanalisis": True
     }

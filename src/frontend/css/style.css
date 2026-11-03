@@ -1,237 +1,547 @@
-/* Custom Glassmorphism & Theme Variables */
-:root {
-  --bg-dark: #0b0f19;
-  --bg-card: rgba(18, 24, 38, 0.85);
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --accent-cyan: #06b6d4;
-  --accent-emerald: #10b981;
-  --accent-violet: #8b5cf6;
-  --accent-rose: #f43f5e;
-  --accent-amber: #f59e0b;
+/* ==========================================================================
+   SISTEMA DE AUDITORÍA DSPM & GESTOR DE BRECHAS PII (ISO 27701 & LEY 29733)
+   Sistema de Paletas Institucionales • Anti-AI-Slop Craft Architecture
+   ========================================================================== */
+
+/* ==========================================================================
+   SISTEMA DE AUDITORÍA DSPM & GESTOR DE BRECHAS PII (ISO 27701 & LEY 29733)
+   Sistema de Paletas Institucionales • Anti-AI-Slop Craft Architecture
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   VARIANTE 1: SILLAR & LACRE CARDENAL (Institucional UNSA / Heráldico)
+   Cabecera en Lacre Granate heráldico, lienzo sillar blanco y zonas de color
+   vibrantes para sanciones, titulares y los 4 ejes de remediación.
+   -------------------------------------------------------------------------- */
+:root, [data-theme="sillar"], [data-theme="sillar-lacre"] {
+  --bg-ground: #f8f9fa;
+  --bg-card: #ffffff;
+  --bg-sidebar: #f1f4f8;
+  --bg-elevated: #e2e8f0;
+  --border-subtle: #cbd5e1;
+  --border-bright: #94a3b8;
+  --header-bg: #881337;
+  --header-ink: #ffffff;
+  --header-ink-muted: #fecdd3;
+  --header-border: #700f2d;
+  --unsa-primary: #881337;
+  --unsa-hover: #700f2d;
+  --unsa-badge-bg: #ffe4e6;
+  --unsa-badge-text: #9f1239;
+  --unsa-badge-border: #fecdd3;
+  --ink-primary: #0f172a;
+  --ink-secondary: #475569;
+  --ink-muted: #64748b;
+  --active-card-bg: #fff1f2;
+  --active-card-border: #881337;
+  --kpi-multa-bg: #fff1f2;
+  --kpi-multa-border: #fecdd3;
+  --kpi-multa-ink: #9f1239;
+  --kpi-titulares-bg: #f0fdf4;
+  --kpi-titulares-border: #bbf7d0;
+  --kpi-titulares-ink: #166534;
+  --kpi-anpd-bg: #fffbeb;
+  --kpi-anpd-border: #fde68a;
+  --kpi-anpd-ink: #92400e;
+  --axis-1-bg: #fff1f2;
+  --axis-1-border: #fecdd3;
+  --axis-1-ink: #881337;
+  --axis-1-badge-bg: #ffe4e6;
+  --axis-1-badge-ink: #9f1239;
+  --axis-2-bg: #eff6ff;
+  --axis-2-border: #bfdbfe;
+  --axis-2-ink: #1e40af;
+  --axis-2-badge-bg: #dbeafe;
+  --axis-2-badge-ink: #1d4ed8;
+  --axis-3-bg: #fffbeb;
+  --axis-3-border: #fde68a;
+  --axis-3-ink: #92400e;
+  --axis-3-badge-bg: #fef3c7;
+  --axis-3-badge-ink: #b45309;
+  --axis-4-bg: #f0fdf4;
+  --axis-4-border: #bbf7d0;
+  --axis-4-ink: #166534;
+  --axis-4-badge-bg: #dcfce7;
+  --axis-4-badge-ink: #15803d;
+  --clause-bg: #fffbeb;
+  --clause-border: #fde68a;
+  --clause-bar: #d97706;
+  --code-bg: #f1f5f9;
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-track: #f8f9fa;
+  --modal-overlay: rgba(15, 23, 42, 0.45);
 }
 
-body {
-  background-color: var(--bg-dark);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: #e2e8f0;
-  overflow-x: hidden;
+/* --------------------------------------------------------------------------
+   VARIANTE 2: SILLAR & COBALTO PERICIAL (Consola Forense DSPM & Gobernanza)
+   Cabecera en Azul Cobalto profundo (#0f2444), acentos en zafiro/cian y
+   bloques analíticos de alta precisión pericial.
+   -------------------------------------------------------------------------- */
+[data-theme="sillar-cobalto"] {
+  --bg-ground: #f4f7fb;
+  --bg-card: #ffffff;
+  --bg-sidebar: #ebf1f8;
+  --bg-elevated: #dfe8f2;
+  --border-subtle: #c5d6e6;
+  --border-bright: #9cb8d4;
+  --header-bg: #0f2444;
+  --header-ink: #ffffff;
+  --header-ink-muted: #bae6fd;
+  --header-border: #09172c;
+  --unsa-primary: #0284c7;
+  --unsa-hover: #0369a1;
+  --unsa-badge-bg: #e0f2fe;
+  --unsa-badge-text: #0369a1;
+  --unsa-badge-border: #bae6fd;
+  --ink-primary: #0f172a;
+  --ink-secondary: #334155;
+  --ink-muted: #64748b;
+  --active-card-bg: #f0f9ff;
+  --active-card-border: #0284c7;
+  --kpi-multa-bg: #fff1f2;
+  --kpi-multa-border: #fecdd3;
+  --kpi-multa-ink: #be123c;
+  --kpi-titulares-bg: #f0f9ff;
+  --kpi-titulares-border: #bae6fd;
+  --kpi-titulares-ink: #0369a1;
+  --kpi-anpd-bg: #fefce8;
+  --kpi-anpd-border: #fef08a;
+  --kpi-anpd-ink: #854d0e;
+  --axis-1-bg: #f0fdf4;
+  --axis-1-border: #bbf7d0;
+  --axis-1-ink: #166534;
+  --axis-1-badge-bg: #dcfce7;
+  --axis-1-badge-ink: #15803d;
+  --axis-2-bg: #f0f9ff;
+  --axis-2-border: #bae6fd;
+  --axis-2-ink: #0369a1;
+  --axis-2-badge-bg: #e0f2fe;
+  --axis-2-badge-ink: #0284c7;
+  --axis-3-bg: #faf5ff;
+  --axis-3-border: #e9d5ff;
+  --axis-3-ink: #6b21a8;
+  --axis-3-badge-bg: #f3e8ff;
+  --axis-3-badge-ink: #7e22ce;
+  --axis-4-bg: #ecfeff;
+  --axis-4-border: #a5f3fc;
+  --axis-4-ink: #0e7490;
+  --axis-4-badge-bg: #cffafe;
+  --axis-4-badge-ink: #0891b2;
+  --clause-bg: #f0f9ff;
+  --clause-border: #bae6fd;
+  --clause-bar: #0284c7;
+  --code-bg: #eaf1f8;
+  --scrollbar-thumb: #b8ccdf;
+  --scrollbar-track: #f4f7fb;
+  --modal-overlay: rgba(15, 36, 68, 0.45);
 }
 
-.glass-card {
-  background: var(--bg-card);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border-glass);
-  border-radius: 1rem;
+/* --------------------------------------------------------------------------
+   VARIANTE 3: SILLAR TERRACOTA & OLIVO (Warm Editorial / Andino Archival)
+   Cabecera en bronce espresso (#382822), acentos en terracota colonial,
+   verde olivo de claustro y cobre para el articulado legal.
+   -------------------------------------------------------------------------- */
+[data-theme="sillar-terracota"] {
+  --bg-ground: #f7f5ef;
+  --bg-card: #ffffff;
+  --bg-sidebar: #eeebe1;
+  --bg-elevated: #e4dfd2;
+  --border-subtle: #d3cdc0;
+  --border-bright: #b8b09f;
+  --header-bg: #382822;
+  --header-ink: #ffffff;
+  --header-ink-muted: #fed7aa;
+  --header-border: #241915;
+  --unsa-primary: #c2410c;
+  --unsa-hover: #9a3412;
+  --unsa-badge-bg: #ffedd5;
+  --unsa-badge-text: #9a3412;
+  --unsa-badge-border: #fed7aa;
+  --ink-primary: #1c1917;
+  --ink-secondary: #44403c;
+  --ink-muted: #78716c;
+  --active-card-bg: #fff7ed;
+  --active-card-border: #c2410c;
+  --kpi-multa-bg: #fff7ed;
+  --kpi-multa-border: #ffedd5;
+  --kpi-multa-ink: #c2410c;
+  --kpi-titulares-bg: #f7fee7;
+  --kpi-titulares-border: #d9f99d;
+  --kpi-titulares-ink: #3f6212;
+  --kpi-anpd-bg: #fefce8;
+  --kpi-anpd-border: #fef08a;
+  --kpi-anpd-ink: #854d0e;
+  --axis-1-bg: #fff7ed;
+  --axis-1-border: #fed7aa;
+  --axis-1-ink: #9a3412;
+  --axis-1-badge-bg: #ffedd5;
+  --axis-1-badge-ink: #c2410c;
+  --axis-2-bg: #f0fdf4;
+  --axis-2-border: #bbf7d0;
+  --axis-2-ink: #166534;
+  --axis-2-badge-bg: #dcfce7;
+  --axis-2-badge-ink: #15803d;
+  --axis-3-bg: #fefce8;
+  --axis-3-border: #fef08a;
+  --axis-3-ink: #854d0e;
+  --axis-3-badge-bg: #fef9c3;
+  --axis-3-badge-ink: #a16207;
+  --axis-4-bg: #f5f3ff;
+  --axis-4-border: #ddd6fe;
+  --axis-4-ink: #5b21b6;
+  --axis-4-badge-bg: #ede9fe;
+  --axis-4-badge-ink: #6d28d9;
+  --clause-bg: #fff7ed;
+  --clause-border: #fed7aa;
+  --clause-bar: #ea580c;
+  --code-bg: #ede9de;
+  --scrollbar-thumb: #c8c0b0;
+  --scrollbar-track: #f7f5ef;
+  --modal-overlay: rgba(56, 40, 34, 0.45);
 }
 
-.glass-header {
-  background: rgba(11, 15, 25, 0.8);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border-glass);
+/* Modo oscuro de respaldo */
+[data-theme="pizarra"], [data-theme="grafito"] {
+  --bg-ground: #0f172a;
+  --bg-card: #1e293b;
+  --bg-sidebar: #141d2d;
+  --bg-elevated: #283548;
+  --border-subtle: #334155;
+  --border-bright: #475569;
+  --header-bg: #0b111e;
+  --header-ink: #ffffff;
+  --header-ink-muted: #94a3b8;
+  --header-border: #1e293b;
+  --unsa-primary: #e11d48;
+  --unsa-hover: #be123c;
+  --unsa-badge-bg: #4c0519;
+  --unsa-badge-text: #fda4af;
+  --unsa-badge-border: #9f1239;
+  --ink-primary: #f8fafc;
+  --ink-secondary: #94a3b8;
+  --ink-muted: #64748b;
+  --active-card-bg: #1e293b;
+  --active-card-border: #e11d48;
+  --kpi-multa-bg: #27141d;
+  --kpi-multa-border: #4c1122;
+  --kpi-multa-ink: #fca5a5;
+  --kpi-titulares-bg: #0c2033;
+  --kpi-titulares-border: #1e3a5f;
+  --kpi-titulares-ink: #7dd3fc;
+  --kpi-anpd-bg: #2b1f0c;
+  --kpi-anpd-border: #523812;
+  --kpi-anpd-ink: #fde047;
+  --axis-1-bg: #27141d;
+  --axis-1-border: #4c1122;
+  --axis-1-ink: #fca5a5;
+  --axis-1-badge-bg: #4c0519;
+  --axis-1-badge-ink: #fda4af;
+  --axis-2-bg: #0c2033;
+  --axis-2-border: #1e3a5f;
+  --axis-2-ink: #7dd3fc;
+  --axis-2-badge-bg: #0c2a4d;
+  --axis-2-badge-ink: #38bdf8;
+  --axis-3-bg: #2b1f0c;
+  --axis-3-border: #523812;
+  --axis-3-ink: #fde047;
+  --axis-3-badge-bg: #422a0a;
+  --axis-3-badge-ink: #fef08a;
+  --axis-4-bg: #06231d;
+  --axis-4-border: #0d4a3d;
+  --axis-4-ink: #6ee7b7;
+  --axis-4-badge-bg: #08332a;
+  --axis-4-badge-ink: #34d399;
+  --clause-bg: #201a14;
+  --clause-border: #523812;
+  --clause-bar: #f59e0b;
+  --code-bg: #0b111e;
+  --scrollbar-thumb: #334155;
+  --scrollbar-track: #0f172a;
+  --modal-overlay: rgba(2, 6, 23, 0.75);
 }
 
-/* Custom Scrollbar */
+html, body {
+  background-color: var(--bg-ground);
+  color: var(--ink-primary);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+/* Numeración tabular uniforme en tablas, códigos e importes */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scrollbars sobrios adaptativos */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: var(--scrollbar-track);
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--scrollbar-thumb);
+  border-radius: 2px;
 }
 
-/* Animations */
-@keyframes pulse-slow {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(0.98); }
+/* Selección de texto */
+::selection {
+  background: var(--unsa-primary);
+  color: #ffffff;
 }
 
-.pulse-glow {
-  animation: pulse-slow 3s infinite ease-in-out;
-}
-
-/* Code block highlight */
-pre code {
-  font-family: 'Fira Code', monospace;
-  font-size: 0.825rem;
-}
 /* ==========================================================================
-   SHADCN-INSPIRED MARKDOWN TYPOGRAPHY FOR CHAT (NO AI SLOP, HIGH DENSITY)
+   TIPOGRAFÍA EDITORIAL PARA DICTÁMENES Y CONSULTAS LEGALES
    ========================================================================== */
-.chat-markdown {
-  color: #e2e8f0;
-  font-size: 0.8125rem; /* 13px */
-  line-height: 1.6;
+.chat-user-bubble {
+  background-color: var(--unsa-primary) !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+.chat-user-bubble,
+.chat-user-bubble p,
+.chat-user-bubble span,
+.chat-user-bubble div,
+.chat-user-bubble .legal-markdown {
+  color: #ffffff !important;
 }
 
-.chat-markdown h1,
-.chat-markdown h2,
-.chat-markdown h3,
-.chat-markdown h4 {
-  color: #f8fafc;
+.chat-assistant-bubble {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--ink-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.legal-markdown {
+  color: var(--ink-primary);
+  font-size: 0.8125rem;
+  line-height: 1.65;
+}
+
+.legal-markdown h1,
+.legal-markdown h2,
+.legal-markdown h3,
+.legal-markdown h4 {
+  color: var(--ink-primary);
+  font-family: 'Literata', Georgia, serif;
   font-weight: 600;
-  letter-spacing: -0.015em;
-  margin-top: 0.9rem;
+  margin-top: 1rem;
   margin-bottom: 0.4rem;
+  letter-spacing: -0.01em;
 }
 
-.chat-markdown h1:first-child,
-.chat-markdown h2:first-child,
-.chat-markdown h3:first-child,
-.chat-markdown h4:first-child {
+.legal-markdown h1:first-child,
+.legal-markdown h2:first-child,
+.legal-markdown h3:first-child {
   margin-top: 0;
 }
 
-.chat-markdown h2 {
-  font-size: 0.925rem;
-  padding-bottom: 0.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  color: #38bdf8;
+.legal-markdown h2 {
+  font-size: 0.95rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-.chat-markdown h3 {
-  font-size: 0.85rem;
-  color: #22d3ee;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
+.legal-markdown p {
+  margin-bottom: 0.65rem;
 }
 
-.chat-markdown h4 {
-  font-size: 0.775rem;
-  color: #94a3b8;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.chat-markdown p {
-  margin-bottom: 0.6rem;
-  color: #cbd5e1;
-}
-
-.chat-markdown p:last-child {
+.legal-markdown p:last-child {
   margin-bottom: 0;
 }
 
-.chat-markdown ul,
-.chat-markdown ol {
-  margin-bottom: 0.7rem;
+.legal-markdown ul,
+.legal-markdown ol {
+  margin-bottom: 0.75rem;
   padding-left: 1.25rem;
 }
 
-.chat-markdown ul {
+.legal-markdown ul {
   list-style-type: disc;
 }
 
-.chat-markdown ol {
+.legal-markdown ol {
   list-style-type: decimal;
 }
 
-.chat-markdown li {
-  margin-bottom: 0.25rem;
-  color: #cbd5e1;
+.legal-markdown li {
+  margin-bottom: 0.3rem;
+  color: var(--ink-secondary);
 }
 
-.chat-markdown li::marker {
-  color: #06b6d4;
-}
-
-.chat-markdown strong {
+.legal-markdown strong {
   font-weight: 600;
-  color: #f1f5f9;
+  color: var(--ink-primary);
 }
 
-.chat-markdown em {
-  font-style: italic;
-  color: #94a3b8;
-}
-
-.chat-markdown hr {
-  border: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+.legal-markdown blockquote {
+  border-left: 2px solid var(--unsa-primary);
+  background: var(--bg-elevated);
+  padding: 0.5rem 0.85rem;
   margin: 0.75rem 0;
-}
-
-.chat-markdown blockquote {
-  border-left: 3px solid #06b6d4;
-  background: rgba(6, 182, 212, 0.05);
-  padding: 0.35rem 0.75rem;
-  margin: 0.6rem 0;
-  border-radius: 0 0.375rem 0.375rem 0;
-  color: #94a3b8;
+  border-radius: 0 3px 3px 0;
+  color: var(--ink-secondary);
+  font-family: 'Literata', Georgia, serif;
   font-style: italic;
 }
 
-.chat-markdown code {
+.legal-markdown code {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
-  background: rgba(15, 23, 42, 0.9);
-  color: #38bdf8;
+  background: var(--code-bg);
+  color: var(--ink-primary);
   padding: 0.15rem 0.35rem;
-  border-radius: 0.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  border: 1px solid var(--border-subtle);
 }
 
-.chat-markdown pre {
-  background: #050811;
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  border-radius: 0.5rem;
+.legal-markdown pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
   padding: 0.75rem;
   margin: 0.75rem 0;
   overflow-x: auto;
-  position: relative;
-  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.5);
 }
 
-.chat-markdown pre code {
+.legal-markdown pre code {
   background: transparent;
-  color: #67e8f9;
   border: 0;
   padding: 0;
+  color: var(--ink-primary);
   font-size: 0.75rem;
-  line-height: 1.5;
 }
 
-.chat-markdown table {
+.legal-markdown table {
   width: 100%;
   border-collapse: collapse;
   margin: 0.75rem 0;
   font-size: 0.75rem;
-  border-radius: 0.375rem;
-  display: block;
-  overflow-x: auto;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-subtle);
 }
 
-.chat-markdown th {
-  background: rgba(15, 23, 42, 0.9);
-  color: #f8fafc;
+.legal-markdown th {
+  background: var(--bg-sidebar);
+  color: var(--ink-primary);
   font-weight: 600;
   text-align: left;
   padding: 0.45rem 0.65rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: 'JetBrains Mono', monospace;
   font-size: 0.6875rem;
-  letter-spacing: 0.05em;
 }
 
-.chat-markdown td {
+.legal-markdown td {
   padding: 0.45rem 0.65rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  color: #cbd5e1;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--ink-secondary);
 }
 
-.chat-markdown tr:nth-child(even) td {
-  background: rgba(15, 23, 42, 0.4);
-}
-
-.chat-markdown tr:last-child td {
+.legal-markdown tr:last-child td {
   border-bottom: none;
+}
+
+/* ==========================================================================
+   CLASES SEMÁNTICAS DE COLOR INSTITUCIONAL (SILLAR CLARO VARIANTES)
+   ========================================================================== */
+
+.app-header {
+  background-color: var(--header-bg);
+  color: var(--header-ink);
+  border-bottom: 1px solid var(--header-border);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.kpi-card-multa {
+  background-color: var(--kpi-multa-bg);
+  border: 1px solid var(--kpi-multa-border);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.kpi-card-multa .kpi-num {
+  color: var(--kpi-multa-ink);
+}
+
+.kpi-card-titulares {
+  background-color: var(--kpi-titulares-bg);
+  border: 1px solid var(--kpi-titulares-border);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.kpi-card-titulares .kpi-num {
+  color: var(--kpi-titulares-ink);
+}
+
+.kpi-card-anpd {
+  background-color: var(--kpi-anpd-bg);
+  border: 1px solid var(--kpi-anpd-border);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.kpi-card-anpd .kpi-num {
+  color: var(--kpi-anpd-ink);
+}
+
+.remediation-axis-1 {
+  background-color: var(--axis-1-bg);
+  border: 1px solid var(--axis-1-border);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.remediation-axis-1 .axis-title {
+  color: var(--axis-1-ink);
+}
+.remediation-axis-1 .axis-tag {
+  background-color: var(--axis-1-badge-bg);
+  color: var(--axis-1-badge-ink);
+  border: 1px solid var(--axis-1-border);
+}
+
+.remediation-axis-2 {
+  background-color: var(--axis-2-bg);
+  border: 1px solid var(--axis-2-border);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.remediation-axis-2 .axis-title {
+  color: var(--axis-2-ink);
+}
+.remediation-axis-2 .axis-tag {
+  background-color: var(--axis-2-badge-bg);
+  color: var(--axis-2-badge-ink);
+  border: 1px solid var(--axis-2-border);
+}
+
+.remediation-axis-3 {
+  background-color: var(--axis-3-bg);
+  border: 1px solid var(--axis-3-border);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.remediation-axis-3 .axis-title {
+  color: var(--axis-3-ink);
+}
+.remediation-axis-3 .axis-tag {
+  background-color: var(--axis-3-badge-bg);
+  color: var(--axis-3-badge-ink);
+  border: 1px solid var(--axis-3-border);
+}
+
+.remediation-axis-4 {
+  background-color: var(--axis-4-bg);
+  border: 1px solid var(--axis-4-border);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.remediation-axis-4 .axis-title {
+  color: var(--axis-4-ink);
+}
+.remediation-axis-4 .axis-tag {
+  background-color: var(--axis-4-badge-bg);
+  color: var(--axis-4-badge-ink);
+  border: 1px solid var(--axis-4-border);
+}
+
+.clause-callout {
+  background-color: var(--clause-bg);
+  border: 1px solid var(--clause-border);
+  border-left: 3px solid var(--clause-bar);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }

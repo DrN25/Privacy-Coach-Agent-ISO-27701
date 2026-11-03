@@ -28,12 +28,17 @@ def main():
     if os.getenv("ENVIRONMENT", "development") == "development":
         threading.Thread(target=abrir_navegador, daemon=True).start()
 
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    src_dir = os.path.dirname(os.path.abspath(__file__))
+    for p in [base_dir, src_dir]:
+        if p not in sys.path:
+            sys.path.insert(0, p)
+
     uvicorn.run(
         "backend.app:app",
         host=os.getenv("HOST", "127.0.0.1"),
         port=int(os.getenv("PORT", "8000")),
-        reload=False,
+        reload=True,
         log_level="info",
     )
 

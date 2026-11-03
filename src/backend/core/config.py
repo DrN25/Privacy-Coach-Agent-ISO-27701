@@ -32,8 +32,20 @@ class Settings(BaseSettings):
     openrouter_url: str = Field(default="https://openrouter.ai/api/v1/chat/completions", alias="OPENROUTER_URL")
     openrouter_model: str = Field(default="openai/gpt-6-luna", alias="OPENROUTER_MODEL")
 
-    # Base de Datos
+    # Base de Datos SQLite (Fallback)
     database_path: str = Field(default=DEFAULT_DB_PATH, alias="DATABASE_PATH")
+
+    # Base de Datos PostgreSQL Institucional (unsa_pims_db)
+    pg_host: str = Field(default="localhost", alias="PG_HOST")
+    pg_port: int = Field(default=5432, alias="PG_PORT")
+    pg_database: str = Field(default="unsa_pims_db", alias="PG_DATABASE")
+    pg_user: str = Field(default="postgres", alias="PG_USER")
+    pg_password: str = Field(default="", alias="PG_PASSWORD")
+    pg_schema: str = Field(default="demo", alias="PG_SCHEMA")
+    pg_enabled: bool = Field(default=True, alias="PG_ENABLED")
+
+    # Directorio de Almacenamiento Centralizado de Documentos
+    media_dir: str = Field(default=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "media"), alias="MEDIA_DIR")
 
     # Integración A2A con Agente Normativo Institucional UNSA (unsa-mind)
     unsa_a2a_url: str = Field(default="http://localhost:8001/a2a", alias="UNSA_A2A_URL")

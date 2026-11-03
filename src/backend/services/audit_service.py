@@ -143,7 +143,12 @@ class AuditService:
             })
 
         # R-005: Conservación indefinida de datos
-        r005 = [c for c in clausulas if any(k in c["texto_clausula"].upper() for k in ["INDEFINIDO", "PERPETUO", "TIEMPO ILIMITADO", "SIN PLAZO DE PURGA", "DE FORMA INDEFINIDA"])]
+        r005 = [
+            c for c in clausulas
+            if any(k in c["texto_clausula"].upper() for k in [
+                "INDEFINID", "PERPETU", "TIEMPO ILIMITADO", "SIN PLAZO DE PURGA", "DE FORMA INDEFINIDA", "SIN CADUCIDAD"
+            ])
+        ]
         if r005:
             info = resolver_regla_con_fallback("R-005")
             titulos = ", ".join(dict.fromkeys([m["titulo_clausula"] for m in r005]))

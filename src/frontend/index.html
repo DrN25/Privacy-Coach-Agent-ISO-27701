@@ -1,13 +1,22 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es" data-theme="sillar-lacre">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DSPM & Privacy Compliance Multi-Agent System | TIF UNSA</title>
-  <meta name="description" content="Sistema Multi-Agente para Auditoría de Privacidad y DSPM alineado a ISO/IEC 27701:2025 y Ley 29733 (ANPD Perú)">
+  <title>UNSA • Sistema de Peritaje y Resolución de Brechas PII (ISO 27701 / Ley 29733)</title>
+  <meta name="description" content="Plataforma de Peritaje Técnico-Legal y Gestión de Incidentes de Privacidad bajo ISO/IEC 27701:2025 y Ley N° 29733 (ANPD Perú)">
+  
+  <script>
+    (function() {
+      var savedTheme = localStorage.getItem('pims_unsa_theme') || 'sillar-lacre';
+      if (savedTheme === 'sillar') savedTheme = 'sillar-lacre';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -17,18 +26,34 @@
       theme: {
         extend: {
           colors: {
-            brand: {
-              50: '#ecfeff',
-              100: '#cffafe',
-              400: '#22d3ee',
-              500: '#06b6d4',
-              600: '#0891b2',
-              900: '#164e63',
+            unsa: {
+              50: '#fdf2f2',
+              100: '#fce7e7',
+              200: '#f9d2d2',
+              600: '#b91c1c',
+              700: '#991b1b',
+              800: '#821417',
+              900: '#5a0d0f',
+              950: '#380608',
+            },
+            surface: {
+              ground: 'var(--bg-ground)',
+              card: 'var(--bg-card)',
+              sidebar: 'var(--bg-sidebar)',
+              elevated: 'var(--bg-elevated)',
+              border: 'var(--border-subtle)',
+              borderLight: 'var(--border-bright)',
+            },
+            ink: {
+              primary: 'var(--ink-primary)',
+              secondary: 'var(--ink-secondary)',
+              muted: 'var(--ink-muted)',
             }
           },
           fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
+            serif: ['Literata', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
           }
         }
       }
@@ -36,7 +61,7 @@
   </script>
   
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css?v=5.4">
   
   <!-- React 18 & ReactDOM 18 -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -48,17 +73,22 @@
   <!-- Marked Markdown Parser (Local with CDN Fallback) -->
   <script src="/js/marked.min.js"></script>
 </head>
-<body class="bg-[#090d16] text-slate-100 min-h-screen antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
+<body class="bg-surface-ground text-ink-primary font-sans min-h-screen antialiased selection:bg-unsa-800 selection:text-white">
   <div id="root">
-    <div class="flex items-center justify-center min-h-screen">
-      <div class="flex flex-col items-center gap-4 text-center">
-        <div class="w-10 h-10 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-        <div class="text-sm font-medium text-slate-400 font-mono tracking-wide">Iniciando DSPM & Privacy Compliance System...</div>
+    <div class="flex items-center justify-center min-h-screen bg-surface-ground">
+      <div class="flex flex-col items-center gap-4 text-center max-w-sm px-6">
+        <div class="w-9 h-9 border-2 border-unsa-700 border-t-transparent rounded-full animate-spin"></div>
+        <div class="font-serif text-sm font-semibold text-ink-primary tracking-wide">
+          Universidad Nacional de San Agustín de Arequipa
+        </div>
+        <div class="text-[11px] font-mono text-ink-muted uppercase tracking-widest">
+          Iniciando Registro de Incidentes & DSPM PIMS
+        </div>
       </div>
     </div>
   </div>
 
   <!-- React JSX App -->
-  <script type="text/babel" src="/js/app.jsx?v=4.3"></script>
+  <script type="text/babel" src="/js/app.jsx?v=5.4"></script>
 </body>
 </html>
