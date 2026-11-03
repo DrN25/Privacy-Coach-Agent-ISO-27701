@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arquitectura Integral del Sistema • PIMS UNSA (Agente 6)</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    /* Estilos semánticos y animaciones de flujo */
+    :root {
+      --bg-surface: #0f172a;
+      --card-surface: #1e293b;
+      --border-color: #334155;
+      --primary: #38bdf8;
+      --accent: #818cf8;
+      --warning: #fbbf24;
+      --danger: #f87171;
+      --success: #34d399;
+    }
+    .flow-line {
+      stroke-dasharray: 6;
+      animation: dash 1.5s linear infinite;
+    }
+    @keyframes dash {
+      to {
+        stroke-dashoffset: -12;
+      }
+    }
+    .tab-btn.active {
+      border-bottom: 2px solid #38bdf8;
+      color: #38bdf8;
+      font-weight: 600;
+      background: rgba(56, 189, 248, 0.08);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-sky-500 selection:text-white p-4 md:p-8">
+
+  <!-- ENCABEZADO PRINCIPAL -->
+  <header class="max-w-7xl mx-auto mb-8 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+    <div class="absolute -right-20 -top-20 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -left-20 -bottom-20 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-400 border border-sky-500/30">
+            TIF • AUDITORÍA DE SISTEMAS 2026
+          </span>
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+            GRUPO 6 • INCIDENTES & BRECHAS PII
+          </span>
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> A2A Protocol v0.3.0
+          </span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
+          <span>🏛️</span> Arquitectura Integral del Sistema PIMS UNSA
+        </h1>
+        <p class="text-sm md:text-base text-slate-400 mt-1 max-w-3xl">
+          Visualizador interactivo de extremo a extremo: Dual GraphRAG (Normativo vs Documental), Orquestación Multi-Agente LangGraph, Protocolo A2A con VPS institucional y Módulos de la UI.
+        </p>
+      </div>
+
+      <!-- Métricas Clave -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3 text-center">
+          <div class="text-xl font-bold text-sky-400">142</div>
+          <div class="text-xs text-slate-400">Controles ISO 27701</div>
+        </div>
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3 text-center">
+          <div class="text-xl font-bold text-amber-400">588</div>
+          <div class="text-xs text-slate-400">Sanciones ANPD</div>
+        </div>
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3 text-center">
+          <div class="text-xl font-bold text-indigo-400">48h</div>
+          <div class="text-xs text-slate-400">Plazo D.S. 016-2024</div>
+        </div>
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-3 text-center">
+          <div class="text-xl font-bold text-emerald-400">4 Nodos</div>
+          <div class="text-xs text-slate-400">LangGraph State</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pestañas de Navegación -->
+    <nav class="flex overflow-x-auto gap-2 mt-6 border-b border-slate-800 text-sm">
+      <button onclick="showTab('tab-diagramas')" id="btn-tab-diagramas" class="tab-btn active px-4 py-3 text-sky-400 font-bold border-b-2 border-sky-400 bg-sky-500/10 transition whitespace-nowrap">
+        📊 1. Diagramas de Flujo y Procesos COMPLETOS (SVG)
+      </button>
+      <button onclick="showTab('tab-mapa')" id="btn-tab-mapa" class="tab-btn px-4 py-3 text-slate-300 hover:text-white transition whitespace-nowrap">
+        🗺️ 2. Mapa General de Arquitectura (4 Capas)
+      </button>
+      <button onclick="showTab('tab-graphrag')" id="btn-tab-graphrag" class="tab-btn px-4 py-3 text-slate-300 hover:text-white transition whitespace-nowrap">
+        🧠 2. Base de Conocimiento & Dual GraphRAG
+      </button>
+      <button onclick="showTab('tab-langgraph')" id="btn-tab-langgraph" class="tab-btn px-4 py-3 text-slate-300 hover:text-white transition whitespace-nowrap">
+        🤖 3. Flujo Multi-Agente (LangGraph)
+      </button>
+      <button onclick="showTab('tab-a2a')" id="btn-tab-a2a" class="tab-btn px-4 py-3 text-slate-300 hover:text-white transition whitespace-nowrap">
+        🌐 4. Integración A2A con VPS de Compañero
+      </button>
+      <button onclick="showTab('tab-ui')" id="btn-tab-ui" class="tab-btn px-4 py-3 text-slate-300 hover:text-white transition whitespace-nowrap">
+        💻 5. Módulos y Flujos de la Interfaz
+      </button>
+    </nav>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL DINÁMICO -->
+  <main class="max-w-7xl mx-auto space-y-8">
+
+    <!-- =================================================================== -->
+    <!-- TAB 1: MAPA GENERAL DE ARQUITECTURA (4 CAPAS) -->
+    <!-- =================================================================== -->
+    <section id="tab-mapa" class="space-y-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <span>🏗️</span> Visión de Arquitectura End-to-End por Capas
+        </h2>
+        <p class="text-sm text-slate-400 mb-6">
+          El sistema está desacoplado limpiamente en cuatro capas horizontales. Haz clic en cualquiera de las capas para resaltar su flujo de comunicación.
+        </p>
+
+        <!-- Diagrama Visual de 4 Capas -->
+        <div class="space-y-4">
+
+          <!-- CAPA 1: PRESENTACIÓN -->
+          <div onclick="selectCapa('presentacion')" id="capa-presentacion" class="cursor-pointer border-2 border-sky-500/40 bg-slate-800/60 hover:bg-slate-800 rounded-xl p-5 transition duration-200">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-sm">L1</span>
+                <div>
+                  <h3 class="font-bold text-white text-base">Capa de Presentación (Frontend React + Tailwind)</h3>
+                  <p class="text-xs text-slate-400">Dashboard de Gestión de Brechas, Inventario de Activos, DSPM Documental y Asistente Conversacional DPO</p>
+                </div>
+              </div>
+              <span class="text-xs bg-sky-950 text-sky-300 border border-sky-800 px-2 py-1 rounded">SPA React 18</span>
+            </div>
+            <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+              <div class="bg-slate-900/80 p-2 rounded border border-slate-700/40">🛡️ Brechas & Multas UIT</div>
+              <div class="bg-slate-900/80 p-2 rounded border border-slate-700/40">🏛️ Activos UNSA (PostgreSQL)</div>
+              <div class="bg-slate-900/80 p-2 rounded border border-slate-700/40">📁 Auditoría AST + RapidOCR</div>
+              <div class="bg-slate-900/80 p-2 rounded border border-slate-700/40">💬 Chatbot DPO con Citas [Ref]</div>
+            </div>
+          </div>
+
+          <!-- FLECHA CONEXIÓN REST API -->
+          <div class="flex justify-center items-center py-1 text-slate-500 font-mono text-xs">
+            <span>⬇️ REST API Endpoints (FastAPI en puerto 8000: /api/incidents, /api/unsa-assets, /api/chat) ⬇️</span>
+          </div>
+
+          <!-- CAPA 2: ORQUESTACIÓN MULTI-AGENTE -->
+          <div onclick="selectCapa('agentes')" id="capa-agentes" class="cursor-pointer border-2 border-indigo-500/40 bg-slate-800/60 hover:bg-slate-800 rounded-xl p-5 transition duration-200">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-sm">L2</span>
+                <div>
+                  <h3 class="font-bold text-white text-base">Capa de Inteligencia y Orquestación Multi-Agente (LangGraph)</h3>
+                  <p class="text-xs text-slate-400">Máquina de estados determinista (StateGraph) que coordina peritos sin alucinaciones</p>
+                </div>
+              </div>
+              <span class="text-xs bg-indigo-950 text-indigo-300 border border-indigo-800 px-2 py-1 rounded">LangGraph + OpenRouter</span>
+            </div>
+            <div class="mt-3 grid grid-cols-1 md:grid-cols-4 gap-2 text-xs">
+              <div class="bg-slate-900/80 p-2.5 rounded border border-slate-700/40">
+                <div class="font-semibold text-indigo-300">1. Classifier Node</div>
+                <div class="text-slate-400 text-[11px] mt-0.5">Extrae entidades de la brecha</div>
+              </div>
+              <div class="bg-slate-900/80 p-2.5 rounded border border-slate-700/40">
+                <div class="font-semibold text-indigo-300">2. Normative Node</div>
+                <div class="text-slate-400 text-[11px] mt-0.5">Cruce ISO 27701 + A2A</div>
+              </div>
+              <div class="bg-slate-900/80 p-2.5 rounded border border-slate-700/40">
+                <div class="font-semibold text-indigo-300">3. Remediation Node</div>
+                <div class="text-slate-400 text-[11px] mt-0.5">Scoring UIT + Script SQL</div>
+              </div>
+              <div class="bg-slate-900/80 p-2.5 rounded border border-slate-700/40">
+                <div class="font-semibold text-indigo-300">4. Coach/DPO Node</div>
+                <div class="text-slate-400 text-[11px] mt-0.5">Dictamen y Oficio Condonación</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FLECHA CONEXIÓN DUAL GRAPHRAG -->
+          <div class="flex justify-center items-center py-1 text-slate-500 font-mono text-xs">
+            <span>⬇️ Puente Determinístico O(1) de Reglas Canónicas (R-001 a R-007) ⬇️</span>
+          </div>
+
+          <!-- CAPA 3: DUAL GRAPHRAG Y KNOWLEDGE BASE -->
+          <div onclick="selectCapa('dualrag')" id="capa-dualrag" class="cursor-pointer border-2 border-emerald-500/40 bg-slate-800/60 hover:bg-slate-800 rounded-xl p-5 transition duration-200">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">L3</span>
+                <div>
+                  <h3 class="font-bold text-white text-base">Capa de Conocimiento Dual GraphRAG (Normativo + Documental)</h3>
+                  <p class="text-xs text-slate-400">Separación estricta entre el grafo legal inmutable y los datos institucionales del usuario</p>
+                </div>
+              </div>
+              <span class="text-xs bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-1 rounded">NetworkX + Vector DB + AST</span>
+            </div>
+            <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div class="bg-slate-900/90 p-3 rounded-lg border border-emerald-900/50">
+                <span class="font-semibold text-emerald-400 block mb-1">📘 Grafo 1: Normativo & Jurisprudencia (Teórico)</span>
+                <p class="text-slate-300 text-[12px] leading-relaxed">
+                  142 controles ISO 27701:2025, 11 principios ISO 29100, Artículos Ley 29733, DS 016-2024 (48h) y dataset de 588 resoluciones sancionadoras ANPD con multas históricas.
+                </p>
+              </div>
+              <div class="bg-slate-900/90 p-3 rounded-lg border border-emerald-900/50">
+                <span class="font-semibold text-emerald-400 block mb-1">📂 Grafo 2: Empresarial & Documental (Datos Reales UNSA)</span>
+                <p class="text-slate-300 text-[12px] leading-relaxed">
+                  PostgreSQL (`demo.core_asset`, `core_incident`), esquemas SQL parseados con AST `sqlglot`, y PDFs de la UNSA procesados con PyMuPDF y RapidOCR.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- FLECHA CONEXIÓN PROTOCOLO & VPS -->
+          <div class="flex justify-center items-center py-1 text-slate-500 font-mono text-xs">
+            <span>⬇️ Transporte JSON-RPC 2.0 (HTTP POST /a2a) y PostgreSQL Wire Protocol ⬇️</span>
+          </div>
+
+          <!-- CAPA 4: INFRAESTRUCTURA & SERVICIOS EXTERNOS -->
+          <div onclick="selectCapa('infra')" id="capa-infra" class="cursor-pointer border-2 border-amber-500/40 bg-slate-800/60 hover:bg-slate-800 rounded-xl p-5 transition duration-200">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">L4</span>
+                <div>
+                  <h3 class="font-bold text-white text-base">Capa de Infraestructura, Persistencia y Agentes Remotos</h3>
+                  <p class="text-xs text-slate-400">PostgreSQL institucional en puerto 5432 + Agente Institucional UNSA en VPS de tu compañero (puerto 8001)</p>
+                </div>
+              </div>
+              <span class="text-xs bg-amber-950 text-amber-300 border border-amber-800 px-2 py-1 rounded">PostgreSQL + VPS Remota</span>
+            </div>
+            <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div class="bg-slate-900/90 p-3 rounded-lg border border-amber-900/50 flex items-start gap-2">
+                <span class="text-base">🐘</span>
+                <div>
+                  <span class="font-semibold text-amber-300 block">PostgreSQL `unsa_pims_db` (Schema `demo`)</span>
+                  <span class="text-slate-400 text-[11px]">Tablas de activos, incidentes, bitácora de seguridad y destinatarios de notificación oficial.</span>
+                </div>
+              </div>
+              <div class="bg-slate-900/90 p-3 rounded-lg border border-amber-900/50 flex items-start gap-2">
+                <span class="text-base">☁️</span>
+                <div>
+                  <span class="font-semibold text-amber-300 block">VPS Agente Normativo Institucional (`unsa-mind:8001`)</span>
+                  <span class="text-slate-400 text-[11px]">Servicio A2A autónomo que contiene el RAG de resoluciones rectorales, estatutos y reglamentos UNSA.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Panel de Detalle Dinámico de la Capa -->
+        <div id="capa-info" class="mt-6 bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm text-slate-300">
+          <span class="text-sky-400 font-bold">💡 Consejo:</span> Haz clic en cualquiera de las 4 capas para ver su especificación técnica, puertos, tecnologías y responsabilidades exactas.
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 2: BASE DE CONOCIMIENTO & DUAL GRAPHRAG -->
+    <!-- =================================================================== -->
+    <section id="tab-graphrag" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <span>🧠</span> Anatomía del Dual GraphRAG: ¿Por qué dos grafos?
+        </h2>
+        <p class="text-sm text-slate-400 mb-6">
+          Un RAG tradicional de vectores plano suele confundir normativas de diferentes países o aplicar sanciones erróneas. El sistema resuelve esto mediante dos grafos complementarios vinculados por un <strong>Puente Determinístico O(1)</strong>.
+        </p>
+
+        <!-- Comparativa de Grafos -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          <!-- GRAFO 1: NORMATIVO -->
+          <div class="bg-slate-950/80 border border-sky-500/30 rounded-xl p-5 relative overflow-hidden">
+            <div class="flex items-center justify-between mb-4">
+              <span class="px-3 py-1 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-400 border border-sky-500/30">
+                GRAFO 1 • TEÓRICO / LEGAL
+              </span>
+              <span class="text-xs text-slate-400 font-mono">Inmutable</span>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">Grafo de Estándares, Leyes y Jurisprudencia</h3>
+            <p class="text-xs text-slate-400 mb-4">
+              Estructura formal creada con <code>NetworkX</code> y serializada en <code>data/knowledge/</code>.
+            </p>
+
+            <div class="space-y-3 text-xs">
+              <div class="bg-slate-900 p-3 rounded border border-slate-800">
+                <div class="font-semibold text-sky-300 mb-1">📘 142 Controles ISO/IEC 27701:2025</div>
+                <div class="text-slate-400">Mapeo de Cláusulas 5 (PIMS), 6 (Responsable de Datos), 7 (Encargado) y Controles Anexo A/B.</div>
+              </div>
+              <div class="bg-slate-900 p-3 rounded border border-slate-800">
+                <div class="font-semibold text-sky-300 mb-1">⚖️ Ley N° 29733 & D.S. 016-2024-JUS</div>
+                <div class="text-slate-400">Art. 13 (Datos sensibles), Art. 18 (ARCO), Art. 28 (Transferencias transfronterizas) y plazo perentorio de 48 horas.</div>
+              </div>
+              <div class="bg-slate-900 p-3 rounded border border-slate-800">
+                <div class="font-semibold text-sky-300 mb-1">📊 588 Resoluciones Sancionadoras ANPD</div>
+                <div class="text-slate-400">Precedentes vinculantes categorizados con multas promedio en UIT, atenuantes y agravantes.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- GRAFO 2: EMPRESARIAL DOCUMENTAL -->
+          <div class="bg-slate-950/80 border border-emerald-500/30 rounded-xl p-5 relative overflow-hidden">
+            <div class="flex items-center justify-between mb-4">
+              <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                GRAFO 2 • INSTITUCIONAL / USUARIO
+              </span>
+              <span class="text-xs text-slate-400 font-mono">Dinámico</span>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">Grafo de Infraestructura y Documentos UNSA</h3>
+            <p class="text-xs text-slate-400 mb-4">
+              Esquemas relacionales en PostgreSQL (<code>demo</code>) y segmentos documentales extraídos.
+            </p>
+
+            <div class="space-y-3 text-xs">
+              <div class="bg-slate-900 p-3 rounded border border-slate-800">
+                <div class="font-semibold text-emerald-300 mb-1">🏛️ 10 Activos de Información (`core_asset`)</div>
+                <div class="text-slate-400">Bases de datos (SISUNSA, Hospital Docente), Aplicaciones (SISADMISION, UNSApay) y Repositorios Cloud.</div>
+              </div>
+              <div class="bg-slate-900 p-3 rounded border border-slate-800">
+                <div class="font-semibold text-emerald-300 mb-1">🔍 AST SQL Profiler (`sqlglot`)</div>
+                <div class="text-slate-400">Análisis sintáctico del DDL identificando columnas críticas (`dni`, `password_hash`, `cie10`, `cvv`).</div>
+              </div>
+              <div class="bg-slate-900 p-3 rounded border border-slate-800">
+                <div class="font-semibold text-emerald-300 mb-1">📄 Procesador Dual: PyMuPDF + RapidOCR</div>
+                <div class="text-slate-400">Extracción de texto nativo en padrones y OCR con modelos ONNX a 200 DPI para resoluciones selladas.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- EL PUENTE DETERMINÍSTICO -->
+        <div class="bg-indigo-950/40 border border-indigo-500/40 rounded-xl p-5 mt-6">
+          <h3 class="text-base font-bold text-indigo-300 mb-2 flex items-center gap-2">
+            <span>⚡</span> El Puente Determinístico O(1) (Cero Alucinaciones)
+          </h3>
+          <p class="text-xs text-slate-300 leading-relaxed mb-4">
+            Cuando el DSPM detecta un hallazgo en el <strong>Grafo 2</strong> (ejemplo: un campo de tarjeta de crédito con columna <code>cvv</code> en una tabla SQL o una cláusula de retención indefinida en un PDF), el motor no le pregunta a un modelo generativo qué ley aplica. Ejecuta una ruta determinista en tiempo $O(1)$ que vincula los nodos exactos del <strong>Grafo 1</strong>:
+          </p>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border border-slate-800">
+              <thead class="bg-slate-900/90 text-slate-300">
+                <tr>
+                  <th class="p-2.5 border-b border-slate-800">Regla Canónica</th>
+                  <th class="p-2.5 border-b border-slate-800">Hallazgo en Grafo 2</th>
+                  <th class="p-2.5 border-b border-slate-800">Control ISO 27701</th>
+                  <th class="p-2.5 border-b border-slate-800">Ley 29733 / D.S.</th>
+                  <th class="p-2.5 border-b border-slate-800">Multa Típica ANPD</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60 font-mono text-slate-300">
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-sky-400 font-bold">R-001</td>
+                  <td class="p-2.5">Historias clínicas sin cifrar (Hospital Zamacola)</td>
+                  <td class="p-2.5">6.5.10 / A.3.24</td>
+                  <td class="p-2.5">Art. 13 (Datos Sensibles)</td>
+                  <td class="p-2.5 text-amber-400">12.5 UIT (S/ 64,375)</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-sky-400 font-bold">R-002</td>
+                  <td class="p-2.5">Hashes MD5 obsoletos en SISADMISION</td>
+                  <td class="p-2.5">6.5.10 / A.3.19</td>
+                  <td class="p-2.5">Art. 9 (Seguridad)</td>
+                  <td class="p-2.5 text-amber-400">8.8 UIT (S/ 45,320)</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-sky-400 font-bold">R-003</td>
+                  <td class="p-2.5">Almacenamiento de CVV en Tesorería UNSApay</td>
+                  <td class="p-2.5">6.5.3 / A.1.2.3</td>
+                  <td class="p-2.5">Principio de Finalidad</td>
+                  <td class="p-2.5 text-amber-400">15.0 UIT (S/ 77,250)</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-sky-400 font-bold">R-004</td>
+                  <td class="p-2.5">Consentimiento presunto en Comedor (SISCOM)</td>
+                  <td class="p-2.5">6.5.2 / P2 Choice</td>
+                  <td class="p-2.5">Art. 12 (Consentimiento)</td>
+                  <td class="p-2.5 text-amber-400">6.5 UIT (S/ 33,475)</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-sky-400 font-bold">R-005</td>
+                  <td class="p-2.5">Retención indefinida de huellas y biometría</td>
+                  <td class="p-2.5">6.5.11 / A.1.2.11</td>
+                  <td class="p-2.5">Art. 7 (Calidad/Plazo)</td>
+                  <td class="p-2.5 text-amber-400">7.5 UIT (S/ 38,625)</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-sky-400 font-bold">R-006</td>
+                  <td class="p-2.5">Flujo transfronterizo cloud sin DPA/SCC</td>
+                  <td class="p-2.5">6.12.1 / Cláusula 7</td>
+                  <td class="p-2.5">Art. 28 (Transferencia)</td>
+                  <td class="p-2.5 text-amber-400">10.0 UIT (S/ 51,500)</td>
+                </tr>
+                <tr class="hover:bg-slate-900/40">
+                  <td class="p-2.5 text-sky-400 font-bold">R-007</td>
+                  <td class="p-2.5">Cobro de tasa o carta notarial para ARCO</td>
+                  <td class="p-2.5">6.5.18 / A.1.2.18</td>
+                  <td class="p-2.5">Art. 18 (Gratuidad ARCO)</td>
+                  <td class="p-2.5 text-amber-400">9.5 UIT (S/ 48,925)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 3: FLUJO MULTI-AGENTE (LANGGRAPH) -->
+    <!-- =================================================================== -->
+    <section id="tab-langgraph" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <span>🤖</span> Flujo de Estados de LangGraph (StateGraph)
+        </h2>
+        <p class="text-sm text-slate-400 mb-6">
+          Un StateGraph con 4 nodos especializados. El estado (<code>State</code>) viaja acumulando el peritaje técnico, las citas legales y la cuantificación económica.
+        </p>
+
+        <!-- Simulador Interactivo de Estados -->
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-5 mb-6">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <div>
+              <span class="text-xs font-semibold text-indigo-400 uppercase tracking-wider">Simulador de Ejecución</span>
+              <h3 class="text-base font-bold text-white">Prueba la cadena de razonamiento multi-agente</h3>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="simularFlujo('R-001')" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded text-xs font-semibold transition">
+                Simular R-001 (Salud)
+              </button>
+              <button onclick="simularFlujo('R-003')" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs font-semibold transition">
+                Simular R-003 (CVV)
+              </button>
+              <button onclick="simularFlujo('R-005')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold transition">
+                Simular R-005 (Biometría)
+              </button>
+            </div>
+          </div>
+
+          <!-- Nodos Visuales de LangGraph -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 relative">
+            
+            <!-- NODO 1 -->
+            <div id="node-1" class="border border-slate-700 bg-slate-900 p-4 rounded-xl transition duration-300">
+              <div class="flex items-center justify-between mb-2">
+                <span class="w-6 h-6 rounded-full bg-slate-800 text-slate-300 text-xs flex items-center justify-center font-bold">1</span>
+                <span id="badge-node-1" class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">Espera</span>
+              </div>
+              <h4 class="font-bold text-sm text-white">Classifier Agent</h4>
+              <p class="text-xs text-slate-400 mt-1">Identifica el activo afectado, los titulares expuestos y la regla canónica.</p>
+              <div id="output-node-1" class="mt-3 text-[11px] font-mono text-sky-300 bg-slate-950 p-2 rounded border border-slate-800/80 min-h-[42px]">
+                Sin ejecutar
+              </div>
+            </div>
+
+            <!-- NODO 2 -->
+            <div id="node-2" class="border border-slate-700 bg-slate-900 p-4 rounded-xl transition duration-300">
+              <div class="flex items-center justify-between mb-2">
+                <span class="w-6 h-6 rounded-full bg-slate-800 text-slate-300 text-xs flex items-center justify-center font-bold">2</span>
+                <span id="badge-node-2" class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">Espera</span>
+              </div>
+              <h4 class="font-bold text-sm text-white">Normative Agent</h4>
+              <p class="text-xs text-slate-400 mt-1">Cruza con ISO 27701 y consulta vía A2A a <code>unsa-mind</code>.</p>
+              <div id="output-node-2" class="mt-3 text-[11px] font-mono text-indigo-300 bg-slate-950 p-2 rounded border border-slate-800/80 min-h-[42px]">
+                Sin ejecutar
+              </div>
+            </div>
+
+            <!-- NODO 3 -->
+            <div id="node-3" class="border border-slate-700 bg-slate-900 p-4 rounded-xl transition duration-300">
+              <div class="flex items-center justify-between mb-2">
+                <span class="w-6 h-6 rounded-full bg-slate-800 text-slate-300 text-xs flex items-center justify-center font-bold">3</span>
+                <span id="badge-node-3" class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">Espera</span>
+              </div>
+              <h4 class="font-bold text-sm text-white">Remediation Node</h4>
+              <p class="text-xs text-slate-400 mt-1">Genera el script SQL de cura técnica y calcula la multa estimada en UIT.</p>
+              <div id="output-node-3" class="mt-3 text-[11px] font-mono text-amber-300 bg-slate-950 p-2 rounded border border-slate-800/80 min-h-[42px]">
+                Sin ejecutar
+              </div>
+            </div>
+
+            <!-- NODO 4 -->
+            <div id="node-4" class="border border-slate-700 bg-slate-900 p-4 rounded-xl transition duration-300">
+              <div class="flex items-center justify-between mb-2">
+                <span class="w-6 h-6 rounded-full bg-slate-800 text-slate-300 text-xs flex items-center justify-center font-bold">4</span>
+                <span id="badge-node-4" class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">Espera</span>
+              </div>
+              <h4 class="font-bold text-sm text-white">DPO Coach Node</h4>
+              <p class="text-xs text-slate-400 mt-1">Sintetiza el Dictamen Pericial con citas [Ref] y oficio de condonación ANPD.</p>
+              <div id="output-node-4" class="mt-3 text-[11px] font-mono text-emerald-300 bg-slate-950 p-2 rounded border border-slate-800/80 min-h-[42px]">
+                Sin ejecutar
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Log de Trazabilidad del Estado -->
+          <div class="mt-4 bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs">
+            <span class="text-slate-400 font-semibold block mb-1">📋 Historial de Trazabilidad (State Trace):</span>
+            <div id="trace-log" class="font-mono text-slate-300 space-y-1 text-[11px]">
+              &gt; Selecciona una simulación para ver la propagación del estado a través de los nodos.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 4: PROTOCOLO A2A & CONEXIÓN VPS -->
+    <!-- =================================================================== -->
+    <section id="tab-a2a" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <span>🌐</span> Integración Inter-Agente A2A (Agent-to-Agent v0.3.0)
+        </h2>
+        <p class="text-sm text-slate-400 mb-6">
+          Cómo se conecta nuestro sistema (<strong>Agente 6: Brechas & DSPM</strong>) con el agente de tu compañero (<strong>unsa-mind: Normativa UNSA</strong>) alojado en su VPS mediante el estándar de la Linux Foundation.
+        </p>
+
+        <!-- Diagrama de Secuencia A2A -->
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-5 mb-6">
+          <h3 class="text-base font-bold text-white mb-3">Diagrama de Secuencia de Consulta Inter-Agente</h3>
+
+          <div class="space-y-4 text-xs font-mono">
+            
+            <!-- Paso 1 -->
+            <div class="flex items-start gap-4 p-3 bg-slate-900 rounded-lg border border-slate-800">
+              <span class="px-2 py-1 bg-sky-900/60 text-sky-400 rounded text-[11px]">Paso 1</span>
+              <div class="flex-1">
+                <div class="font-bold text-slate-200">Handshake & Discovery (Agent Card)</div>
+                <div class="text-slate-400 text-[11px] mt-0.5"><code>GET http://&lt;IP_VPS&gt;:8001/.well-known/agent-card.json</code></div>
+                <p class="text-slate-400 text-[11px] mt-1 font-sans">
+                  Nuestro cliente valida que la VPS está viva y que expone capacidades sobre normativa institucional universitaria.
+                </p>
+              </div>
+            </div>
+
+            <!-- Paso 2 -->
+            <div class="flex items-start gap-4 p-3 bg-slate-900 rounded-lg border border-slate-800">
+              <span class="px-2 py-1 bg-indigo-900/60 text-indigo-400 rounded text-[11px]">Paso 2</span>
+              <div class="flex-1">
+                <div class="font-bold text-slate-200">Envío de Mensaje RPC (message/send)</div>
+                <div class="text-slate-400 text-[11px] mt-0.5"><code>POST http://&lt;IP_VPS&gt;:8001/a2a</code> (JSON-RPC 2.0)</div>
+                <pre class="bg-slate-950 p-2.5 rounded mt-1.5 text-slate-300 text-[11px] overflow-x-auto border border-slate-800">{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "message/send",
+  "params": {
+    "message": {
+      "role": "user",
+      "parts": [{"kind": "text", "text": "¿Qué directiva rige la retención de huellas en SISADMISION?"}],
+      "contextId": "tif-audit-602"
+    }
+  }
+}</pre>
+              </div>
+            </div>
+
+            <!-- Paso 3 -->
+            <div class="flex items-start gap-4 p-3 bg-slate-900 rounded-lg border border-slate-800">
+              <span class="px-2 py-1 bg-emerald-900/60 text-emerald-400 rounded text-[11px]">Paso 3</span>
+              <div class="flex-1">
+                <div class="font-bold text-slate-200">Respuesta Oficial con Citas Estructuradas</div>
+                <p class="text-slate-400 text-[11px] font-sans">
+                  El agente en la VPS busca en su base vectorial de resoluciones de la UNSA y devuelve el texto oficial con metadatos:
+                </p>
+                <pre class="bg-slate-950 p-2.5 rounded mt-1.5 text-emerald-300 text-[11px] overflow-x-auto border border-slate-800">{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "parts": [{"kind": "text", "text": "Conforme al RCU N° 0103-2026 (Art. 42), las huellas se custodian..."}],
+    "metadata": {
+      "citations": [{"title": "RCU N° 0103-2026", "section": "Art. 42", "effective_date": "2026-03-15"}],
+      "abstained": false
+    }
+  }
+}</pre>
+              </div>
+            </div>
+
+            <!-- Paso 4 -->
+            <div class="flex items-start gap-4 p-3 bg-slate-900 rounded-lg border border-slate-800">
+              <span class="px-2 py-1 bg-amber-900/60 text-amber-400 rounded text-[11px]">Paso 4</span>
+              <div class="flex-1">
+                <div class="font-bold text-slate-200">Contingencia Automática (Circuit Breaker & Fallback)</div>
+                <p class="text-slate-400 text-[11px] font-sans">
+                  Si la VPS de tu compañero no está disponible o se agota el timeout de 3.5 segundos, el sistema <strong>no falla ni se congela</strong>. Aplica de manera supletoria la <strong>Ley 29733 (Arts. 7 y 8)</strong> y la <strong>ISO 27701 (Control 6.5.11)</strong> registrando un <code>warn</code> en la traza.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Instrucciones de Conexión VPS -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+            <h4 class="font-bold text-sky-400 mb-2">📌 En tu archivo `.env` (Tu máquina)</h4>
+            <pre class="bg-slate-900 p-3 rounded font-mono text-slate-300 overflow-x-auto text-[11px]">UNSA_A2A_URL=http://&lt;IP_VPS&gt;:8001/a2a
+UNSA_A2A_ENABLED=true
+UNSA_A2A_API_KEY=tu_token_opcional</pre>
+          </div>
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+            <h4 class="font-bold text-emerald-400 mb-2">📌 En la VPS de tu compañero</h4>
+            <pre class="bg-slate-900 p-3 rounded font-mono text-slate-300 overflow-x-auto text-[11px]"># 1. Escuchar en todas las interfaces
+uvicorn main:app --host 0.0.0.0 --port 8001
+
+# 2. Abrir puerto en firewall de la VPS
+sudo ufw allow 8001/tcp</pre>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- TAB 5: MÓDULOS Y FLUJOS DE LA INTERFAZ -->
+    <!-- =================================================================== -->
+    <section id="tab-ui" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <span>💻</span> Módulos y Funcionalidades de la Interfaz Web
+        </h2>
+        <p class="text-sm text-slate-400 mb-6">
+          La interfaz en React está diseñada bajo principios de <strong>No AI-Slop</strong> (soluciones directas ejecutables, sin relleno corporativo de Jira). Cuenta con 4 módulos principales:
+        </p>
+
+        <!-- Grid de los 4 Módulos -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          <!-- MÓDULO 1 -->
+          <div class="bg-slate-950 border border-sky-500/30 rounded-xl p-5">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-white text-base flex items-center gap-2">
+                <span>🛡️</span> Módulo 1: Brechas & Incidentes PII
+              </h3>
+              <span class="text-xs bg-sky-950 text-sky-400 px-2 py-0.5 rounded border border-sky-800 font-mono">demo.core_incident</span>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">
+              Gestiona el ciclo de vida de los 7 incidentes canónicos de la UNSA cargados en tiempo real desde PostgreSQL.
+            </p>
+            <ul class="space-y-2 text-xs text-slate-300">
+              <li class="flex items-start gap-2">
+                <span class="text-amber-400">⏱️</span>
+                <span><strong>Calificación Jurídica & Multa UIT:</strong> Temporizador perentorio para notificación ante la ANPD (D.S. 016-2024-JUS).</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-sky-400">⚡</span>
+                <span><strong>Solución Técnica Directa:</strong> Script SQL o comando CLI ejecutable en 1 clic para remediar la fuga en la base de datos.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-emerald-400">📄</span>
+                <span><strong>Exportación de Dictamen:</strong> Descarga del peritaje técnico-legal con sustento para exención o condonación de multa.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-purple-400">🔒</span>
+                <span><strong>Cierre Formal:</strong> Actualiza el estado a <code>RESUELTO</code> en PostgreSQL auditando fecha y responsable.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- MÓDULO 2 -->
+          <div class="bg-slate-950 border border-indigo-500/30 rounded-xl p-5">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-white text-base flex items-center gap-2">
+                <span>🏛️</span> Módulo 2: Activos Institucionales UNSA
+              </h3>
+              <span class="text-xs bg-indigo-950 text-indigo-400 px-2 py-0.5 rounded border border-indigo-800 font-mono">demo.core_asset</span>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">
+              Inventario de los 10 activos de información institucionales que almacenan datos personales en la universidad.
+            </p>
+            <ul class="space-y-2 text-xs text-slate-300">
+              <li class="flex items-start gap-2">
+                <span class="text-indigo-400">👤</span>
+                <span><strong>Custodios y Responsables:</strong> DBA de OTI, Director de Admisión, Administrador de Hospital Zamácola.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-emerald-400">🛡️</span>
+                <span><strong>Controles PII Implementados:</strong> Cifrado AES-256 en reposo, MFA, Backups inmutables y RBAC.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-sky-400">📜</span>
+                <span><strong>Base Legal & Retención:</strong> Ley Universitaria 30220, Ley General de Salud, y plazos reglamentarios.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- MÓDULO 3 -->
+          <div class="bg-slate-950 border border-emerald-500/30 rounded-xl p-5">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-white text-base flex items-center gap-2">
+                <span>📁</span> Módulo 3: Auditoría Documental & DSPM
+              </h3>
+              <span class="text-xs bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded border border-emerald-800 font-mono">AST + RapidOCR</span>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">
+              Ingesta y análisis de archivos heterogéneos sin crear silos de datos, alimentando el Grafo 2.
+            </p>
+            <ul class="space-y-2 text-xs text-slate-300">
+              <li class="flex items-start gap-2">
+                <span class="text-emerald-400">📄</span>
+                <span><strong>Carga de PDFs Institucionales:</strong> Aplica PyMuPDF para texto nativo y RapidOCR (ONNX) para resoluciones escaneadas.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-sky-400">🗄️</span>
+                <span><strong>Esquemas SQL DDL (sqlglot):</strong> Profiler sintáctico que detecta columnas sensibles sin consultar datos en producción.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-amber-400">🔍</span>
+                <span><strong>Segmentador de Cláusulas:</strong> Detecta artículos abusivos (retención indefinida, consentimiento tácito, cobros ARCO).</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- MÓDULO 4 -->
+          <div class="bg-slate-950 border border-amber-500/30 rounded-xl p-5">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-white text-base flex items-center gap-2">
+                <span>💬</span> Módulo 4: Asistente DPO Multi-Agente
+              </h3>
+              <span class="text-xs bg-amber-950 text-amber-400 px-2 py-0.5 rounded border border-amber-800 font-mono">Chatbot Pericial</span>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">
+              Canal conversacional donde el auditor interactúa directamente con el grafo normativo y el motor de peritaje.
+            </p>
+            <ul class="space-y-2 text-xs text-slate-300">
+              <li class="flex items-start gap-2">
+                <span class="text-amber-400">🏷️</span>
+                <span><strong>Citas Interactivas [Ref]:</strong> Pills clickeables que abren el texto íntegro del control ISO 27701 o de la Ley 29733.</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-sky-400">📊</span>
+                <span><strong>Trazabilidad en Vivo:</strong> Despliegue de los pasos ejecutados por los agentes (Classifier $\rightarrow$ Normative $\rightarrow$ Remediation).</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-emerald-400">🛡️</span>
+                <span><strong>Redacción de Oficios:</strong> Generación de descargos oficiales listos para presentar ante la Dirección de Fiscalización de la ANPD.</span>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  
+    <!-- =================================================================== -->
+    <!-- TAB 1: DIAGRAMAS DE FLUJO Y PROCESOS COMPLETOS (SVG VECTORIAL) -->
+    <!-- =================================================================== -->
+    <section id="tab-diagramas" class="space-y-8">
+
+      <!-- DIAGRAMA 1: FLUJO DE PROCESO END-TO-END (SWIMLANES) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+          <div>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-400 border border-sky-500/30">
+              DIAGRAMA 1 • PROCESO COMPLETO
+            </span>
+            <h2 class="text-xl font-bold text-white mt-1">Diagrama de Flujo de Proceso End-to-End (Swimlanes / Carriles)</h2>
+            <p class="text-xs text-slate-400">Desde la detección del incidente en PostgreSQL hasta el peritaje A2A y la remediación técnica.</p>
+          </div>
+          <div class="flex items-center gap-2 text-xs font-mono text-slate-400 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+            6 Carriles de Responsabilidad
+          </div>
+        </div>
+
+        <!-- SVG SWIMLANES INTERACTIVO -->
+        <div class="overflow-x-auto bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+          <svg viewBox="0 0 1150 720" class="w-full min-w-[1050px] font-sans" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#38bdf8" />
+              </marker>
+              <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#34d399" />
+              </marker>
+              <marker id="arrow-amber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#fbbf24" />
+              </marker>
+              <linearGradient id="grad-node" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#1e293b" />
+                <stop offset="100%" stop-color="#0f172a" />
+              </linearGradient>
+            </defs>
+
+            <!-- CARRILES HORIZONTALES (SWIMLANES) -->
+            <!-- Carril 1: Auditor DPO -->
+            <rect x="10" y="20" width="1130" height="95" rx="8" fill="#0f172a" stroke="#1e293b" />
+            <rect x="10" y="20" width="160" height="95" rx="8" fill="#1e293b" />
+            <text x="90" y="60" text-anchor="middle" fill="#38bdf8" font-size="12" font-weight="bold">AUDITOR / DPO</text>
+            <text x="90" y="78" text-anchor="middle" fill="#64748b" font-size="10">(Oficial de Privacidad)</text>
+
+            <!-- Carril 2: Frontend UI -->
+            <rect x="10" y="125" width="1130" height="95" rx="8" fill="#0b1120" stroke="#1e293b" />
+            <rect x="10" y="125" width="160" height="95" rx="8" fill="#1e293b" />
+            <text x="90" y="165" text-anchor="middle" fill="#818cf8" font-size="12" font-weight="bold">FRONTEND REACT</text>
+            <text x="90" y="183" text-anchor="middle" fill="#64748b" font-size="10">(SPA Dashboard)</text>
+
+            <!-- Carril 3: LangGraph -->
+            <rect x="10" y="230" width="1130" height="120" rx="8" fill="#0f172a" stroke="#1e293b" />
+            <rect x="10" y="230" width="160" height="120" rx="8" fill="#1e293b" />
+            <text x="90" y="280" text-anchor="middle" fill="#38bdf8" font-size="12" font-weight="bold">LANGGRAPH CORE</text>
+            <text x="90" y="298" text-anchor="middle" fill="#64748b" font-size="10">(StateGraph 4 Nodos)</text>
+
+            <!-- Carril 4: Ingesta & DSPM -->
+            <rect x="10" y="360" width="1130" height="95" rx="8" fill="#0b1120" stroke="#1e293b" />
+            <rect x="10" y="360" width="160" height="95" rx="8" fill="#1e293b" />
+            <text x="90" y="400" text-anchor="middle" fill="#34d399" font-size="12" font-weight="bold">MOTOR DSPM</text>
+            <text x="90" y="418" text-anchor="middle" fill="#64748b" font-size="10">(PyMuPDF / RapidOCR)</text>
+
+            <!-- Carril 5: Dual GraphRAG -->
+            <rect x="10" y="465" width="1130" height="115" rx="8" fill="#0f172a" stroke="#1e293b" />
+            <rect x="10" y="465" width="160" height="115" rx="8" fill="#1e293b" />
+            <text x="90" y="515" text-anchor="middle" fill="#fbbf24" font-size="12" font-weight="bold">DUAL GRAPHRAG</text>
+            <text x="90" y="533" text-anchor="middle" fill="#64748b" font-size="10">(ISO / ANPD / Activos)</text>
+
+            <!-- Carril 6: Infra & VPS A2A -->
+            <rect x="10" y="590" width="1130" height="110" rx="8" fill="#0b1120" stroke="#1e293b" />
+            <rect x="10" y="590" width="160" height="110" rx="8" fill="#1e293b" />
+            <text x="90" y="635" text-anchor="middle" fill="#f43f5e" font-size="12" font-weight="bold">INFRA & VPS A2A</text>
+            <text x="90" y="653" text-anchor="middle" fill="#64748b" font-size="10">(PostgreSQL & unsa-mind)</text>
+
+            <!-- NODOS DE PROCESO (ACTIVIDADES) -->
+            <!-- 1. Inicio: Auditor selecciona brecha -->
+            <circle cx="210" cy="65" r="16" fill="#38bdf8" />
+            <text x="210" y="70" text-anchor="middle" fill="#0f172a" font-size="10" font-weight="bold">INICIO</text>
+            
+            <path d="M 226 65 L 255 65 L 255 160 L 270 160" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+
+            <!-- 2. UI carga incidentes de PostgreSQL -->
+            <rect x="275" y="140" width="140" height="45" rx="6" fill="#1e293b" stroke="#38bdf8" />
+            <text x="345" y="160" text-anchor="middle" fill="#f8fafc" font-size="11" font-weight="bold">Cargar Brecha PII</text>
+            <text x="345" y="174" text-anchor="middle" fill="#94a3b8" font-size="9">GET /api/incidents/{id}</text>
+
+            <path d="M 345 185 L 345 250" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+
+            <!-- 3. Nodo 1 Classifier en LangGraph -->
+            <rect x="275" y="255" width="140" height="50" rx="6" fill="#1e293b" stroke="#818cf8" />
+            <text x="345" y="275" text-anchor="middle" fill="#818cf8" font-size="11" font-weight="bold">1. Classifier Node</text>
+            <text x="345" y="290" text-anchor="middle" fill="#94a3b8" font-size="9">Identifica Activo & Regla</text>
+
+            <path d="M 415 280 L 460 280" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+
+            <!-- 4. Nodo 2 Normative Agent -->
+            <rect x="465" y="255" width="150" height="50" rx="6" fill="#1e293b" stroke="#818cf8" />
+            <text x="540" y="275" text-anchor="middle" fill="#818cf8" font-size="11" font-weight="bold">2. Normative Node</text>
+            <text x="540" y="290" text-anchor="middle" fill="#94a3b8" font-size="9">Cruce ISO 27701 + Ley</text>
+
+            <!-- Cruce hacia Grafo 1 (abajo) -->
+            <path d="M 540 305 L 540 480" fill="none" stroke="#fbbf24" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrow-amber)" />
+
+            <!-- NODO GRAFO 1 -->
+            <rect x="465" y="485" width="150" height="55" rx="6" fill="#1e293b" stroke="#fbbf24" />
+            <text x="540" y="505" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="bold">Grafo 1 (Normativo)</text>
+            <text x="540" y="520" text-anchor="middle" fill="#94a3b8" font-size="9">142 Controles ISO 27701</text>
+            <text x="540" y="532" text-anchor="middle" fill="#94a3b8" font-size="8">588 Sanciones ANPD (UIT)</text>
+
+            <!-- ¿Requiere consulta a la VPS unsa-mind? Diamante de Decisión -->
+            <path d="M 615 280 L 660 280" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+
+            <polygon points="700,255 745,280 700,305 655,280" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5" />
+            <text x="700" y="278" text-anchor="middle" fill="#38bdf8" font-size="9" font-weight="bold">¿Contexto</text>
+            <text x="700" y="288" text-anchor="middle" fill="#38bdf8" font-size="8">UNSA?</text>
+
+            <!-- Rama Sí: Consulta A2A a VPS -->
+            <path d="M 700 305 L 700 615" fill="none" stroke="#f43f5e" stroke-width="2" marker-end="url(#arrow)" />
+            <text x="710" y="340" fill="#f43f5e" font-size="9" font-weight="bold">SÍ (A2A)</text>
+
+            <rect x="630" y="620" width="140" height="50" rx="6" fill="#1e293b" stroke="#f43f5e" />
+            <text x="700" y="640" text-anchor="middle" fill="#f43f5e" font-size="10" font-weight="bold">VPS unsa-mind:8001</text>
+            <text x="700" y="654" text-anchor="middle" fill="#94a3b8" font-size="9">JSON-RPC /message/send</text>
+
+            <!-- Retorno de la VPS a LangGraph -->
+            <path d="M 770 645 L 810 645 L 810 280 L 830 280" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#arrow-green)" />
+
+            <!-- Rama No: Salto directo -->
+            <path d="M 745 280 L 830 280" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4" marker-end="url(#arrow)" />
+            <text x="770" y="272" fill="#94a3b8" font-size="8">NO (General)</text>
+
+            <!-- 5. Nodo 3 Remediation Agent -->
+            <rect x="835" y="255" width="135" height="50" rx="6" fill="#1e293b" stroke="#818cf8" />
+            <text x="902" y="275" text-anchor="middle" fill="#818cf8" font-size="11" font-weight="bold">3. Remediation</text>
+            <text x="902" y="290" text-anchor="middle" fill="#94a3b8" font-size="9">Multa UIT + Fix SQL</text>
+
+            <path d="M 970 280 L 1000 280" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+
+            <!-- 6. Nodo 4 DPO Coach -->
+            <rect x="1005" y="255" width="125" height="50" rx="6" fill="#1e293b" stroke="#34d399" />
+            <text x="1067" y="275" text-anchor="middle" fill="#34d399" font-size="11" font-weight="bold">4. DPO Synthesis</text>
+            <text x="1067" y="290" text-anchor="middle" fill="#94a3b8" font-size="9">Dictamen Pericial</text>
+
+            <!-- Retorno a la UI -->
+            <path d="M 1067 255 L 1067 185" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#arrow-green)" />
+
+            <!-- Nodo en UI: Solución y Multa UIT -->
+            <rect x="995" y="140" width="145" height="45" rx="6" fill="#1e293b" stroke="#34d399" />
+            <text x="1067" y="158" text-anchor="middle" fill="#34d399" font-size="10" font-weight="bold">Dashboard Actualizado</text>
+            <text x="1067" y="172" text-anchor="middle" fill="#f8fafc" font-size="9">Multa UIT & Script SQL</text>
+
+            <!-- Acción final Auditor: Cierre y Ejecución -->
+            <path d="M 1067 140 L 1067 90" fill="none" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+
+            <rect x="995" y="45" width="145" height="45" rx="6" fill="#1e293b" stroke="#38bdf8" />
+            <text x="1067" y="63" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="bold">Auditor Aplica Cura</text>
+            <text x="1067" y="77" text-anchor="middle" fill="#94a3b8" font-size="8">Ejecutar SQL & Cerrar</text>
+
+            <!-- Cierre actualiza PostgreSQL -->
+            <path d="M 1120 90 L 1140 90 L 1140 645 L 770 645" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3" />
+            <text x="1100" y="380" fill="#38bdf8" font-size="8" transform="rotate(90, 1100, 380)">UPDATE demo.core_incident (status='C')</text>
+
+            <!-- Leyenda de colores -->
+            <rect x="180" y="685" width="12" height="12" rx="2" fill="#38bdf8" />
+            <text x="200" y="695" fill="#94a3b8" font-size="10">Control Frontend / UI</text>
+
+            <rect x="360" y="685" width="12" height="12" rx="2" fill="#818cf8" />
+            <text x="380" y="695" fill="#94a3b8" font-size="10">Agentes LangGraph</text>
+
+            <rect x="520" y="685" width="12" height="12" rx="2" fill="#fbbf24" />
+            <text x="540" y="695" fill="#94a3b8" font-size="10">Dual GraphRAG</text>
+
+            <rect x="680" y="685" width="12" height="12" rx="2" fill="#f43f5e" />
+            <text x="700" y="695" fill="#94a3b8" font-size="10">Protocolo A2A (VPS)</text>
+
+            <rect x="850" y="685" width="12" height="12" rx="2" fill="#34d399" />
+            <text x="870" y="695" fill="#94a3b8" font-size="10">Remediación & Cierre</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- DIAGRAMA 2: DIAGRAMA DE SECUENCIA UML (A2A Y CIRCUIT BREAKER) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+          <div>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+              DIAGRAMA 2 • PROTOCOLO A2A
+            </span>
+            <h2 class="text-xl font-bold text-white mt-1">Diagrama de Secuencia Completo: Protocolo A2A & Circuit Breaker</h2>
+            <p class="text-xs text-slate-400">Intercambio de mensajes JSON-RPC 2.0 sobre HTTP entre el Agente 6 y la VPS remota con contingencia por timeout.</p>
+          </div>
+          <span class="text-xs font-mono text-indigo-400 bg-indigo-950 px-3 py-1 rounded border border-indigo-800">
+            A2A Spec v0.3.0
+          </span>
+        </div>
+
+        <div class="overflow-x-auto bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+          <svg viewBox="0 0 1000 520" class="w-full min-w-[900px] font-sans" xmlns="http://www.w3.org/2000/svg">
+            <!-- LÍNEAS DE VIDA (LIFELINES) -->
+            <!-- 1. Frontend -->
+            <rect x="40" y="20" width="120" height="35" rx="6" fill="#1e293b" stroke="#38bdf8" />
+            <text x="100" y="42" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="bold">Frontend (React)</text>
+            <line x1="100" y1="55" x2="100" y2="480" stroke="#334155" stroke-dasharray="4" />
+
+            <!-- 2. FastAPI -->
+            <rect x="220" y="20" width="130" height="35" rx="6" fill="#1e293b" stroke="#818cf8" />
+            <text x="285" y="42" text-anchor="middle" fill="#818cf8" font-size="11" font-weight="bold">FastAPI Router</text>
+            <line x1="285" y1="55" x2="285" y2="480" stroke="#334155" stroke-dasharray="4" />
+
+            <!-- 3. LangGraph -->
+            <rect x="410" y="20" width="140" height="35" rx="6" fill="#1e293b" stroke="#818cf8" />
+            <text x="480" y="42" text-anchor="middle" fill="#818cf8" font-size="11" font-weight="bold">LangGraph Core</text>
+            <line x1="480" y1="55" x2="480" y2="480" stroke="#334155" stroke-dasharray="4" />
+
+            <!-- 4. UNSAA2AClient -->
+            <rect x="610" y="20" width="140" height="35" rx="6" fill="#1e293b" stroke="#f43f5e" />
+            <text x="680" y="42" text-anchor="middle" fill="#f43f5e" font-size="11" font-weight="bold">UNSAA2AClient</text>
+            <line x1="680" y1="55" x2="680" y2="480" stroke="#334155" stroke-dasharray="4" />
+
+            <!-- 5. VPS unsa-mind -->
+            <rect x="810" y="20" width="140" height="35" rx="6" fill="#1e293b" stroke="#f43f5e" />
+            <text x="880" y="42" text-anchor="middle" fill="#f43f5e" font-size="11" font-weight="bold">VPS unsa-mind:8001</text>
+            <line x1="880" y1="55" x2="880" y2="480" stroke="#334155" stroke-dasharray="4" />
+
+            <!-- MENSAJES DE SECUENCIA -->
+            <!-- 1. Click Auditor -->
+            <line x1="100" y1="85" x2="285" y2="85" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+            <text x="190" y="78" text-anchor="middle" fill="#cbd5e1" font-size="10">1. POST /api/chat o /api/incidents/{id}</text>
+
+            <!-- 2. FastAPI a LangGraph -->
+            <line x1="285" y1="120" x2="480" y2="120" stroke="#818cf8" stroke-width="2" marker-end="url(#arrow)" />
+            <text x="382" y="113" text-anchor="middle" fill="#cbd5e1" font-size="10">2. invoke_graph(state)</text>
+
+            <!-- 3. LangGraph ejecuta Classifier & Normative -->
+            <rect x="475" y="135" width="10" height="60" fill="#818cf8" />
+            <text x="500" y="155" fill="#94a3b8" font-size="9">Cruce con Grafo 1 ISO</text>
+
+            <!-- 4. Disparo de consulta A2A -->
+            <line x1="480" y1="180" x2="680" y2="180" stroke="#f43f5e" stroke-width="2" marker-end="url(#arrow)" />
+            <text x="580" y="173" text-anchor="middle" fill="#f43f5e" font-size="10">4. consultar_normativa(pregunta)</text>
+
+            <!-- 5. Discovery Handshake HTTP GET -->
+            <line x1="680" y1="215" x2="880" y2="215" stroke="#f43f5e" stroke-width="1.5" stroke-dasharray="3" marker-end="url(#arrow)" />
+            <text x="780" y="208" text-anchor="middle" fill="#cbd5e1" font-size="9">GET /.well-known/agent-card.json</text>
+
+            <line x1="880" y1="235" x2="680" y2="235" stroke="#34d399" stroke-width="1.5" stroke-dasharray="3" marker-end="url(#arrow-green)" />
+            <text x="780" y="230" text-anchor="middle" fill="#34d399" font-size="9">200 OK (Agent Card v0.3.0)</text>
+
+            <!-- 6. JSON-RPC POST /a2a -->
+            <line x1="680" y1="270" x2="880" y2="270" stroke="#f43f5e" stroke-width="2" marker-end="url(#arrow)" />
+            <text x="780" y="263" text-anchor="middle" fill="#f43f5e" font-size="10">POST /a2a (method: message/send)</text>
+
+            <!-- BLOQUE ALTERNATIVO: ÉXITO vs TIMEOUT -->
+            <rect x="630" y="295" width="310" height="110" rx="6" fill="#0b1120" stroke="#475569" stroke-dasharray="2" />
+            <text x="640" y="310" fill="#94a3b8" font-size="9" font-weight="bold">CASO 1: VPS Responde (Status 200)</text>
+
+            <line x1="880" y1="330" x2="680" y2="330" stroke="#34d399" stroke-width="2" marker-end="url(#arrow-green)" />
+            <text x="780" y="323" text-anchor="middle" fill="#34d399" font-size="9">{ result: { citations: [RCU 0103-2026] } }</text>
+
+            <line x1="630" y1="345" x2="940" y2="345" stroke="#334155" stroke-dasharray="2" />
+            <text x="640" y="360" fill="#f87171" font-size="9" font-weight="bold">CASO 2: Timeout (t &gt; 3.5s) o VPS Caída</text>
+
+            <line x1="680" y1="385" x2="480" y2="385" stroke="#fbbf24" stroke-width="2" stroke-dasharray="3" marker-end="url(#arrow-amber)" />
+            <text x="580" y="378" text-anchor="middle" fill="#fbbf24" font-size="9">Circuit Breaker: Ley 29733 Supletoria</text>
+
+            <!-- Retorno a FastAPI y UI -->
+            <line x1="480" y1="430" x2="285" y2="430" stroke="#34d399" stroke-width="2" marker-end="url(#arrow-green)" />
+            <text x="382" y="423" text-anchor="middle" fill="#34d399" font-size="10">Respuesta + Dictamen Pericial</text>
+
+            <line x1="285" y1="460" x2="100" y2="460" stroke="#34d399" stroke-width="2" marker-end="url(#arrow-green)" />
+            <text x="190" y="453" text-anchor="middle" fill="#34d399" font-size="10">Render en UI con Citas [Ref] e [Ley]</text>
+          </svg>
+        </div>
+      </div>
+
+    </section>
+
+</main>
+
+  <!-- SCRIPTS DE INTERACCIÓN -->
+  <script>
+    function showTab(tabId) {
+      // Ocultar todas las secciones
+      document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+      // Mostrar la seleccionada
+      document.getElementById(tabId).classList.remove('hidden');
+
+      // Actualizar estado activo de botones
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtnId = 'btn-' + tabId;
+      const activeBtn = document.getElementById(activeBtnId);
+      if (activeBtn) activeBtn.classList.add('active');
+    }
+
+    const capaDetails = {
+      presentacion: {
+        title: "L1: Capa de Presentación (Frontend React)",
+        desc: "Construida en React 18 con Tailwind CSS. Expone las 4 vistas funcionales: Brechas, Activos PostgreSQL, Auditoría DSPM y Asistente DPO. Los botones de acción generan llamadas REST asíncronas a FastAPI con feedback instantáneo y copiado al portapapeles."
+      },
+      agentes: {
+        title: "L2: Orquestación Multi-Agente (LangGraph)",
+        desc: "Implementa un StateGraph lineal y determinista con 4 nodos. Cada nodo enriquece el estado inmutable sin dependencias circulares. Utiliza OpenRouter para inferencia rápida con fallback automático a modelos locales si no hay conexión a internet."
+      },
+      dualrag: {
+        title: "L3: Capa Dual GraphRAG (Normativo + Documental)",
+        desc: "El Grafo 1 almacena los 142 controles de ISO 27701 y las 588 sanciones ANPD como grafos NetworkX. El Grafo 2 almacena las tablas, columnas, perfiles y cláusulas extraídas con RapidOCR y sqlglot. El Puente Determinístico vincula ambos mundos en tiempo O(1)."
+      },
+      infra: {
+        title: "L4: Infraestructura, Persistencia & Protocolo A2A",
+        desc: "Base de datos PostgreSQL en puerto 5432 (schema demo) para persistencia relacional. Conexión HTTP/JSON-RPC 2.0 al puerto 8001 de la VPS remota de tu compañero para consultar normas institucionales de la UNSA."
+      }
+    };
+
+    function selectCapa(capaKey) {
+      const info = capaDetails[capaKey];
+      if (info) {
+        document.getElementById('capa-info').innerHTML = `
+          <div class="border-l-4 border-sky-400 pl-3">
+            <span class="text-sky-400 font-bold text-sm block mb-1">${info.title}</span>
+            <p class="text-xs text-slate-300 leading-relaxed">${info.desc}</p>
+          </div>
+        `;
+      }
+    }
+
+    const simulaciones = {
+      'R-001': {
+        n1: 'Activo: Hospital Docente | Regla: R-001 (Salud sin cifrar) | 3,420 pacientes expuestos',
+        n2: 'ISO 27701: Control 6.5.10 / A.3.24 | Ley 29733 Art. 13 | A2A: Sin norma interna hospitalaria (rige Ley)',
+        n3: 'Scoring: 12.5 UIT (S/ 64,375) | Script SQL: Cifrado con pgcrypto pgp_sym_encrypt()',
+        n4: 'Dictamen: Notificar a ANPD en plazo de 48h. Cierre disponible en demo.core_incident (id=601).'
+      },
+      'R-003': {
+        n1: 'Activo: Tesorería UNSApay | Regla: R-003 (CVV almacenado en tabla pagos) | 1,200 transacciones',
+        n2: 'ISO 27701: Control 6.5.3 (Finalidad) | Ley 29733 Art. 5 | A2A: Convenio Banco Nación prohíbe retención de CVV',
+        n3: 'Scoring: 15.0 UIT (S/ 77,250) | Script SQL: ALTER TABLE pagos DROP COLUMN cvv; borrado seguro',
+        n4: 'Dictamen: Condonación por subsanación voluntaria antes de inspección ANPD. Notificación enviada.'
+      },
+      'R-005': {
+        n1: 'Activo: Portal SISADMISION | Regla: R-005 (Retención indefinida de huellas) | 45,000 postulantes',
+        n2: 'ISO 27701: Control 6.5.11 / P3 | Ley 29733 Art. 7 | A2A: RCU 0103-2026 fija límite de 1 año',
+        n3: 'Scoring: 7.5 UIT (S/ 38,625) | Script SQL: DELETE FROM biometria WHERE fecha < NOW() - INTERVAL 1 YEAR',
+        n4: 'Dictamen: Adecuación reglamentaria de política de retención. Trámite cerrado con éxito.'
+      }
+    };
+
+    function simularFlujo(reglaId) {
+      const data = simulaciones[reglaId];
+      if (!data) return;
+
+      const n1 = document.getElementById('node-1');
+      const n2 = document.getElementById('node-2');
+      const n3 = document.getElementById('node-3');
+      const n4 = document.getElementById('node-4');
+
+      // Reset
+      [n1, n2, n3, n4].forEach(n => {
+        n.classList.remove('border-sky-400', 'border-indigo-400', 'border-amber-400', 'border-emerald-400', 'bg-slate-800');
+        n.classList.add('border-slate-700', 'bg-slate-900');
+      });
+
+      document.getElementById('trace-log').innerHTML = `&gt; Iniciando ejecución en LangGraph para evento [${reglaId}]...`;
+
+      // Paso 1
+      setTimeout(() => {
+        n1.classList.remove('border-slate-700');
+        n1.classList.add('border-sky-400', 'bg-slate-800');
+        document.getElementById('badge-node-1').textContent = 'Completado';
+        document.getElementById('badge-node-1').className = 'text-[10px] bg-sky-950 text-sky-400 px-1.5 py-0.5 rounded';
+        document.getElementById('output-node-1').textContent = data.n1;
+        document.getElementById('trace-log').innerHTML += `<br>&gt; [Paso 1] Classifier Agent: ${data.n1}`;
+      }, 200);
+
+      // Paso 2
+      setTimeout(() => {
+        n2.classList.remove('border-slate-700');
+        n2.classList.add('border-indigo-400', 'bg-slate-800');
+        document.getElementById('badge-node-2').textContent = 'Completado';
+        document.getElementById('badge-node-2').className = 'text-[10px] bg-indigo-950 text-indigo-400 px-1.5 py-0.5 rounded';
+        document.getElementById('output-node-2').textContent = data.n2;
+        document.getElementById('trace-log').innerHTML += `<br>&gt; [Paso 2] Normative Agent + A2A: ${data.n2}`;
+      }, 600);
+
+      // Paso 3
+      setTimeout(() => {
+        n3.classList.remove('border-slate-700');
+        n3.classList.add('border-amber-400', 'bg-slate-800');
+        document.getElementById('badge-node-3').textContent = 'Completado';
+        document.getElementById('badge-node-3').className = 'text-[10px] bg-amber-950 text-amber-400 px-1.5 py-0.5 rounded';
+        document.getElementById('output-node-3').textContent = data.n3;
+        document.getElementById('trace-log').innerHTML += `<br>&gt; [Paso 3] Remediation Agent: ${data.n3}`;
+      }, 1000);
+
+      // Paso 4
+      setTimeout(() => {
+        n4.classList.remove('border-slate-700');
+        n4.classList.add('border-emerald-400', 'bg-slate-800');
+        document.getElementById('badge-node-4').textContent = 'Completado';
+        document.getElementById('badge-node-4').className = 'text-[10px] bg-emerald-950 text-emerald-400 px-1.5 py-0.5 rounded';
+        document.getElementById('output-node-4').textContent = data.n4;
+        document.getElementById('trace-log').innerHTML += `<br>&gt; [Paso 4] DPO Coach Agent: Dictamen final generado con éxito. Estado persistido en PostgreSQL.`;
+      }, 1400);
+    }
+  </script>
+</body>
+</html>

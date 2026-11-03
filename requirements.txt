@@ -10,6 +10,9 @@ python-multipart>=0.0.9
 
 # Modelado y Validación de Datos
 pydantic>=2.6.0
+pydantic-settings>=2.2.0
+langgraph>=0.2.0
+httpx>=0.27.0
 
 # Motor de Grafos de Conocimiento (PIMS & Redes Normativas)
 networkx>=3.2.0
