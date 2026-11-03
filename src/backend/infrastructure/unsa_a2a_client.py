@@ -79,8 +79,8 @@ class UNSAA2AClient:
                         "citas": meta.get("citations", []),
                         "context_id": result.get("contextId", cid)
                     }
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Error consultando agente UNSA: %s", e)
 
         return {
             "disponible": False,
@@ -100,7 +100,8 @@ if __name__ == "__main__":
         if "/.well-known/agent-card.json" in str(request.url):
             return httpx.Response(200, json={"name": "Asistente Virtual UNSA", "skills": []})
         body = request.read().decode("utf-8")
-        assert "message/send" in body
+        if "message/send" not in body:
+            raise ValueError("Payload inválido en prueba unitaria A2A")
         return httpx.Response(200, json={
             "jsonrpc": "2.0",
             "id": 1,
@@ -124,6 +125,8 @@ if __name__ == "__main__":
         }
         resp = mock_http.post("http://testserver/a2a", json=req_payload)
         res_data = resp.json()["result"]
-        assert "Art. 12" in res_data["parts"][0]["text"]
-        assert len(res_data["metadata"]["citations"]) == 1
+        if "Art. 12" not in res_data["parts"][0]["text"]:
+            raise ValueError("Respuesta inesperada en prueba unitaria")
+        if len(res_data["metadata"]["citations"]) != 1:
+            raise ValueError("Citas inválidas en prueba unitaria")
     print("UNSA A2A Client: self-check passed (JSON-RPC 2.0 & citations valid).")

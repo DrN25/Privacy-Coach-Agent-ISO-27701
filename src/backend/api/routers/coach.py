@@ -36,7 +36,7 @@ def get_dialogar_coach():
         import backend.app as app_mod
         if hasattr(app_mod, "dialogar_coach"):
             return app_mod.dialogar_coach
-    except Exception:
+    except (ImportError, AttributeError):
         pass
     from ...coach_agent import dialogar_coach
     return dialogar_coach

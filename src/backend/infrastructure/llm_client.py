@@ -178,6 +178,8 @@ if __name__ == "__main__":
         content="Dictamen pericial...\n```sql\nBEGIN;\nALTER TABLE cuentas_usuario DROP COLUMN token_secreto;\nCOMMIT;\n```\nFin.",
         reasoning="Pensamiento"
     )
-    assert "BEGIN;" in dummy.extract_sql_patch(), "Error extrayendo SQL transaccional"
-    assert dummy.to_dict()["mode"] == "openrouter"
+    if "BEGIN;" not in dummy.extract_sql_patch():
+        raise ValueError("Error extrayendo SQL transaccional")
+    if dummy.to_dict()["mode"] != "openrouter":
+        raise ValueError("Modo incorrecto en to_dict")
     print("LLM Client: self-check passed (parsing & SQL extraction valid).")

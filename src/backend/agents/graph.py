@@ -81,5 +81,6 @@ def ejecutar_flujo_multiagente(historial_mensajes: List[Dict[str, str]], context
 
 
 if __name__ == "__main__":
-    assert grafo_multiagente_principal is not None
+    if grafo_multiagente_principal is None:
+        raise RuntimeError("Grafo multiagente no pudo compilarse.")
     print("Multi-agent LangGraph workflow compiled successfully.")
