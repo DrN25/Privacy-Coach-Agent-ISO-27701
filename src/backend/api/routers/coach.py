@@ -4,6 +4,7 @@ Endpoints: /api/chat, /api/remediate, /api/export-dictamen/{hallazgo_id}.
 """
 
 import datetime
+import logging
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel, Field
@@ -13,6 +14,7 @@ from ...knowledge_bridge import knowledge_bridge
 from ...agents.graph import ejecutar_flujo_multiagente
 
 router = APIRouter(tags=["Coach"])
+logger = logging.getLogger(__name__)
 
 
 class ChatRequest(BaseModel):
@@ -36,8 +38,8 @@ def get_dialogar_coach():
         import backend.app as app_mod
         if hasattr(app_mod, "dialogar_coach"):
             return app_mod.dialogar_coach
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("No se pudo cargar el coach desde la fachada (%s)", type(exc).__name__)
     from ...coach_agent import dialogar_coach
     return dialogar_coach
 

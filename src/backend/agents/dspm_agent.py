@@ -5,11 +5,14 @@ canónico de la ISO/IEC 27701:2025 y la Ley 29733, de manera agnóstica al domin
 empresarial (banca, salud, retail, educación o servicios).
 """
 
+import logging
 import re
 from typing import Dict, Any, Optional
 from .state import AuditState
 from ..core.rules_catalog import resolver_regla_con_fallback, CATALOGO_REGLAS, obtener_regla
 from ..infrastructure.repository import repository
+
+logger = logging.getLogger(__name__)
 
 
 def _resolver_codigo_auditoria(state: AuditState) -> Optional[str]:
@@ -49,8 +52,8 @@ def _resolver_codigo_auditoria(state: AuditState) -> Optional[str]:
             for h in hallazgos:
                 if h.get("elemento_afectado", "").strip().lower() == elemento.lower():
                     return h.get("codigo_regla")
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("No se pudieron correlacionar hallazgos (%s)", type(exc).__name__)
 
     # 4. Si hay hallazgos activos en el repositorio, tomar el hallazgo de mayor severidad
     try:
@@ -60,8 +63,8 @@ def _resolver_codigo_auditoria(state: AuditState) -> Optional[str]:
             prioridad = {"MUY GRAVE": 4, "CRÍTICO": 4, "CRITICO": 4, "GRAVE": 3, "ALTO": 3, "MEDIO": 2, "LEVE": 1, "BAJO": 1}
             hallazgo_top = max(hallazgos, key=lambda h: prioridad.get(str(h.get("nivel_riesgo", "MEDIO")).upper(), 1))
             return hallazgo_top.get("codigo_regla")
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("No se pudo consultar la severidad de hallazgos (%s)", type(exc).__name__)
 
     return None
 

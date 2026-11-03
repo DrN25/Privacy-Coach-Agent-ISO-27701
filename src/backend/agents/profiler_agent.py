@@ -3,10 +3,13 @@ Nodo Agente Perfilador (Data Profiler Agent).
 Clasifica columnas y tipos de datos conforme a categorías de sensibilidad de la LPDP.
 """
 
+import logging
 from typing import Dict, Any, List
 from .state import AuditState
 from ..profiler import perfilar_columna
 from ..infrastructure.repository import repository
+
+logger = logging.getLogger(__name__)
 
 
 def nodo_profiler_agent(state: AuditState) -> Dict[str, Any]:
@@ -48,8 +51,8 @@ def nodo_profiler_agent(state: AuditState) -> Dict[str, Any]:
                                 "sensible": res.es_sensible,
                                 "candado": res.candado
                             })
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("No se pudieron obtener activos para perfilar (%s)", type(exc).__name__)
 
     trace = list(state.get("trazabilidad") or [])
     trace.append({

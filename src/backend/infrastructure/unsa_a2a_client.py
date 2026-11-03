@@ -3,6 +3,7 @@ Cliente del Protocolo A2A (Agent-to-Agent v0.3.0) para integración con el agent
 Implementa transporte JSON-RPC 2.0 sobre HTTP para consulta de normativa universitaria.
 """
 
+import logging
 import os
 import uuid
 from typing import Dict, Any, List, Optional
@@ -11,6 +12,7 @@ import httpx
 from ..core.config import settings
 
 DEFAULT_UNSA_A2A_URL = "http://localhost:8001/a2a"
+logger = logging.getLogger(__name__)
 
 
 class UNSAA2AClient:
@@ -79,8 +81,8 @@ class UNSAA2AClient:
                         "citas": meta.get("citations", []),
                         "context_id": result.get("contextId", cid)
                     }
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("No se pudo consultar el agente UNSA (%s)", type(exc).__name__)
 
         return {
             "disponible": False,
@@ -100,7 +102,8 @@ if __name__ == "__main__":
         if "/.well-known/agent-card.json" in str(request.url):
             return httpx.Response(200, json={"name": "Asistente Virtual UNSA", "skills": []})
         body = request.read().decode("utf-8")
-        assert "message/send" in body
+        if "message/send" not in body:
+            raise AssertionError("La solicitud A2A no contiene message/send")
         return httpx.Response(200, json={
             "jsonrpc": "2.0",
             "id": 1,
@@ -124,6 +127,8 @@ if __name__ == "__main__":
         }
         resp = mock_http.post("http://testserver/a2a", json=req_payload)
         res_data = resp.json()["result"]
-        assert "Art. 12" in res_data["parts"][0]["text"]
-        assert len(res_data["metadata"]["citations"]) == 1
+        if "Art. 12" not in res_data["parts"][0]["text"]:
+            raise AssertionError("La respuesta A2A no contiene el artículo esperado")
+        if len(res_data["metadata"]["citations"]) != 1:
+            raise AssertionError("La respuesta A2A no contiene una cita")
     print("UNSA A2A Client: self-check passed (JSON-RPC 2.0 & citations valid).")

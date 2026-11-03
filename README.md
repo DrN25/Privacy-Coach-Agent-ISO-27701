@@ -174,6 +174,18 @@ python src/run.py
 
 El servidor inicia en `http://127.0.0.1:8000`.
 
+### Pruebas automatizadas
+
+Desde la raíz del proyecto, con el entorno virtual activado:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest
+```
+
+Las pruebas usan una base SQLite temporal independiente y no necesitan una API key ni PostgreSQL.
+Para ejecutar solo un archivo, usa por ejemplo `python -m pytest tests/test_api.py`.
+
 ### Docker
 
 ```bash
@@ -200,10 +212,12 @@ El pipeline de `.github/workflows/ci.yml` ejecuta compilación, Ruff, Pytest, `p
 
 Después de un CI exitoso sobre `main`, el mismo workflow comprime el código, lo copia por SCP y ejecuta `docker compose build/up` dentro de la VPS. No usa registry ni publica imágenes.
 
-- FastAPI en `127.0.0.1:8000`, accesible solo desde la propia VPS.
+- FastAPI publicado en `0.0.0.0:8000`; restrinja el acceso mediante firewall o un proxy seguro.
 - SQLite en un volumen Docker persistente.
 - Contenedores con reinicio automático, health checks y logs rotados.
 - Aplicación con filesystem de solo lectura y directorios temporales limitados.
+- Los archivos cargados quedan en `/app/media/uploads` (tmpfs) y se pierden al recrear el contenedor;
+  los resultados procesados permanecen en SQLite.
 - Una sola imagen local `privacy-coach:local`; imágenes anteriores no usadas se eliminan.
 
 ### Preparación de la VPS
@@ -250,10 +264,10 @@ En producción, toda la interfaz y API usan HTTP Basic con `APP_USERNAME` y `APP
 Comandos de verificación local equivalentes a CI:
 
 ```bash
-pip install -r requirements-dev.txt
+python -m pip install -r requirements-dev.txt
 python -m compileall -q src knowledge_base tests
 ruff check src knowledge_base tests
-pytest
+python -m pytest
 pip-audit -r requirements.txt
 bandit -q -r src -x tests
 docker build -t privacy-coach:ci .

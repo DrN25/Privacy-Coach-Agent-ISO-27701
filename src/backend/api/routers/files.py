@@ -238,10 +238,6 @@ def get_raw_document(archivo_id: str):
 @router.post("/api/upload")
 async def upload_file(file: UploadFile = File(...)):
     """Carga y procesa un nuevo documento (.pdf, .sql, .md, .txt) extrayendo texto, OCR y AST."""
-    base_dir = obtener_base_dir()
-    temp_dir = os.path.join(base_dir, "media", "uploads")
-    os.makedirs(temp_dir, exist_ok=True)
-
     safe_filename = os.path.basename(file.filename or "")
     if not safe_filename or safe_filename != file.filename:
         raise HTTPException(status_code=400, detail="Nombre de archivo inválido.")
@@ -250,6 +246,9 @@ async def upload_file(file: UploadFile = File(...)):
     if not fname.endswith((".sql", ".pdf", ".md", ".txt")):
         raise HTTPException(status_code=400, detail="Formato no soportado. Suba archivos SQL, PDF, MD o TXT.")
 
+    base_dir = obtener_base_dir()
+    temp_dir = os.path.join(base_dir, "media", "uploads")
+    os.makedirs(temp_dir, exist_ok=True)
     temp_path = os.path.join(temp_dir, safe_filename)
     with open(temp_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)

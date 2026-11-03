@@ -75,6 +75,8 @@ settings = Settings()
 
 
 if __name__ == "__main__":
-    assert settings.openrouter_model == "openai/gpt-6-luna" or os.getenv("OPENROUTER_MODEL")
-    assert settings.database_path.endswith(".db")
+    if settings.openrouter_model != "openai/gpt-6-luna" and not os.getenv("OPENROUTER_MODEL"):
+        raise AssertionError("Modelo OpenRouter no configurado")
+    if not settings.database_path.endswith(".db"):
+        raise AssertionError("La ruta de la base debe terminar en .db")
     print(f"Config loaded successfully: env={settings.environment}, model={settings.openrouter_model}")

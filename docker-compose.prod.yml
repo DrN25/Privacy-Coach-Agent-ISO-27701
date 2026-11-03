@@ -19,7 +19,7 @@ services:
       - privacy-coach-data:/var/data
     tmpfs:
       - /tmp:size=64m,mode=1777
-      - /app/src/data/uploads:size=128m,mode=1777
+      - /app/media/uploads:size=128m,mode=1777
     read_only: true
     security_opt:
       - no-new-privileges:true

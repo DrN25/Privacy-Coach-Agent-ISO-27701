@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY --chown=app:app src ./src
 COPY --chown=app:app knowledge_base ./knowledge_base
 
-RUN mkdir -p /var/data && chown app:app /var/data
+RUN mkdir -p /var/data /app/media/uploads && chown app:app /var/data /app/media/uploads
 
 USER app
 

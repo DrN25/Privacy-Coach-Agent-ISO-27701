@@ -299,11 +299,16 @@ def listar_todas_las_reglas() -> List[ReglaAuditoria]:
 
 
 if __name__ == "__main__":
-    assert len(CATALOGO_REGLAS) == 7, "Deben existir exactamente 7 reglas canónicas (R-001 a R-007)"
+    if len(CATALOGO_REGLAS) != 7:
+        raise AssertionError("Deben existir exactamente 7 reglas canónicas (R-001 a R-007)")
     for r_id in [f"R-00{i}" for i in range(1, 8)]:
         r = obtener_regla(r_id)
-        assert r is not None, f"Regla {r_id} no encontrada"
-        assert r["multa_estimada_uit"] > 0, f"Multa inválida para {r_id}"
-        assert r["control_iso27701"].startswith("A."), f"Control ISO inválido para {r_id}"
-        assert len(r["aviso_legal_anpd"]) > 10, f"Aviso ANPD vacío para {r_id}"
+        if r is None:
+            raise AssertionError(f"Regla {r_id} no encontrada")
+        if r["multa_estimada_uit"] <= 0:
+            raise AssertionError(f"Multa inválida para {r_id}")
+        if not r["control_iso27701"].startswith("A."):
+            raise AssertionError(f"Control ISO inválido para {r_id}")
+        if len(r["aviso_legal_anpd"]) <= 10:
+            raise AssertionError(f"Aviso ANPD vacío para {r_id}")
     print("Core rules catalog: self-check passed (7 canonical multidimensional rules valid).")
