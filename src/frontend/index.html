@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UNSA • Sistema de Peritaje y Resolución de Brechas PII (ISO 27701 / Ley 29733)</title>
+  <link rel="icon" href="data:,">
   <meta name="description" content="Plataforma de Peritaje Técnico-Legal y Gestión de Incidentes de Privacidad bajo ISO/IEC 27701:2025 y Ley N° 29733 (ANPD Perú)">
   
   <script>
@@ -88,7 +89,28 @@
     </div>
   </div>
 
-  <!-- React JSX App -->
-  <script type="text/babel" src="/js/app.jsx?v=5.4"></script>
+  <!-- Helpers y Cargador Secuencial Babel JSX -->
+  <script src="/js/api.js?v=6.0"></script>
+  <script>
+    (async function loadPimsFrontend() {
+      const modules = [
+        '/js/components/ChatDrawer.jsx?v=6.0',
+        '/js/components/IncidentModal.jsx?v=6.0',
+        '/js/views/IncidentsView.jsx?v=6.0',
+        '/js/views/SecondaryViews.jsx?v=6.0',
+        '/js/app.jsx?v=6.0'
+      ];
+      for (const url of modules) {
+        const res = await fetch(url);
+        const code = await res.text();
+        const compiled = Babel.transform(code, { presets: [['react', { runtime: 'classic' }]] }).code;
+        const script = document.createElement('script');
+        script.textContent = compiled;
+        document.body.appendChild(script);
+      }
+    })().catch(function(err) {
+      console.error('Error cargando módulos frontend:', err);
+    });
+  </script>
 </body>
 </html>
