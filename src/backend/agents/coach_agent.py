@@ -72,28 +72,68 @@ def obtener_system_prompt() -> str:
 
 
 def nodo_coach_agent(state: AuditState) -> Dict[str, Any]:
-    """Genera el dictamen pericial forense y el parche de remediación."""
+    """Genera el dictamen pericial o respuesta operativa SQL + normativa."""
     expediente = state.get("expediente_texto", "")
     historial = state.get("historial_mensajes", [])
     eval_previa = state.get("evaluacion_critica", {})
     iteracion = state.get("iteracion", 0) + 1
+    intencion = (state.get("intencion") or "").lower()
+    ui_ctx = state.get("ui_context") or {}
+    ctx = state.get("contexto_brecha") or {}
+    sql_ctx = state.get("sql_context_text") or ""
+
+    extra_blocks: List[str] = []
+    if ui_ctx:
+        extra_blocks.append(
+            f"[CONTEXTO ACTUAL DE INTERFAZ: módulo={ui_ctx.get('active_module', 'incidentes')}, "
+            f"incidente_activo={ui_ctx.get('selected_incident_code') or ui_ctx.get('selected_incident_id') or 'ninguno'}, "
+            f"pestaña={ui_ctx.get('active_tab', '')}, filtros={ui_ctx.get('active_filters', {})}]"
+        )
+    if ctx.get("incident_code"):
+        mc = ctx.get("corrective_action") or {}
+        actions_list = ctx.get("actions") or []
+        actions_txt = "; ".join(
+            f"[{a.get('action_type')}] {a.get('action_date')} ({a.get('responsible')}): {a.get('description')}"
+            for a in actions_list[:8]
+        ) or "Ninguna registrada"
+        extra_blocks.append(
+            "EXPEDIENTE ACTIVO EN PANTALLA:\n"
+            f"- Código: {ctx.get('incident_code')} (ID={ctx.get('id')}) | Estado: {ctx.get('status')} | Severidad: {ctx.get('severity')} | Impacto: {ctx.get('impact')}\n"
+            f"- Título: {ctx.get('title')}\n"
+            f"- Hechos completos: {ctx.get('description') or 'Sin descripción adicional'}\n"
+            f"- Control ISO/IEC 27701:2025: {ctx.get('iso27701_control_id')} | Afecta PII: {ctx.get('involves_personal_data')} | Tipo: {ctx.get('incident_type')}\n"
+            f"- Activo comprometido: {ctx.get('compromised_system') or 'N/A'} | Titulares afectados: {ctx.get('num_affected_subjects', 0)}\n"
+            f"- Responsable: {ctx.get('assigned_to')} | Reportado por: {ctx.get('reported_by')}\n"
+            f"- Fecha incidente: {ctx.get('incident_date')} | Fecha detección/apertura: {ctx.get('detection_date')} | Cierre: {ctx.get('resolved_date') or 'Pendiente (Sin cerrar)'}\n"
+            f"- Consecuencias: {ctx.get('consequences_summary') or 'En evaluación'}\n"
+            f"- Recuperación datos: {ctx.get('data_recovered_status')} ({ctx.get('data_recovered_detail') or ''})\n"
+            f"- Notificación ANPD: {'Sí' if ctx.get('anpd_notified') else 'No'} | Ref: {ctx.get('anpd_official_ref') or 'N/A'} | Fecha: {ctx.get('anpd_notified_at') or 'N/A'}\n"
+            f"- Precedente y exposición estimada: {ctx.get('precedente_anpd') or 'N/A'} ({ctx.get('multa_estimada_uit', 0)} UIT)\n"
+            f"- Acciones A.3.12 ({len(actions_list)}): {actions_txt}\n"
+            f"- Medida Correctiva 10.2 (D34): {mc.get('mc_code', 'Sin asignar')} | Estado MC: {mc.get('status', 'N/A')} | Fecha límite: {mc.get('due_date', 'N/A')} | Causa raíz: {mc.get('root_cause', 'N/A')} | Plan: {mc.get('action_to_implement', 'N/A')}"
+        )
+    if sql_ctx:
+        extra_blocks.append(
+            f"{sql_ctx}\nINSTRUCCIÓN CRÍTICA DE VERACIDAD: Basa tus conteos, códigos de incidente, fechas, estados y nombres de responsables EXCLUSIVAMENTE en las filas SQL reales mostradas arriba. No inventes ni extrapoles registros."
+        )
+
+    base_context = "\n\n".join([b for b in [ "\n\n".join(extra_blocks), "" if intencion == "sql_query" and sql_ctx else expediente ] if b.strip()])
 
     messages: List[Dict[str, str]] = [{"role": "system", "content": obtener_system_prompt()}]
 
-    # Si viene de un bucle de reflexión con observaciones del Evaluador Crítico:
     if eval_previa and not eval_previa.get("aprobado", False):
         obs = eval_previa.get("observaciones", "")
         retroalimentacion = f"\n\n[OBSERVACIÓN DE REVISIÓN CRÍTICA - ITERACIÓN {iteracion}]:\nCorrige lo siguiente:\n{obs}"
-        messages.append({"role": "user", "content": f"{expediente}{retroalimentacion}"})
+        messages.append({"role": "user", "content": f"{base_context}{retroalimentacion}"})
     else:
         if not historial:
-            messages.append({"role": "user", "content": f"{expediente}\n\nRequerimiento: Emitir dictamen pericial completo y script de remediación."})
+            messages.append({"role": "user", "content": f"{base_context}\n\nRequerimiento: Emitir dictamen pericial completo."})
         elif len(historial) == 1:
             primer_txt = historial[0].get("content", "")
-            messages.append({"role": "user", "content": f"{expediente}\n\nRequerimiento del Auditor / Ingeniero:\n{primer_txt}"})
+            messages.append({"role": "user", "content": f"{base_context}\n\nRequerimiento del Auditor / Operador:\n{primer_txt}"})
         else:
             primer_txt = historial[0].get("content", "")
-            messages.append({"role": "user", "content": f"{expediente}\n\nRequerimiento Inicial:\n{primer_txt}"})
+            messages.append({"role": "user", "content": f"{base_context}\n\nRequerimiento Inicial:\n{primer_txt}"})
             for m in historial[1:]:
                 role = m.get("role", "user")
                 if role not in ["user", "assistant"]:

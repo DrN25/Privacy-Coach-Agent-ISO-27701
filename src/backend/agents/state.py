@@ -7,11 +7,17 @@ from typing import TypedDict, List, Dict, Any, Optional
 
 class AuditState(TypedDict, total=False):
     # Enrutamiento e intención
-    intencion: str  # 'dictamen', 'normativo', 'remediacion', 'contexto', 'general'
+    intencion: str  # 'dictamen', 'normativo', 'remediacion', 'contexto', 'sql_query', 'hibrido', 'general'
     
     # Entradas de usuario y contexto
     historial_mensajes: List[Dict[str, str]]
     contexto_brecha: Dict[str, Any]
+    ui_context: Dict[str, Any]
+
+    # Consulta SQL en tiempo real (SQLGlot Guardrail)
+    sql_executed: str
+    sql_rows: List[Dict[str, Any]]
+    sql_context_text: str
     
     # Datos recuperados por agentes especialistas
     contexto_empresa: Dict[str, Any]
