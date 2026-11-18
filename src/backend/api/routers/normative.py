@@ -5,11 +5,38 @@ Endpoints: /api/subgraph/{control_id}, /api/legal-reference/{tipo}/{ref_id}.
 
 import os
 import json
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
+from typing import Optional
 
 from ...knowledge_bridge import knowledge_bridge
+from ...infrastructure.repository import repository
 
 router = APIRouter(tags=["Normative"])
+
+
+@router.get("/api/controls/iso27701")
+def list_iso27701_controls(table: Optional[str] = Query(default=None), q: Optional[str] = Query(default=None)):
+    """Retorna el catálogo completo de los 78 controles ISO/IEC 27701:2025 con conteo vivo de incidentes."""
+    counts = repository.contar_incidentes_por_control()
+    controls = []
+    for cid, ctrl in knowledge_bridge.engine.controls_map.items():
+        if table and table.upper() != "ALL" and (ctrl.get("table") or "").upper() != table.upper():
+            continue
+        if q:
+            ql = q.strip().lower()
+            haystack = f"{cid} {ctrl.get('title', '')} {ctrl.get('category', '')} {ctrl.get('annex_b_guidance', '')}".lower()
+            if ql not in haystack:
+                continue
+        item = dict(ctrl)
+        item["incidents_count"] = counts.get(cid, 0)
+        controls.append(item)
+
+    def _sort_key(c):
+        parts = [int(p) if p.isdigit() else p for p in str(c.get("id", "")).split(".")]
+        return (str(c.get("table", "")), parts)
+
+    controls.sort(key=_sort_key)
+    return {"controls": controls, "total": len(controls)}
 
 
 @router.get("/api/subgraph/{control_id}")
