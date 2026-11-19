@@ -45,6 +45,8 @@ Thumbs.db
 *.bak
 *.checkpoint.bak
 src/data/evidencias_uploads/
+src/data/uploads/
+media/uploads/
 
 # Documentos PDF pesados / protegidos por derechos de autor (ISO OCR 14.7MB)
 # (Los grafos y datasets estructurados en .json de Material/ SÍ se versionan)

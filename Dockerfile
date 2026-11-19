@@ -20,6 +20,7 @@ COPY --chown=app:app src ./src
 COPY --chown=app:app knowledge_base ./knowledge_base
 COPY --chown=app:app media/evidencias ./media/evidencias
 COPY --chown=app:app media/documents ./media/documents
+COPY --chown=app:app media/demos ./media/demos
 
 RUN mkdir -p /var/data /app/media/uploads && chown app:app /var/data /app/media/uploads
 
