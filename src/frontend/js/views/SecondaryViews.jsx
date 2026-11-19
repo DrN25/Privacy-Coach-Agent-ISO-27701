@@ -8,17 +8,23 @@
 
 window.MedidasCorrectivasView = function MedidasCorrectivasView({
   onOpenIncident,
+  incidents,
+  users,
+  controls,
+  onRefreshAll,
   showToast,
 }) {
-  const { useState, useEffect } = React;
-  const { MC_STATUS_MAP } = window.PIMS_API;
+  const { useState, useEffect, useRef } = React;
+  const { MC_STATUS_MAP, apiFetch } = window.PIMS_API;
   const [items, setItems] = useState([]);
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [d35Modal, setD35Modal] = useState({ open: false, markdown: '' });
+  const [mcModal, setMcModal] = useState({ open: false, saving: false, data: null });
+  const importD34Ref = useRef(null);
 
   const loadMc = async () => {
     const qs = statusFilter !== 'ALL' ? `?status=${encodeURIComponent(statusFilter)}` : '';
-    const res = await fetch(`/api/corrective-actions${qs}`);
+    const res = await fetch(`/api/corrective-actions${qs}`, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       setItems(data.corrective_actions || []);
@@ -39,6 +45,83 @@ window.MedidasCorrectivasView = function MedidasCorrectivasView({
     }
   };
 
+  const openNewMcModal = () => {
+    setMcModal({
+      open: true,
+      saving: false,
+      data: {
+        id: null,
+        incident_id: '',
+        source_type: 'AUDITORIA_INTERNA',
+        iso27701_control_id: 'A.3.12',
+        status: 'ABIERTA',
+        due_date: '',
+        action_required: true,
+        nonconformity_desc: '',
+        root_cause: '',
+        action_to_implement: '',
+        responsible_name: '',
+        approved_by_name: '',
+      },
+    });
+  };
+
+  const handleImportD34 = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/corrective-actions/import-docx', { method: 'POST', body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.draft) {
+        setMcModal({
+          open: true,
+          saving: false,
+          data: {
+            ...data.draft,
+            id: null,
+            incident_id: data.matched_incident ? String(data.matched_incident.id) : '',
+          },
+        });
+        showToast(data.mensaje || 'Formulario D34 importado. Revise y guarde.', 'success');
+      } else {
+        showToast(data.detail || 'No se pudo importar el D34.', 'error');
+      }
+    } catch {
+      showToast('Error de red al importar D34.', 'error');
+    } finally {
+      e.target.value = '';
+    }
+  };
+
+  const handleSaveMcModal = async (e) => {
+    e.preventDefault();
+    if (!mcModal.data) return;
+    setMcModal((p) => ({ ...p, saving: true }));
+    try {
+      const payload = {
+        ...mcModal.data,
+        incident_id: mcModal.data.incident_id ? parseInt(mcModal.data.incident_id, 10) : null,
+      };
+      const isUpdate = Boolean(mcModal.data.id);
+      const url = isUpdate ? `/api/corrective-actions/${mcModal.data.id}` : '/api/corrective-actions';
+      const method = isUpdate ? 'PUT' : 'POST';
+      const res = await apiFetch(url, { method, body: JSON.stringify(payload) });
+      const resData = await res.json().catch(() => ({}));
+      if (res.ok) {
+        showToast(resData.mensaje || 'Medida correctiva guardada.', 'success');
+        setMcModal({ open: false, saving: false, data: null });
+        await loadMc();
+        onRefreshAll && onRefreshAll();
+      } else {
+        showToast(resData.detail || 'Error al guardar Medida Correctiva.', 'error');
+      }
+    } finally {
+      setMcModal((p) => (p.open ? { ...p, saving: false } : p));
+    }
+  };
+
   return (
     <div className="p-4 sm:p-5 space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -47,21 +130,49 @@ window.MedidasCorrectivasView = function MedidasCorrectivasView({
             Medidas Correctivas (Cláusula 10.2 / Formulario D34)
           </h1>
           <p className="text-xs text-ink-secondary">
-            Seguimiento consolidado de causas raíz, acciones permanentes y reporte D35 para Revisión por la Dirección (Cl. 9.3).
+            Gestión de medidas correctivas (vinculadas o independientes Cl. 10.2), Minutas D35 (Cl. 9.3), Procedimiento MC e Informe de No Conformidades.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <input ref={importD34Ref} type="file" className="hidden" accept=".docx" onChange={handleImportD34} />
           <button
-            onClick={handleOpenD35}
+            type="button"
+            onClick={openNewMcModal}
             className="px-3.5 py-2 rounded bg-[var(--unsa-primary)] hover:bg-[var(--unsa-hover)] text-white text-xs font-semibold cursor-pointer"
           >
-            Vista Previa Reporte D35 (Cl. 9.3)
+            + Nueva Medida 10.2
+          </button>
+          <button
+            type="button"
+            onClick={() => importD34Ref.current?.click()}
+            className="px-3 py-2 rounded border border-surface-border bg-surface-card hover:bg-surface-elevated text-ink-primary text-xs font-semibold cursor-pointer"
+          >
+            Importar D34 (.docx)
+          </button>
+          <button
+            type="button"
+            onClick={handleOpenD35}
+            className="px-3 py-2 rounded border border-surface-border bg-surface-card hover:bg-surface-elevated text-ink-primary text-xs font-semibold cursor-pointer"
+          >
+            Vista Previa D35
           </button>
           <a
             href="/api/reports/management-review-d35?format=docx"
-            className="px-3.5 py-2 rounded border border-surface-border bg-surface-card hover:bg-surface-elevated text-ink-primary text-xs font-semibold"
+            className="px-3 py-2 rounded bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold"
           >
-            Descargar D35 (.docx)
+            Minutas D35 (.docx)
+          </a>
+          <a
+            href="/api/reports/corrective-procedure-docx"
+            className="px-3 py-2 rounded border border-surface-border bg-surface-card hover:bg-surface-elevated text-ink-primary text-xs font-medium"
+          >
+            Procedimiento MC (.docx)
+          </a>
+          <a
+            href="/api/reports/audit-nonconformities-docx"
+            className="px-3 py-2 rounded border border-surface-border bg-surface-card hover:bg-surface-elevated text-ink-primary text-xs font-medium"
+          >
+            Informe NC (.docx)
           </a>
         </div>
       </div>
@@ -89,7 +200,7 @@ window.MedidasCorrectivasView = function MedidasCorrectivasView({
           <thead className="bg-surface-sidebar border-b border-surface-border font-mono text-[11px] text-ink-muted">
             <tr>
               <th className="p-3">Código MC</th>
-              <th className="p-3">Incidente / Control</th>
+              <th className="p-3">Origen / Control ISO</th>
               <th className="p-3">Acción a Implementar</th>
               <th className="p-3">Responsable</th>
               <th className="p-3">Fecha Límite</th>
@@ -104,10 +215,17 @@ window.MedidasCorrectivasView = function MedidasCorrectivasView({
                 <tr key={mc.id} className="hover:bg-surface-ground">
                   <td className="p-3 font-mono font-bold text-ink-primary whitespace-nowrap">{mc.mc_code}</td>
                   <td className="p-3">
-                    <div className="font-mono text-[11px] font-semibold text-ink-primary">
-                      {mc.incident_code} ({mc.iso27701_control_id || 'A.3.12'})
+                    <div className="font-mono text-[11px] font-semibold text-ink-primary flex flex-wrap items-center gap-1.5">
+                      {mc.incident_code ? (
+                        <span>{mc.incident_code}</span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-300 text-[10px]">
+                          Independiente ({mc.source_type || 'Cl. 10.2'})
+                        </span>
+                      )}
+                      <span className="text-ink-muted">({mc.iso27701_control_id || 'A.3.12'})</span>
                     </div>
-                    <div className="text-ink-secondary line-clamp-1 max-w-xs">{mc.incident_title}</div>
+                    <div className="text-ink-secondary line-clamp-1 max-w-xs">{mc.incident_title || mc.nonconformity_desc}</div>
                   </td>
                   <td className="p-3 text-ink-secondary max-w-sm">
                     <div className="line-clamp-2">{mc.action_to_implement || 'Por definir'}</div>
@@ -119,13 +237,20 @@ window.MedidasCorrectivasView = function MedidasCorrectivasView({
                   </td>
                   <td className="p-3 text-right whitespace-nowrap space-x-1.5">
                     <button
-                      onClick={() => onOpenIncident(mc.incident_id, 'mc102')}
+                      type="button"
+                      onClick={() => {
+                        if (mc.incident_id) {
+                          onOpenIncident(mc.incident_id, 'mc102');
+                        } else {
+                          setMcModal({ open: true, saving: false, data: { ...mc, incident_id: '' } });
+                        }
+                      }}
                       className="px-2.5 py-1 rounded border border-surface-border bg-surface-card hover:bg-surface-elevated font-mono text-[11px] cursor-pointer"
                     >
                       Editar
                     </button>
                     <a
-                      href={`/api/incidents/${mc.incident_id}/corrective-action/export-docx`}
+                      href={`/api/corrective-actions/${mc.id}/export-docx`}
                       className="px-2.5 py-1 rounded bg-emerald-700 hover:bg-emerald-800 text-white font-mono text-[11px]"
                     >
                       .docx
@@ -137,6 +262,144 @@ window.MedidasCorrectivasView = function MedidasCorrectivasView({
           </tbody>
         </table>
       </div>
+
+      {/* Modal Creación / Edición MC Independiente o Importada D34 */}
+      {mcModal.open && mcModal.data && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-xs" style={{ backgroundColor: 'var(--modal-overlay)' }}>
+          <form onSubmit={handleSaveMcModal} className="bg-surface-card border border-surface-border rounded max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden text-xs">
+            <div className="p-4 border-b border-surface-border bg-surface-sidebar flex items-center justify-between">
+              <div className="font-serif font-bold text-sm text-ink-primary">
+                {mcModal.data.id ? `Editar Medida Correctiva ${mcModal.data.mc_code}` : 'Registrar Medida Correctiva Cláusula 10.2 (D34)'}
+              </div>
+              <button type="button" onClick={() => setMcModal({ open: false, saving: false, data: null })} className="text-ink-muted hover:text-ink-primary">✕</button>
+            </div>
+            <div className="p-5 flex-1 overflow-y-auto space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold mb-1">Vincular a Incidente (opcional)</label>
+                  <select
+                    value={mcModal.data.incident_id || ''}
+                    onChange={(e) => setMcModal((p) => ({ ...p, data: { ...p.data, incident_id: e.target.value } }))}
+                    className="w-full px-2.5 py-1.5 rounded border border-surface-border bg-surface-ground"
+                  >
+                    <option value="">-- Sin incidente previo (Medida independiente Cl. 10.2) --</option>
+                    {(incidents || []).map((inc) => (
+                      <option key={inc.id} value={inc.id}>{inc.incident_code} — {inc.title.slice(0, 50)}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1">Origen de No Conformidad</label>
+                  <select
+                    value={mcModal.data.source_type || 'AUDITORIA_INTERNA'}
+                    onChange={(e) => setMcModal((p) => ({ ...p, data: { ...p.data, source_type: e.target.value } }))}
+                    className="w-full px-2.5 py-1.5 rounded border border-surface-border bg-surface-ground"
+                  >
+                    <option value="AUDITORIA_INTERNA">Auditoría Interna (Cl. 9.2)</option>
+                    <option value="REVISION_DIRECCION">Revisión por Dirección (Cl. 9.3)</option>
+                    <option value="IMPORTACION_D34">Importación D34 (.docx)</option>
+                    <option value="MANUAL">Registro Manual Directo</option>
+                    <option value="INCIDENTE">Incidente A.3.12</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-semibold mb-1">Control ISO 27701:2025</label>
+                  <select
+                    value={mcModal.data.iso27701_control_id || 'A.3.12'}
+                    onChange={(e) => setMcModal((p) => ({ ...p, data: { ...p.data, iso27701_control_id: e.target.value } }))}
+                    className="w-full px-2.5 py-1.5 rounded border border-surface-border bg-surface-ground font-mono"
+                  >
+                    {(controls || []).map((c) => (
+                      <option key={c.id} value={c.id}>{c.id} — {c.title}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1">Estado MC</label>
+                  <select
+                    value={mcModal.data.status || 'ABIERTA'}
+                    onChange={(e) => setMcModal((p) => ({ ...p, data: { ...p.data, status: e.target.value } }))}
+                    className="w-full px-2.5 py-1.5 rounded border border-surface-border bg-surface-ground"
+                  >
+                    {Object.keys(MC_STATUS_MAP).map((k) => (
+                      <option key={k} value={k}>{MC_STATUS_MAP[k].label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1">Fecha Límite</label>
+                  <input
+                    type="date"
+                    value={mcModal.data.due_date || ''}
+                    onChange={(e) => setMcModal((p) => ({ ...p, data: { ...p.data, due_date: e.target.value } }))}
+                    className="w-full px-2.5 py-1.5 rounded border border-surface-border bg-surface-ground"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block font-semibold mb-1">Descripción de la no-conformidad *</label>
+                <textarea
+                  rows={2}
+                  required
+                  value={mcModal.data.nonconformity_desc || ''}
+                  onChange={(e) => setMcModal((p) => ({ ...p, data: { ...p.data, nonconformity_desc: e.target.value } }))}
+                  className="w-full px-2.5 py-1.5 rounded border border-surface-border bg-surface-ground"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold mb-1">Causa raíz</label>
+                <textarea
+                  rows={2}
+                  value={mcModal.data.root_cause || ''}
+                  onChange={(e) => setMcModal((p) => ({ ...p, data: { ...p.data, root_cause: e.target.value } }))}
+                  className="w-full px-2.5 py-1.5 rounded border border-surface-border bg-surface-ground"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold mb-1">Medida correctiva a implementar</label>
+                <textarea
+                  rows={2}
+                  value={mcModal.data.action_to_implement || ''}
+                  onChange={(e) => setMcModal((p) => ({ ...p, data: { ...p.data, action_to_implement: e.target.value } }))}
+                  className="w-full px-2.5 py-1.5 rounded border border-surface-border bg-surface-ground"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold mb-1">Responsable de Implementación</label>
+                  <input
+                    type="text"
+                    value={mcModal.data.responsible_name || ''}
+                    onChange={(e) => setMcModal((p) => ({ ...p, data: { ...p.data, responsible_name: e.target.value } }))}
+                    placeholder={(users && users[0]?.full_name) || 'Responsable UNSA'}
+                    className="w-full px-2.5 py-1.5 rounded border border-surface-border bg-surface-ground"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold mb-1">Aprobado por</label>
+                  <input
+                    type="text"
+                    value={mcModal.data.approved_by_name || ''}
+                    onChange={(e) => setMcModal((p) => ({ ...p, data: { ...p.data, approved_by_name: e.target.value } }))}
+                    placeholder="Abog. Carlos Mendoza Valdivia (DPO)"
+                    className="w-full px-2.5 py-1.5 rounded border border-surface-border bg-surface-ground"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="p-3 border-t border-surface-border bg-surface-sidebar flex justify-end gap-2">
+              <button type="button" onClick={() => setMcModal({ open: false, saving: false, data: null })} className="px-3.5 py-1.5 rounded border border-surface-border bg-surface-card text-ink-secondary">
+                Cancelar
+              </button>
+              <button type="submit" disabled={mcModal.saving} className="px-4 py-1.5 rounded bg-[var(--unsa-primary)] text-white font-semibold cursor-pointer disabled:opacity-50">
+                {mcModal.saving ? 'Guardando...' : 'Guardar Medida 10.2'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {d35Modal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-xs" style={{ backgroundColor: 'var(--modal-overlay)' }}>
@@ -183,6 +446,9 @@ window.InspectorView = function InspectorView({
   const { apiFetch } = window.PIMS_API;
   const [dbView, setDbView] = useState({ archivos: [], hallazgos: [], resumen_impacto: {} });
   const [busy, setBusy] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [autoAiAfterUpload, setAutoAiAfterUpload] = useState(false);
+  const [aiSummary, setAiSummary] = useState(null);
   const [draftingId, setDraftingId] = useState(null);
   const fileRef = useRef(null);
 
@@ -200,11 +466,32 @@ window.InspectorView = function InspectorView({
     try {
       const res = await apiFetch('/api/reset', { method: 'POST' });
       if (res.ok) {
+        setAiSummary(null);
         showToast('Bandeja del Inspector limpiada. Listo para analizar un nuevo archivo.', 'info');
         await loadView();
       }
     } finally {
       setBusy(false);
+    }
+  };
+
+  const handleRunAiInspector = async (archivoId = null) => {
+    setAiBusy(true);
+    try {
+      const qs = archivoId ? `?archivo_id=${encodeURIComponent(archivoId)}` : '';
+      const res = await apiFetch(`/api/inspector/ai-analyze${qs}`, { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setAiSummary(data);
+        showToast(data.mensaje || 'Análisis con Subagente IA completado.', data.ai_executed ? 'success' : 'info');
+        await loadView();
+      } else {
+        showToast(data.detail || 'Error al ejecutar Subagente IA.', 'error');
+      }
+    } catch {
+      showToast('Error de red al invocar Subagente IA.', 'error');
+    } finally {
+      setAiBusy(false);
     }
   };
 
@@ -235,6 +522,9 @@ window.InspectorView = function InspectorView({
         await apiFetch('/api/reanalyze', { method: 'POST' });
         showToast(`Archivo '${file.name}' analizado correctamente.`, 'success');
         await loadView();
+        if (autoAiAfterUpload && data.archivo_id) {
+          await handleRunAiInspector(data.archivo_id);
+        }
       } else {
         showToast(data.detail || 'Formato no soportado.', 'error');
       }
@@ -280,26 +570,34 @@ window.InspectorView = function InspectorView({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-serif text-lg font-bold text-ink-primary">
-            Inspector SQL / PDF (DSPM ➔ Modal IA ➔ Registro BD)
+            Inspector SQL / PDF / DOCX (DSPM + Subagente IA ➔ Registro BD)
           </h1>
           <p className="text-xs text-ink-secondary">
-            Escanea esquemas SQL y reglamentos PDF/MD/TXT para detectar brechas, autocompletar el formulario con IA y registrarlas en BD.
+            Escanea esquemas SQL, documentos PDF/DOCX/MD/TXT e Informes de Auditoría para detectar brechas con reglas fijas o con el Subagente IA (78 controles).
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <input ref={fileRef} type="file" className="hidden" accept=".sql,.pdf,.md,.txt" onChange={handleUpload} />
+          <input ref={fileRef} type="file" className="hidden" accept=".sql,.pdf,.docx,.md,.txt" onChange={handleUpload} />
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            disabled={busy}
+            disabled={busy || aiBusy}
             className="px-3.5 py-2 rounded border border-surface-border bg-surface-card hover:bg-surface-elevated text-xs font-semibold cursor-pointer disabled:opacity-50"
           >
-            + Subir SQL / PDF / TXT
+            + Subir SQL / PDF / DOCX / TXT
+          </button>
+          <button
+            type="button"
+            onClick={() => handleRunAiInspector(null)}
+            disabled={busy || aiBusy || !(dbView.archivos?.length > 0)}
+            className="px-3.5 py-2 rounded bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-semibold cursor-pointer disabled:opacity-40"
+          >
+            {aiBusy ? 'Analizando con Subagente IA...' : 'Analizar con Subagente IA (78 Controles)'}
           </button>
           <button
             type="button"
             onClick={handleLoadMockups}
-            disabled={busy}
+            disabled={busy || aiBusy}
             className="px-4 py-2 rounded bg-[var(--unsa-primary)] hover:bg-[var(--unsa-hover)] text-white text-xs font-semibold cursor-pointer disabled:opacity-50"
           >
             {busy ? 'Procesando...' : 'Cargar y Auditar Corpus UNSA'}
@@ -308,7 +606,7 @@ window.InspectorView = function InspectorView({
             <button
               type="button"
               onClick={handleResetInspector}
-              disabled={busy}
+              disabled={busy || aiBusy}
               className="px-3 py-2 rounded border border-surface-border bg-surface-ground hover:bg-surface-elevated text-xs text-ink-secondary cursor-pointer disabled:opacity-50"
             >
               Limpiar Inspector
@@ -316,6 +614,28 @@ window.InspectorView = function InspectorView({
           )}
         </div>
       </div>
+
+      <div className="px-3.5 py-2 rounded bg-surface-card border border-surface-border flex flex-wrap items-center justify-between gap-2 text-xs">
+        <label className="inline-flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={autoAiAfterUpload}
+            onChange={(e) => setAutoAiAfterUpload(e.target.checked)}
+            className="w-4 h-4 accent-[var(--unsa-primary)]"
+          />
+          <span>Ejecutar Subagente IA (78 controles) automáticamente al subir un nuevo archivo</span>
+        </label>
+        <span className="font-mono text-[11px] text-ink-muted">Detectores: Reglas R-001..R-007 + Tabla Auditoría .docx + Subagente IA</span>
+      </div>
+
+      {aiSummary && (
+        <div className="p-3.5 rounded bg-indigo-50 border border-indigo-200 text-indigo-950 text-xs space-y-1">
+          <div className="font-mono font-bold text-[11px]">
+            Subagente IA Documental • Tipo identificado: {aiSummary.tipo_documento} ({aiSummary.hallazgos_nuevos} hallazgos nuevos)
+          </div>
+          <div>{aiSummary.resumen_ejecutivo}</div>
+        </div>
+      )}
 
       {/* Hallazgos detectados */}
       <div className="bg-surface-card border border-surface-border rounded overflow-hidden">
@@ -341,7 +661,13 @@ window.InspectorView = function InspectorView({
                 <div key={h.id} className="p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs">
                   <div className="space-y-1 max-w-2xl">
                     <div className="flex flex-wrap items-center gap-2 font-mono text-[11px]">
-                      <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-900 font-bold">{h.codigo_regla}</span>
+                      {String(h.codigo_regla || '').startsWith('IA-') ? (
+                        <span className="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-900 font-bold">Subagente IA • {h.codigo_regla}</span>
+                      ) : h.codigo_regla === 'AUD-NC' ? (
+                        <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold">Auditoría .docx • {h.codigo_regla}</span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-900 font-bold">Regla DSPM • {h.codigo_regla}</span>
+                      )}
                       <span className="px-1.5 py-0.5 rounded bg-surface-ground border border-surface-border">{h.control_iso27701}</span>
                       <span className="text-ink-muted">{h.nivel_riesgo} • {h.origen_archivo}</span>
                     </div>
@@ -408,10 +734,18 @@ window.ControlesIsoDocsView = function ControlesIsoDocsView({
   onInspectDocument,
   onOpenLegalModal,
 }) {
-  const { useState } = React;
+  const { useState, useEffect } = React;
   const [subTab, setSubTab] = useState('controls');
   const [tableFilter, setTableFilter] = useState('ALL');
   const [q, setQ] = useState('');
+  const [templates, setTemplates] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/templates/pims')
+      .then((r) => (r.ok ? r.json() : { templates: [] }))
+      .then((d) => setTemplates(d.templates || []))
+      .catch(() => setTemplates([]));
+  }, []);
 
   const filteredControls = (controls || []).filter((c) => {
     if (tableFilter !== 'ALL' && c.table !== tableFilter) return false;
@@ -437,7 +771,7 @@ window.ControlesIsoDocsView = function ControlesIsoDocsView({
             78 controles verificados (31 A.1 Controller, 18 A.2 Processor, 29 A.3 Seguridad) + documentos institucionales fuente.
           </p>
         </div>
-        <div className="flex gap-1.5 text-xs font-mono">
+        <div className="flex flex-wrap gap-1.5 text-xs font-mono">
           <button
             onClick={() => setSubTab('controls')}
             className={`px-3 py-1.5 rounded border cursor-pointer ${subTab === 'controls' ? 'bg-[var(--unsa-primary)] text-white border-[var(--unsa-primary)] font-bold' : 'bg-surface-card border-surface-border'}`}
@@ -450,33 +784,77 @@ window.ControlesIsoDocsView = function ControlesIsoDocsView({
           >
             Documentos UNSA ({documents?.length || 0})
           </button>
+          <button
+            onClick={() => setSubTab('templates')}
+            className={`px-3 py-1.5 rounded border cursor-pointer ${subTab === 'templates' ? 'bg-[var(--unsa-primary)] text-white border-[var(--unsa-primary)] font-bold' : 'bg-surface-card border-surface-border'}`}
+          >
+            Plantillas PIMS (.docx) ({templates.length})
+          </button>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 text-xs">
-        <input
-          type="text"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Buscar por código (A.3.12), título o descripción..."
-          className="flex-1 min-w-[220px] px-3 py-1.5 rounded border border-surface-border bg-surface-card"
-        />
-        {subTab === 'controls' && (
-          <div className="flex gap-1 font-mono">
-            {['ALL', 'A.1', 'A.2', 'A.3'].map((tb) => (
-              <button
-                key={tb}
-                onClick={() => setTableFilter(tb)}
-                className={`px-3 py-1.5 rounded border cursor-pointer ${tableFilter === tb ? 'bg-[var(--unsa-primary)] text-white border-[var(--unsa-primary)] font-bold' : 'bg-surface-card border-surface-border'}`}
-              >
-                {tb === 'ALL' ? 'Todos (78)' : tb}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      {subTab !== 'templates' && (
+        <div className="flex flex-wrap gap-2 text-xs">
+          <input
+            type="text"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar por código (A.3.12), título o descripción..."
+            className="flex-1 min-w-[220px] px-3 py-1.5 rounded border border-surface-border bg-surface-card"
+          />
+          {subTab === 'controls' && (
+            <div className="flex gap-1 font-mono">
+              {['ALL', 'A.1', 'A.2', 'A.3'].map((tb) => (
+                <button
+                  key={tb}
+                  onClick={() => setTableFilter(tb)}
+                  className={`px-3 py-1.5 rounded border cursor-pointer ${tableFilter === tb ? 'bg-[var(--unsa-primary)] text-white border-[var(--unsa-primary)] font-bold' : 'bg-surface-card border-surface-border'}`}
+                >
+                  {tb === 'ALL' ? 'Todos (78)' : tb}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
-      {subTab === 'controls' ? (
+      {subTab === 'templates' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {templates.map((tpl) => (
+            <div key={tpl.id} className="p-4 rounded bg-surface-card border border-surface-border flex flex-col justify-between gap-3 text-xs">
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-[10px]">
+                  <span className="px-1.5 py-0.5 rounded bg-rose-50 text-rose-900 border border-rose-200 font-bold">{tpl.clause}</span>
+                  <span className="text-ink-muted">{tpl.origin}</span>
+                </div>
+                <div className="font-serif font-bold text-sm text-ink-primary">{tpl.title}</div>
+                <div className="text-ink-secondary leading-relaxed">{tpl.description}</div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-surface-border/60 font-mono text-[11px]">
+                <a
+                  href={`/api/templates/pims/${tpl.id}/blank`}
+                  className="px-3 py-1.5 rounded border border-surface-border bg-surface-ground hover:bg-surface-elevated text-ink-primary font-semibold"
+                >
+                  Plantilla en Blanco (.docx)
+                </a>
+                {tpl.supports_export_live && tpl.live_url && (
+                  <a
+                    href={tpl.live_url}
+                    className="px-3 py-1.5 rounded bg-[var(--unsa-primary)] hover:bg-[var(--unsa-hover)] text-white font-semibold"
+                  >
+                    Generar con Datos BD (.docx)
+                  </a>
+                )}
+                {tpl.supports_import && (
+                  <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-900 border border-emerald-200 text-[10px]">
+                    Admite Importación .docx
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : subTab === 'controls' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {filteredControls.map((c) => (
             <div key={c.id} className="p-3.5 rounded bg-surface-card border border-surface-border flex flex-col justify-between gap-2 text-xs">

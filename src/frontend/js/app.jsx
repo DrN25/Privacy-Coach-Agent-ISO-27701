@@ -359,6 +359,10 @@ function App() {
                 setCreateModalPrefill({ data: null, meta: null });
                 setCreateModalOpen(true);
               }}
+              onOpenImportModal={(draft, meta) => {
+                setCreateModalPrefill({ data: draft, meta });
+                setCreateModalOpen(true);
+              }}
               onAskAiAboutCase={(inc) => {
                 setSelectedIncident(inc);
                 setChatDrawerOpen(true);
@@ -370,6 +374,10 @@ function App() {
 
           {activeModule === 'medidas' && (
             <window.MedidasCorrectivasView
+              incidents={incidents}
+              users={users}
+              controls={controls}
+              onRefreshAll={loadIncidents}
               onOpenIncident={(incId, tab) => {
                 loadIncidentDetail(incId);
                 setActiveTab(tab || 'mc102');

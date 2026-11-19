@@ -96,15 +96,15 @@
   </div>
 
   <!-- Helpers y Cargador Secuencial Babel JSX -->
-  <script src="/js/api.js?v=6.1"></script>
+  <script src="/js/api.js?v=6.2"></script>
   <script>
     (async function loadPimsFrontend() {
       const modules = [
-        '/js/components/ChatDrawer.jsx?v=6.1',
-        '/js/components/IncidentModal.jsx?v=6.1',
-        '/js/views/IncidentsView.jsx?v=6.1',
-        '/js/views/SecondaryViews.jsx?v=6.1',
-        '/js/app.jsx?v=6.1'
+        '/js/components/ChatDrawer.jsx?v=6.2',
+        '/js/components/IncidentModal.jsx?v=6.2',
+        '/js/views/IncidentsView.jsx?v=6.2',
+        '/js/views/SecondaryViews.jsx?v=6.2',
+        '/js/app.jsx?v=6.2'
       ];
       for (const url of modules) {
         const res = await fetch(url);

@@ -18,6 +18,7 @@ window.IncidentsView = function IncidentsView({
   onRefreshList,
   onRefreshDetail,
   onOpenCreateModal,
+  onOpenImportModal,
   onAskAiAboutCase,
   onOpenLegalModal,
   showToast,
@@ -34,10 +35,13 @@ window.IncidentsView = function IncidentsView({
   const [mcForm, setMcForm] = useState({});
   const [savingMc, setSavingMc] = useState(false);
   const [aiDraftingMc, setAiDraftingMc] = useState(false);
+  const [importingDoc, setImportingDoc] = useState(false);
 
   const [statusModal, setStatusModal] = useState({ open: false, targetStatus: '', isReopen: false, incidentCode: '' });
   const [uploadingAtt, setUploadingAtt] = useState(false);
   const attInputRef = useRef(null);
+  const importIncRef = useRef(null);
+  const importD34Ref = useRef(null);
   const detailPanelRef = useRef(null);
 
   useEffect(() => {
@@ -245,6 +249,59 @@ window.IncidentsView = function IncidentsView({
     }
   };
 
+  const handleImportIncidentDocx = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportingDoc(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/incidents/import-docx', { method: 'POST', body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.draft) {
+        onOpenImportModal && onOpenImportModal(data.draft, {
+          findingId: null,
+          ruleCode: 'WORD .DOCX',
+          aiEnriched: Boolean(data.ai_enriched),
+          sourceFile: data.filename || file.name,
+        });
+      } else {
+        showToast(data.detail || 'No se pudo importar el reporte Word.', 'error');
+      }
+    } catch {
+      showToast('Error de red al importar reporte .docx.', 'error');
+    } finally {
+      setImportingDoc(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleImportD34InTab = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/corrective-actions/import-docx', { method: 'POST', body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.draft) {
+        const d = data.draft;
+        setMcForm((prev) => ({
+          ...prev,
+          ...d,
+          mc_code: prev.mc_code || d.mc_code || '',
+        }));
+        showToast('Formulario D34 importado. Revise los campos y guarde.', 'success');
+      } else {
+        showToast(data.detail || 'Formato D34 no reconocido.', 'error');
+      }
+    } catch {
+      showToast('Error de red al importar D34.', 'error');
+    } finally {
+      e.target.value = '';
+    }
+  };
+
   const tabs = [
     { id: 'evaluacion', label: '1. Evaluación B.3.12' },
     { id: 'acciones', label: `2. Acciones (${selectedIncident?.actions?.length || 0})` },
@@ -264,12 +321,24 @@ window.IncidentsView = function IncidentsView({
             ISO/IEC 27701:2025 Cláusula 8.1 • Controles A.3.11 / A.3.12 (B.3.12) • Registro histórico 2023–2026
           </p>
         </div>
-        <button
-          onClick={onOpenCreateModal}
-          className="px-4 py-2 rounded bg-[var(--unsa-primary)] hover:bg-[var(--unsa-hover)] text-white text-xs font-semibold shadow-xs cursor-pointer"
-        >
-          + Registrar Incidente
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <input ref={importIncRef} type="file" className="hidden" accept=".docx" onChange={handleImportIncidentDocx} />
+          <button
+            type="button"
+            disabled={importingDoc}
+            onClick={() => importIncRef.current?.click()}
+            className="px-3.5 py-2 rounded border border-surface-border bg-surface-card hover:bg-surface-elevated text-ink-primary text-xs font-semibold cursor-pointer disabled:opacity-50"
+          >
+            {importingDoc ? 'Leyendo .docx...' : 'Importar Reporte (.docx)'}
+          </button>
+          <button
+            type="button"
+            onClick={onOpenCreateModal}
+            className="px-4 py-2 rounded bg-[var(--unsa-primary)] hover:bg-[var(--unsa-hover)] text-white text-xs font-semibold shadow-xs cursor-pointer"
+          >
+            + Registrar Incidente
+          </button>
+        </div>
       </div>
 
       {/* 4 KPI Cards */}
@@ -485,18 +554,26 @@ window.IncidentsView = function IncidentsView({
 
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
                     <button
+                      type="button"
                       onClick={() => onAskAiAboutCase(selectedIncident, activeTab)}
                       className="px-3 py-1.5 rounded bg-[var(--unsa-primary)] hover:bg-[var(--unsa-hover)] text-white text-xs font-semibold cursor-pointer"
                     >
                       Consultar IA sobre este caso
                     </button>
                     <a
+                      href={`/api/incidents/${selectedIncident.id}/export-docx`}
+                      className="px-3 py-1.5 rounded bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold"
+                    >
+                      Exportar Expediente (.docx)
+                    </a>
+                    <a
                       href={`/api/incidents/${selectedIncident.id}/export-dictamen`}
                       target="_blank"
                       rel="noreferrer"
-                      className="px-3 py-1.5 rounded border border-surface-border bg-surface-card hover:bg-surface-elevated text-ink-primary text-xs font-medium"
+                      className="px-2.5 py-1.5 rounded border border-surface-border bg-surface-card hover:bg-surface-elevated text-ink-secondary text-xs font-mono"
+                      title="Ver ficha en texto plano (.txt)"
                     >
-                      Exportar Ficha
+                      .txt
                     </a>
                   </div>
                 </div>
@@ -537,6 +614,27 @@ window.IncidentsView = function IncidentsView({
                       );
                     })}
                   </div>
+                </div>
+                {/* Barra compacta de completitud de ciclo de vida */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-surface-border/60 text-[10px] font-mono">
+                  {[
+                    { label: '1. Registro', done: true },
+                    { label: '2. Triaje B.3.12', done: Boolean(selectedIncident.iso27701_control_id) },
+                    { label: `3. Acciones A.3.12 (${selectedIncident.actions?.length || 0})`, done: (selectedIncident.actions?.length || 0) > 0 },
+                    { label: '4. Medida 10.2', done: Boolean(selectedIncident.corrective_action) },
+                    { label: '5. Cierre', done: selectedIncident.status === 'C' },
+                  ].map((stItem, idx) => (
+                    <span
+                      key={idx}
+                      className={`px-2 py-0.5 rounded border ${
+                        stItem.done
+                          ? 'bg-emerald-50 text-emerald-900 border-emerald-300 font-semibold'
+                          : 'bg-surface-ground text-ink-muted border-surface-border'
+                      }`}
+                    >
+                      {stItem.done ? '✓ ' : '○ '}{stItem.label}
+                    </span>
+                  ))}
                 </div>
               </div>
 
@@ -857,7 +955,15 @@ window.IncidentsView = function IncidentsView({
                           {mcForm.mc_code || 'Nuevo borrador'}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <input ref={importD34Ref} type="file" className="hidden" accept=".docx" onChange={handleImportD34InTab} />
+                        <button
+                          type="button"
+                          onClick={() => importD34Ref.current?.click()}
+                          className="px-3 py-1.5 rounded border border-surface-border bg-surface-card hover:bg-surface-elevated text-ink-primary font-semibold cursor-pointer"
+                        >
+                          Importar D34 (.docx)
+                        </button>
                         <button
                           type="button"
                           onClick={handleAiDraftMc}
