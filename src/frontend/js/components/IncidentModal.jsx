@@ -8,6 +8,8 @@ window.IncidentCreateModal = function IncidentCreateModal({
   users,
   assets,
   controls,
+  prefillData,
+  prefillMeta,
   onCreated,
   showToast,
 }) {
@@ -32,6 +34,12 @@ window.IncidentCreateModal = function IncidentCreateModal({
     assigned_to_id: '',
     initial_action_type: 'C',
     initial_action_description: '',
+    initial_mc_action: '',
+    source_finding_id: null,
+    regla_codigo: '',
+    multa_estimada_uit: 0,
+    precedente_anpd: '',
+    reported_by: '',
     create_mc_draft: true,
   };
 
@@ -43,10 +51,13 @@ window.IncidentCreateModal = function IncidentCreateModal({
   useEffect(() => {
     if (open) {
       setStep(1);
-      setForm(initialForm);
+      const merged = { ...initialForm, ...(prefillData || {}) };
+      merged.asset_id = merged.asset_id ? String(merged.asset_id) : '';
+      merged.assigned_to_id = merged.assigned_to_id ? String(merged.assigned_to_id) : '';
+      setForm(merged);
       setCtrlSearch('');
     }
-  }, [open]);
+  }, [open, prefillData]);
 
   if (!open) return null;
 
@@ -66,6 +77,10 @@ window.IncidentCreateModal = function IncidentCreateModal({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (step < 3) {
+      setStep((s) => Math.min(3, s + 1));
+      return;
+    }
     if (!form.title.trim()) {
       showToast('El título del incidente es obligatorio.', 'error');
       setStep(1);
@@ -78,6 +93,10 @@ window.IncidentCreateModal = function IncidentCreateModal({
         asset_id: form.asset_id ? parseInt(form.asset_id, 10) : null,
         assigned_to_id: form.assigned_to_id ? parseInt(form.assigned_to_id, 10) : null,
         num_affected_subjects: parseInt(form.num_affected_subjects || 0, 10),
+        multa_estimada_uit: form.multa_estimada_uit ? parseFloat(form.multa_estimada_uit) : 0.0,
+        source_finding_id: form.source_finding_id ? parseInt(form.source_finding_id, 10) : null,
+        regla_codigo: form.regla_codigo || null,
+        reported_by: form.reported_by || null,
       };
       const res = await window.PIMS_API.apiFetch('/api/incidents', {
         method: 'POST',
@@ -130,6 +149,16 @@ window.IncidentCreateModal = function IncidentCreateModal({
             </button>
           ))}
         </div>
+
+        {prefillMeta && (
+          <div className="px-5 py-2.5 bg-emerald-50 border-b border-emerald-200 text-emerald-950 text-[11px] font-mono flex flex-wrap items-center justify-between gap-2">
+            <span>
+              <strong>Autocompletado ({prefillMeta.aiEnriched ? 'IA + DSPM' : 'Motor DSPM'})</strong> • Regla{' '}
+              <strong>{prefillMeta.ruleCode}</strong> ({prefillMeta.sourceFile})
+            </span>
+            <span className="text-emerald-800">Revise los 3 pasos y confirme</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
           {step === 1 && (
@@ -190,15 +219,25 @@ window.IncidentCreateModal = function IncidentCreateModal({
                   </select>
                 </div>
                 <div>
-                  <label className="block font-semibold text-ink-primary mb-1">Sistema / Endpoint / URL</label>
+                  <label className="block font-semibold text-ink-primary mb-1">Sistema / Tabla / Elemento Afectado</label>
                   <input
                     type="text"
-                    value={form.affected_url}
-                    onChange={(e) => setForm({ ...form, affected_url: e.target.value })}
-                    placeholder="https://..."
+                    value={form.compromised_system || ''}
+                    onChange={(e) => setForm({ ...form, compromised_system: e.target.value })}
+                    placeholder="Ej. esquema.sql -> pacientes.diagnostico"
                     className="w-full px-3 py-1.5 rounded border border-surface-border bg-surface-ground text-ink-primary"
                   />
                 </div>
+              </div>
+              <div>
+                <label className="block font-semibold text-ink-primary mb-1">Endpoint / URL de Exposición (opcional)</label>
+                <input
+                  type="text"
+                  value={form.affected_url || ''}
+                  onChange={(e) => setForm({ ...form, affected_url: e.target.value })}
+                  placeholder="https://..."
+                  className="w-full px-3 py-1.5 rounded border border-surface-border bg-surface-ground text-ink-primary"
+                />
               </div>
             </>
           )}
@@ -370,19 +409,24 @@ window.IncidentCreateModal = function IncidentCreateModal({
               </button>
               {step < 3 ? (
                 <button
+                  key="btn-next"
                   type="button"
-                  onClick={() => setStep(step + 1)}
-                  className="px-4 py-1.5 rounded bg-[var(--unsa-primary)] hover:bg-[var(--unsa-hover)] text-white font-semibold"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setStep((s) => Math.min(3, s + 1));
+                  }}
+                  className="px-4 py-1.5 rounded bg-[var(--unsa-primary)] hover:bg-[var(--unsa-hover)] text-white font-semibold cursor-pointer"
                 >
                   Siguiente →
                 </button>
               ) : (
                 <button
+                  key="btn-submit"
                   type="submit"
                   disabled={saving}
-                  className="px-4 py-1.5 rounded bg-[var(--unsa-primary)] hover:bg-[var(--unsa-hover)] text-white font-semibold disabled:opacity-50"
+                  className="px-4 py-1.5 rounded bg-[var(--unsa-primary)] hover:bg-[var(--unsa-hover)] text-white font-semibold disabled:opacity-50 cursor-pointer"
                 >
-                  {saving ? 'Guardando...' : 'Registrar Incidente'}
+                  {saving ? 'Guardando...' : (prefillMeta ? 'Confirmar y Registrar Incidente' : 'Registrar Incidente')}
                 </button>
               )}
             </div>

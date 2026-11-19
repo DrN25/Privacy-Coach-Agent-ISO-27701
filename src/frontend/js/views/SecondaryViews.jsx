@@ -173,25 +173,40 @@ window.MedidasCorrectivasView = function MedidasCorrectivasView({
 };
 
 window.InspectorView = function InspectorView({
-  onPromotedIncident,
+  onOpenPromoteModal,
+  onOpenExistingIncident,
   onInspectDocument,
+  refreshKey,
   showToast,
 }) {
   const { useState, useEffect, useRef } = React;
   const { apiFetch } = window.PIMS_API;
   const [dbView, setDbView] = useState({ archivos: [], hallazgos: [], resumen_impacto: {} });
   const [busy, setBusy] = useState(false);
-  const [promotedMap, setPromotedMap] = useState({});
+  const [draftingId, setDraftingId] = useState(null);
   const fileRef = useRef(null);
 
   const loadView = async () => {
-    const res = await fetch('/api/database-view');
+    const res = await fetch('/api/database-view', { cache: 'no-store' });
     if (res.ok) setDbView(await res.json());
   };
 
   useEffect(() => {
     loadView();
-  }, []);
+  }, [refreshKey]);
+
+  const handleResetInspector = async () => {
+    setBusy(true);
+    try {
+      const res = await apiFetch('/api/reset', { method: 'POST' });
+      if (res.ok) {
+        showToast('Bandeja del Inspector limpiada. Listo para analizar un nuevo archivo.', 'info');
+        await loadView();
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const handleLoadMockups = async () => {
     setBusy(true);
@@ -223,21 +238,40 @@ window.InspectorView = function InspectorView({
       } else {
         showToast(data.detail || 'Formato no soportado.', 'error');
       }
+    } catch {
+      showToast('Error de red al subir el archivo.', 'error');
     } finally {
       setBusy(false);
       e.target.value = '';
     }
   };
 
-  const handlePromote = async (findingId) => {
-    const res = await apiFetch(`/api/incidents/from-finding/${findingId}`, { method: 'POST' });
-    const data = await res.json();
-    if (res.ok) {
-      setPromotedMap((p) => ({ ...p, [findingId]: data.incident }));
-      showToast(data.mensaje, 'success');
-      onPromotedIncident && onPromotedIncident(data.incident);
-    } else {
-      showToast(data.detail || 'Error al promover hallazgo.', 'error');
+  const handlePromote = async (h) => {
+    setDraftingId(h.id);
+    try {
+      const res = await apiFetch(`/api/incidents/draft-from-finding/${h.id}`, { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showToast(data.detail || 'Error al generar borrador desde hallazgo.', 'error');
+        return;
+      }
+      if (data.already_exists && data.incident) {
+        showToast(data.mensaje || `Abriendo ${data.incident.incident_code}.`, 'info');
+        onOpenExistingIncident && onOpenExistingIncident(data.incident);
+        return;
+      }
+      if (data.draft) {
+        onOpenPromoteModal && onOpenPromoteModal(data.draft, {
+          findingId: h.id,
+          ruleCode: h.codigo_regla,
+          aiEnriched: Boolean(data.ai_enriched),
+          sourceFile: h.origen_archivo,
+        });
+      }
+    } catch {
+      showToast('Error de red al preparar borrador del incidente.', 'error');
+    } finally {
+      setDraftingId(null);
     }
   };
 
@@ -246,28 +280,40 @@ window.InspectorView = function InspectorView({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-serif text-lg font-bold text-ink-primary">
-            Inspector SQL / PDF (DSPM ➔ Registro BD)
+            Inspector SQL / PDF (DSPM ➔ Modal IA ➔ Registro BD)
           </h1>
           <p className="text-xs text-ink-secondary">
-            Escanea esquemas SQL y reglamentos PDF/MD/TXT para detectar brechas y promoverlas a incidentes persistentes en la base de datos.
+            Escanea esquemas SQL y reglamentos PDF/MD/TXT para detectar brechas, autocompletar el formulario con IA y registrarlas en BD.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <input ref={fileRef} type="file" className="hidden" accept=".sql,.pdf,.md,.txt" onChange={handleUpload} />
           <button
+            type="button"
             onClick={() => fileRef.current?.click()}
             disabled={busy}
-            className="px-3.5 py-2 rounded border border-surface-border bg-surface-card hover:bg-surface-elevated text-xs font-semibold cursor-pointer"
+            className="px-3.5 py-2 rounded border border-surface-border bg-surface-card hover:bg-surface-elevated text-xs font-semibold cursor-pointer disabled:opacity-50"
           >
-            + Subir SQL / PDF
+            + Subir SQL / PDF / TXT
           </button>
           <button
+            type="button"
             onClick={handleLoadMockups}
             disabled={busy}
             className="px-4 py-2 rounded bg-[var(--unsa-primary)] hover:bg-[var(--unsa-hover)] text-white text-xs font-semibold cursor-pointer disabled:opacity-50"
           >
             {busy ? 'Procesando...' : 'Cargar y Auditar Corpus UNSA'}
           </button>
+          {(dbView.archivos?.length > 0 || dbView.hallazgos?.length > 0) && (
+            <button
+              type="button"
+              onClick={handleResetInspector}
+              disabled={busy}
+              className="px-3 py-2 rounded border border-surface-border bg-surface-ground hover:bg-surface-elevated text-xs text-ink-secondary cursor-pointer disabled:opacity-50"
+            >
+              Limpiar Inspector
+            </button>
+          )}
         </div>
       </div>
 
@@ -284,15 +330,17 @@ window.InspectorView = function InspectorView({
         <div className="divide-y divide-surface-border">
           {(dbView.hallazgos || []).length === 0 ? (
             <div className="p-6 text-center text-xs text-ink-muted">
-              No hay hallazgos DSPM activos en esta sesión. Suba un esquema SQL/PDF o ejecute "Cargar y Auditar Corpus UNSA".
+              No hay hallazgos DSPM activos en el Inspector. Suba un archivo (.sql, .pdf, .md, .txt) o ejecute "Cargar y Auditar Corpus UNSA".
             </div>
           ) : (
             dbView.hallazgos.map((h) => {
-              const promoted = promotedMap[h.id];
+              const promotedId = h.promoted_incident_id;
+              const promotedCode = h.promoted_incident_code;
+              const isDrafting = draftingId === h.id;
               return (
                 <div key={h.id} className="p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs">
                   <div className="space-y-1 max-w-2xl">
-                    <div className="flex items-center gap-2 font-mono text-[11px]">
+                    <div className="flex flex-wrap items-center gap-2 font-mono text-[11px]">
                       <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-900 font-bold">{h.codigo_regla}</span>
                       <span className="px-1.5 py-0.5 rounded bg-surface-ground border border-surface-border">{h.control_iso27701}</span>
                       <span className="text-ink-muted">{h.nivel_riesgo} • {h.origen_archivo}</span>
@@ -301,19 +349,22 @@ window.InspectorView = function InspectorView({
                     <div className="text-ink-secondary">{h.descripcion}</div>
                   </div>
                   <div className="shrink-0">
-                    {promoted ? (
+                    {promotedId ? (
                       <button
-                        onClick={() => onPromotedIncident(promoted, true)}
-                        className="px-3 py-1.5 rounded bg-emerald-700 text-white font-mono text-[11px] font-semibold cursor-pointer"
+                        type="button"
+                        onClick={() => onOpenExistingIncident && onOpenExistingIncident({ id: promotedId, incident_code: promotedCode })}
+                        className="px-3 py-1.5 rounded bg-emerald-700 hover:bg-emerald-800 text-white font-mono text-[11px] font-semibold cursor-pointer"
                       >
-                        Ver {promoted.incident_code} →
+                        Ver {promotedCode} →
                       </button>
                     ) : (
                       <button
-                        onClick={() => handlePromote(h.id)}
-                        className="px-3 py-1.5 rounded bg-[var(--unsa-primary)] hover:bg-[var(--unsa-hover)] text-white text-xs font-semibold cursor-pointer"
+                        type="button"
+                        disabled={draftingId !== null}
+                        onClick={() => handlePromote(h)}
+                        className="px-3 py-1.5 rounded bg-[var(--unsa-primary)] hover:bg-[var(--unsa-hover)] text-white text-xs font-semibold cursor-pointer disabled:opacity-50"
                       >
-                        Promover a Incidente BD
+                        {isDrafting ? 'Autocompletando IA...' : 'Promover a Incidente BD'}
                       </button>
                     )}
                   </div>

@@ -185,6 +185,12 @@ class AuditRepository:
         if resp:
             res = [i for i in res if resp in (i.get("assigned_to") or "").lower()]
 
+        has_mc = str(filters.get("has_mc") or "").strip().upper()
+        if has_mc == "WITH_MC":
+            res = [i for i in res if i.get("mc_id")]
+        elif has_mc == "WITHOUT_MC":
+            res = [i for i in res if not i.get("mc_id")]
+
         q = str(filters.get("q") or "").strip().lower()
         if q:
             res = [
@@ -814,17 +820,33 @@ class AuditRepository:
     # 4. PROMOCIÓN DE HALLAZGO DSPM -> INCIDENTE REAL EN BD
     # =========================================================================
 
-    def promover_hallazgo_a_incidente(self, hallazgo_id: int, actor_id: Optional[int] = None) -> Dict[str, Any]:
+    def obtener_incidente_por_hallazgo(self, hallazgo_id: int) -> Optional[Dict[str, Any]]:
+        """Retorna el incidente activo ya vinculado a un hallazgo DSPM, o None."""
         conn = self._pims_conn()
         try:
-            existing_ext = conn.execute(
-                "SELECT incident_id FROM a6_incident_ext WHERE source_finding_id = ?", (hallazgo_id,)
+            row = conn.execute(
+                """
+                SELECT ci.id
+                FROM a6_incident_ext ext
+                JOIN core_incident ci ON ci.id = ext.incident_id
+                WHERE ext.source_finding_id = ? AND ci.is_deleted = 0
+                ORDER BY ci.id DESC
+                LIMIT 1
+                """,
+                (hallazgo_id,),
             ).fetchone()
-            if existing_ext:
-                inc_id = existing_ext["incident_id"]
-                conn.close()
-                return {"already_exists": True, "incident": self.obtener_incidente_unsa(inc_id)}
+            inc_id = row["id"] if row else None
+        finally:
+            conn.close()
+        return self.obtener_incidente_unsa(inc_id) if inc_id else None
 
+    def promover_hallazgo_a_incidente(self, hallazgo_id: int, actor_id: Optional[int] = None) -> Dict[str, Any]:
+        existing = self.obtener_incidente_por_hallazgo(hallazgo_id)
+        if existing:
+            return {"already_exists": True, "incident": existing}
+
+        conn = self._pims_conn()
+        try:
             h = conn.execute("SELECT * FROM hallazgos_dspm WHERE id = ?", (hallazgo_id,)).fetchone()
             if not h:
                 raise KeyError("Hallazgo DSPM no encontrado.")
@@ -1297,18 +1319,32 @@ class AuditRepository:
         return dict(row) if row else None
 
     def obtener_vista_completa_base_datos(self) -> Dict[str, List[Dict[str, Any]]]:
-        conn = get_sqlite_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM archivos_cargados ORDER BY id DESC")
-        archivos = [dict(r) for r in cur.fetchall()]
-        cur.execute("SELECT * FROM inventario_activos_datos ORDER BY id ASC")
-        inventario = [dict(r) for r in cur.fetchall()]
-        cur.execute("SELECT * FROM clausulas_documentales ORDER BY id ASC")
-        clausulas = [dict(r) for r in cur.fetchall()]
-        cur.execute("SELECT * FROM hallazgos_dspm ORDER BY multa_estimada_uit DESC")
-        hallazgos = [dict(r) for r in cur.fetchall()]
-        conn.close()
-        return {"archivos": archivos, "inventario": inventario, "clausulas": clausulas, "hallazgos": hallazgos}
+        conn = self._pims_conn()
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM archivos_cargados ORDER BY id DESC")
+            archivos = [dict(r) for r in cur.fetchall()]
+            cur.execute("SELECT * FROM inventario_activos_datos ORDER BY id ASC")
+            inventario = [dict(r) for r in cur.fetchall()]
+            cur.execute("SELECT * FROM clausulas_documentales ORDER BY id ASC")
+            clausulas = [dict(r) for r in cur.fetchall()]
+            cur.execute("""
+                SELECT h.*,
+                       (SELECT ci.id FROM a6_incident_ext ext
+                        JOIN core_incident ci ON ci.id = ext.incident_id
+                        WHERE ext.source_finding_id = h.id AND ci.is_deleted = 0
+                        ORDER BY ci.id DESC LIMIT 1) AS promoted_incident_id,
+                       (SELECT ci.incident_code FROM a6_incident_ext ext
+                        JOIN core_incident ci ON ci.id = ext.incident_id
+                        WHERE ext.source_finding_id = h.id AND ci.is_deleted = 0
+                        ORDER BY ci.id DESC LIMIT 1) AS promoted_incident_code
+                FROM hallazgos_dspm h
+                ORDER BY h.multa_estimada_uit DESC
+            """)
+            hallazgos = [dict(r) for r in cur.fetchall()]
+            return {"archivos": archivos, "inventario": inventario, "clausulas": clausulas, "hallazgos": hallazgos}
+        finally:
+            conn.close()
 
     def guardar_interaccion_coach(
         self, hallazgo_id: int, rol: str, mensaje: str, reasoning: Optional[str] = None, parche: Optional[str] = None

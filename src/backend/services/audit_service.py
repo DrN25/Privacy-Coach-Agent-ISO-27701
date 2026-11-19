@@ -30,7 +30,13 @@ class AuditService:
         FROM inventario_activos_datos i
         LEFT JOIN archivos_cargados a ON i.archivo_id = a.id
         WHERE i.categoria_sensible IN ('DATOS_SALUD', 'DATOS_BIOMETRICOS', 'DATOS_SENSIBLES')
-          AND UPPER(i.tipo_sql) IN ('VARCHAR', 'TEXT', 'CHARACTER VARYING', 'STRING')
+          AND (
+              UPPER(i.tipo_sql) LIKE 'VARCHAR%'
+              OR UPPER(i.tipo_sql) LIKE 'TEXT%'
+              OR UPPER(i.tipo_sql) LIKE 'CHARACTER VARYING%'
+              OR UPPER(i.tipo_sql) LIKE 'CHAR%'
+              OR UPPER(i.tipo_sql) = 'STRING'
+          )
         """)
         salud_brechas = cur.fetchall()
         if salud_brechas:

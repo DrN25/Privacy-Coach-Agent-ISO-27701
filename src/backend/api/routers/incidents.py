@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 from ...core.rules_catalog import resolver_regla_con_fallback
 from ...db import DEFAULT_DB_PATH
 from ...infrastructure.llm_client import default_luna_client
-from ...infrastructure.repository import repository
+from ...infrastructure.repository import MAPA_SEVERIDAD_HALLAZGO, repository
 from ...knowledge_bridge import knowledge_bridge
 from ...services.docx_exporter import (
     export_corrective_action_docx,
@@ -147,6 +147,10 @@ class IncidentCreate(BaseModel):
     initial_action_type: Optional[str] = "C"
     initial_action_description: Optional[str] = None
     initial_action_evidence: Optional[str] = None
+    initial_mc_action: Optional[str] = None
+    source_finding_id: Optional[int] = None
+    multa_estimada_uit: Optional[float] = 0.0
+    precedente_anpd: Optional[str] = None
     create_mc_draft: bool = True
 
 
@@ -187,6 +191,7 @@ def list_incidents(
     classification: Optional[str] = None,
     control_id: Optional[str] = None,
     assigned_to: Optional[str] = None,
+    has_mc: Optional[str] = None,
     q: Optional[str] = None,
 ):
     """Retorna incidentes filtrados y KPIs operativos en tiempo real."""
@@ -197,6 +202,7 @@ def list_incidents(
         "classification": classification,
         "control_id": control_id,
         "assigned_to": assigned_to,
+        "has_mc": has_mc,
         "q": q,
     }
     incidentes = repository.listar_incidentes_unsa(filters)
@@ -227,6 +233,129 @@ def create_incident(payload: IncidentCreate, x_actor_id: Optional[int] = Header(
     """Crea un nuevo incidente o brecha PII (3 pasos) + borrador opcional de MC 10.2."""
     inc = repository.crear_incidente(payload.model_dump(), actor_id=_actor(x_actor_id))
     return {"incident": inc, "mensaje": f"Incidente {inc['incident_code']} registrado con éxito."}
+
+
+_FINDING_ASSET_USER_MAP = {
+    "R-001": (102, 605),
+    "R-002": (103, 602),
+    "R-003": (108, 608),
+    "R-004": (110, 601),
+    "R-005": (103, 602),
+    "R-006": (101, 609),
+    "R-007": (107, 607),
+}
+
+
+def _build_draft_from_finding(hd: Dict[str, Any]) -> tuple[Dict[str, Any], bool]:
+    """Construye un borrador completo de 3 pasos desde un hallazgo DSPM y lo enriquece con IA."""
+    rule_code = str(hd.get("codigo_regla") or "R-001").upper()
+    regla = resolver_regla_con_fallback(rule_code)
+    ctrl_id = (regla.get("control_iso27701") if regla else None) or hd.get("control_iso27701") or "A.3.12"
+    ctrl = knowledge_bridge.engine.get_control(ctrl_id) or {}
+
+    sev = MAPA_SEVERIDAD_HALLAZGO.get(str(hd.get("nivel_riesgo", "MEDIO")).upper(), "M")
+    inc_type = "PI" if regla.get("tipo_hallazgo") == "DOCUMENTAL" else "BF"
+    asset_id, user_id = _FINDING_ASSET_USER_MAP.get(rule_code, (101, 601))
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    elemento = hd.get("elemento_afectado") or ""
+    origen = hd.get("origen_archivo") or "Inspector DSPM"
+    remed = regla.get("remediacion_sugerida") or ctrl.get("annex_b_guidance") or ""
+
+    draft: Dict[str, Any] = {
+        "title": f"{hd.get('titulo')} ({elemento})".strip(),
+        "description": (hd.get("descripcion") or "").strip(),
+        "incident_date": today,
+        "detection_date": today,
+        "asset_id": asset_id,
+        "compromised_system": f"{origen} -> {elemento}".strip(),
+        "affected_url": "",
+        "involves_personal_data": True,
+        "incident_type": inc_type,
+        "severity": sev,
+        "impact": sev,
+        "iso27701_control_id": ctrl_id,
+        "num_affected_subjects": 0,
+        "consequences_summary": (
+            f"Exposición normativa/técnica detectada en {origen} ({elemento}). "
+            f"Referencia sancionadora estimada: {hd.get('multa_estimada_uit', 5.0)} UIT."
+        ),
+        "assigned_to_id": user_id,
+        "initial_action_type": "C" if inc_type != "PI" else "M",
+        "initial_action_description": remed,
+        "initial_mc_action": remed,
+        "source_finding_id": hd["id"],
+        "regla_codigo": rule_code,
+        "multa_estimada_uit": float(hd.get("multa_estimada_uit") or 0.0),
+        "precedente_anpd": hd.get("precedente_anpd") or "",
+        "reported_by": "Inspector SQL/PDF (DSPM UNSA)",
+        "create_mc_draft": True,
+    }
+
+    ai_enriched = False
+    prompt = (
+        "Completa un borrador JSON estricto (claves exactas: title, description, consequences_summary, initial_action_description) "
+        "en español técnico-jurídico conciso para registrar un incidente/brecha PII en ISO/IEC 27701:2025.\n"
+        f"Regla DSPM: {rule_code} - {hd.get('titulo')}\n"
+        f"Archivo fuente: {origen} | Elemento afectado: {elemento}\n"
+        f"Descripción técnica base: {hd.get('descripcion')}\n"
+        f"Control ISO/IEC 27701:2025: {ctrl_id} ({ctrl.get('title', '')})\n"
+        f"Guía Anexo B: {ctrl.get('annex_b_guidance', '')}\n"
+        f"Precedente ANPD: {hd.get('precedente_anpd', '')}\n"
+        "Responde ÚNICAMENTE con un objeto JSON válido sin markdown."
+    )
+    try:
+        resp = default_luna_client.generate(
+            messages=[
+                {"role": "system", "content": "Eres auditor PIMS ISO/IEC 27701:2025. Responde SOLO JSON válido."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.2,
+            max_tokens=500,
+        )
+        m = re.search(r"\{.*\}", resp.content or "", re.DOTALL)
+        if resp.mode != "error" and m:
+            parsed = json.loads(m.group(0))
+            updated_any = False
+            for k in ("title", "description", "consequences_summary", "initial_action_description"):
+                val = parsed.get(k)
+                if isinstance(val, str) and val.strip():
+                    draft[k] = val.strip()
+                    updated_any = True
+            if updated_any:
+                draft["initial_mc_action"] = draft["initial_action_description"]
+                ai_enriched = True
+    except Exception as exc:
+        logger.warning("Enriquecimiento IA para borrador DSPM omitido: %s", type(exc).__name__)
+
+    return draft, ai_enriched
+
+
+@router.post("/api/incidents/draft-from-finding/{hallazgo_id}")
+def draft_incident_from_finding(hallazgo_id: int):
+    """Genera un borrador autocompletado (DSPM + IA) para revisar en el modal de 3 pasos sin guardar aún."""
+    existing = repository.obtener_incidente_por_hallazgo(hallazgo_id)
+    if existing:
+        return {
+            "already_exists": True,
+            "ai_enriched": False,
+            "incident": existing,
+            "draft": None,
+            "mensaje": f"El hallazgo ya fue registrado como {existing['incident_code']}.",
+        }
+
+    hd = repository.obtener_hallazgo_por_id(hallazgo_id)
+    if not hd:
+        raise HTTPException(status_code=404, detail="Hallazgo DSPM no encontrado.")
+
+    draft, ai_enriched = _build_draft_from_finding(hd)
+    return {
+        "already_exists": False,
+        "ai_enriched": ai_enriched,
+        "incident": None,
+        "draft": draft,
+        "hallazgo": hd,
+    }
 
 
 @router.post("/api/incidents/from-finding/{hallazgo_id}")

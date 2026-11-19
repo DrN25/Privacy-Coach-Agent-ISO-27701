@@ -3,7 +3,17 @@
 // Barra lateral izquierda fija (5 módulos + Asistente IA persistente + Operador)
 // ==============================================================================
 
-const { useState, useEffect, useCallback } = React;
+const { useState, useEffect, useCallback, useRef } = React;
+
+const DEFAULT_FILTERS = {
+  q: '',
+  year: 'ALL',
+  status: 'ALL',
+  severity: '',
+  classification: '',
+  control_id: '',
+  has_mc: '',
+};
 
 function App() {
   const [activeModule, setActiveModule] = useState('incidentes');
@@ -29,8 +39,10 @@ function App() {
   // Datos compartidos
   const [incidents, setIncidents] = useState([]);
   const [kpis, setKpis] = useState({});
-  const [filters, setFilters] = useState({ q: '', year: 'ALL', status: 'ALL', severity: '', classification: '', control_id: '' });
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [selectedIncident, setSelectedIncident] = useState(null);
+  const selectedIdRef = useRef(null);
+  selectedIdRef.current = selectedIncident?.id || null;
   const [activeTab, setActiveTab] = useState('evaluacion');
 
   const [users, setUsers] = useState([]);
@@ -40,6 +52,8 @@ function App() {
 
   // Modales y Drawer
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [createModalPrefill, setCreateModalPrefill] = useState({ data: null, meta: null });
+  const [inspectorRefreshKey, setInspectorRefreshKey] = useState(0);
   const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
@@ -78,33 +92,47 @@ function App() {
     };
   }, [fetchLegalReference]);
 
-  const loadIncidents = useCallback(async () => {
-    const params = new URLSearchParams();
-    if (filters.q) params.set('q', filters.q);
-    if (filters.year && filters.year !== 'ALL') params.set('year', filters.year);
-    if (filters.status && filters.status !== 'ALL') params.set('status', filters.status);
-    if (filters.severity) params.set('severity', filters.severity);
-    if (filters.classification) params.set('classification', filters.classification);
-    if (filters.control_id) params.set('control_id', filters.control_id);
+  const loadIncidentDetail = useCallback(async (id) => {
+    if (!id) return null;
+    try {
+      const res = await fetch(`/api/incidents/${id}`, { cache: 'no-store' });
+      if (res.ok) {
+        const detail = await res.json();
+        setSelectedIncident(detail);
+        return detail;
+      }
+      const err = await res.json().catch(() => ({}));
+      showToast(err.detail || 'No se pudo cargar el expediente del incidente.', 'error');
+    } catch {
+      showToast('Error de red al cargar el expediente.', 'error');
+    }
+    return null;
+  }, [showToast]);
 
-    const res = await fetch(`/api/incidents?${params.toString()}`);
+  const loadIncidents = useCallback(async (overrideFilters = null) => {
+    const f = overrideFilters || filters;
+    const params = new URLSearchParams();
+    if (f.q) params.set('q', f.q);
+    if (f.year && f.year !== 'ALL') params.set('year', f.year);
+    if (f.status && f.status !== 'ALL') params.set('status', f.status);
+    if (f.severity) params.set('severity', f.severity);
+    if (f.classification) params.set('classification', f.classification);
+    if (f.control_id) params.set('control_id', f.control_id);
+    if (f.has_mc) params.set('has_mc', f.has_mc);
+
+    const res = await fetch(`/api/incidents?${params.toString()}`, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       const list = data.incidents || [];
       setIncidents(list);
       setKpis(data.kpis || {});
-      if (list.length > 0 && !selectedIncident) {
+      if (list.length > 0 && !selectedIdRef.current) {
         loadIncidentDetail(list[0].id);
       }
+      return list;
     }
-  }, [filters]);
-
-  const loadIncidentDetail = async (id) => {
-    const res = await fetch(`/api/incidents/${id}`);
-    if (res.ok) {
-      setSelectedIncident(await res.json());
-    }
-  };
+    return [];
+  }, [filters, loadIncidentDetail]);
 
   useEffect(() => {
     loadIncidents();
@@ -228,11 +256,10 @@ function App() {
                   setActiveModule(item.id);
                   setMobileMenuOpen(false);
                 }}
-                className={`w-full px-3 py-2 rounded text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${
-                  active
-                    ? 'bg-[var(--unsa-primary)] text-white font-semibold shadow-xs'
-                    : 'text-ink-primary hover:bg-surface-elevated'
-                }`}
+                className={`w-full px-3 py-2 rounded text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${active
+                  ? 'bg-[var(--unsa-primary)] text-white font-semibold shadow-xs'
+                  : 'text-ink-primary hover:bg-surface-elevated'
+                  }`}
               >
                 <span>{item.label}</span>
                 <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${active ? 'bg-white/20 text-white' : 'bg-surface-card text-ink-muted border border-surface-border'}`}>
@@ -271,11 +298,10 @@ function App() {
                 <button
                   key={t.id}
                   onClick={() => setTheme(t.id)}
-                  className={`py-1 rounded border text-[10px] font-mono cursor-pointer ${
-                    theme === t.id
-                      ? 'bg-[var(--unsa-primary)] text-white border-[var(--unsa-primary)] font-bold'
-                      : 'bg-surface-card text-ink-secondary border-surface-border'
-                  }`}
+                  className={`py-1 rounded border text-[10px] font-mono cursor-pointer ${theme === t.id
+                    ? 'bg-[var(--unsa-primary)] text-white border-[var(--unsa-primary)] font-bold'
+                    : 'bg-surface-card text-ink-secondary border-surface-border'
+                    }`}
                 >
                   {t.label}
                 </button>
@@ -329,7 +355,10 @@ function App() {
               controls={controls}
               onRefreshList={loadIncidents}
               onRefreshDetail={loadIncidentDetail}
-              onOpenCreateModal={() => setCreateModalOpen(true)}
+              onOpenCreateModal={() => {
+                setCreateModalPrefill({ data: null, meta: null });
+                setCreateModalOpen(true);
+              }}
               onAskAiAboutCase={(inc) => {
                 setSelectedIncident(inc);
                 setChatDrawerOpen(true);
@@ -352,13 +381,19 @@ function App() {
 
           {activeModule === 'inspector' && (
             <window.InspectorView
-              onPromotedIncident={(inc) => {
-                loadIncidents();
+              refreshKey={inspectorRefreshKey}
+              onOpenPromoteModal={(draft, meta) => {
+                setCreateModalPrefill({ data: draft, meta });
+                setCreateModalOpen(true);
+              }}
+              onOpenExistingIncident={async (inc) => {
+                setFilters(DEFAULT_FILTERS);
+                await loadIncidents(DEFAULT_FILTERS);
                 if (inc?.id) {
-                  loadIncidentDetail(inc.id);
-                  setActiveTab('evaluacion');
-                  setActiveModule('incidentes');
+                  await loadIncidentDetail(inc.id);
                 }
+                setActiveTab('evaluacion');
+                setActiveModule('incidentes');
               }}
               onInspectDocument={handleInspectDocument}
               showToast={showToast}
@@ -370,7 +405,7 @@ function App() {
               controls={controls}
               documents={documents}
               onFilterByControl={(cid) => {
-                setFilters({ ...filters, control_id: cid, year: 'ALL', status: 'ALL' });
+                setFilters({ ...DEFAULT_FILTERS, control_id: cid });
                 setActiveModule('incidentes');
               }}
               onInspectDocument={handleInspectDocument}
@@ -383,7 +418,15 @@ function App() {
               users={users}
               assets={assets}
               showToast={showToast}
-              onConfigUpdated={loadIncidents}
+              onConfigUpdated={async () => {
+                const list = await loadIncidents(DEFAULT_FILTERS);
+                setInspectorRefreshKey((k) => k + 1);
+                if (list.length > 0) {
+                  await loadIncidentDetail(list[0].id);
+                } else {
+                  setSelectedIncident(null);
+                }
+              }}
             />
           )}
         </main>
@@ -402,20 +445,28 @@ function App() {
         chatLoading={chatLoading}
       />
 
-      {/* Modal Creación 3 pasos */}
+      {/* Modal Creación 3 pasos (Nuevo / Promovido DSPM + IA) */}
       <window.IncidentCreateModal
         open={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
+        onClose={() => {
+          setCreateModalOpen(false);
+          setCreateModalPrefill({ data: null, meta: null });
+        }}
         users={users}
         assets={assets}
         controls={controls}
-        onCreated={(inc) => {
-          loadIncidents();
+        prefillData={createModalPrefill.data}
+        prefillMeta={createModalPrefill.meta}
+        onCreated={async (inc) => {
+          setCreateModalPrefill({ data: null, meta: null });
+          setInspectorRefreshKey((k) => k + 1);
+          setFilters(DEFAULT_FILTERS);
+          await loadIncidents(DEFAULT_FILTERS);
           if (inc?.id) {
-            setSelectedIncident(inc);
-            setActiveTab('evaluacion');
-            setActiveModule('incidentes');
+            await loadIncidentDetail(inc.id);
           }
+          setActiveTab('evaluacion');
+          setActiveModule('incidentes');
         }}
         showToast={showToast}
       />

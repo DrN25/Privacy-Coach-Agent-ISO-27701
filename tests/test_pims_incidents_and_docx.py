@@ -425,3 +425,105 @@ def test_legacy_sqlite_migrates_safely_on_init_db(tmp_path, monkeypatch):
         conn2.close()
 
 
+def test_demo_files_draft_from_finding_ai_and_has_mc_filter(monkeypatch):
+    from backend.api.routers import files as files_router
+    from backend.infrastructure.llm_client import LLMResponse
+
+    created_inc_id = None
+    uploaded_names = ["demo_esquema_clinica_unsa.sql", "demo_politica_portal_unsa.txt"]
+
+    monkeypatch.setattr(
+        incidents_router.default_luna_client,
+        "generate",
+        lambda **kwargs: LLMResponse(
+            content=(
+                '{"title": "Brecha IA: Diagnósticos clínicos sin cifrar en laboratorio",'
+                ' "description": "Descripción pericial enriquecida por IA para diagnóstico CIE-10 en texto plano.",'
+                ' "consequences_summary": "Riesgo grave de exposición de historias clínicas bajo A.3.26.",'
+                ' "initial_action_description": "Activar pgcrypto AES-256 sobre pacientes_laboratorio."}'
+            ),
+            mode="openrouter",
+        ),
+    )
+
+    try:
+        with TestClient(app) as client:
+            assert client.post("/api/reset").status_code == 200
+
+            demo_sql = (PROJECT_ROOT / "media" / "demos" / "demo_esquema_clinica_unsa.sql").read_bytes()
+            up_sql = client.post(
+                "/api/upload",
+                files={"file": ("demo_esquema_clinica_unsa.sql", demo_sql, "text/plain")},
+            )
+            assert up_sql.status_code == 200
+            assert client.post("/api/reanalyze").status_code == 200
+
+            view_sql = client.get("/api/database-view").json()
+            codes_sql = {h["codigo_regla"] for h in view_sql["hallazgos"]}
+            assert {"R-001", "R-002", "R-003"}.issubset(codes_sql)
+
+            r001 = next(h for h in view_sql["hallazgos"] if h["codigo_regla"] == "R-001")
+            draft_resp = client.post(f"/api/incidents/draft-from-finding/{r001['id']}")
+            assert draft_resp.status_code == 200
+            draft_payload = draft_resp.json()
+            assert draft_payload["already_exists"] is False
+            assert draft_payload["ai_enriched"] is True
+            draft = draft_payload["draft"]
+            assert draft["iso27701_control_id"] == "A.3.26"
+            assert draft["asset_id"] == 102
+            assert draft["assigned_to_id"] == 605
+            assert draft["source_finding_id"] == r001["id"]
+            assert draft["title"].startswith("Brecha IA:")
+            assert client.get("/api/db/info").json()["incidents_count"] == 15
+
+            confirm = client.post("/api/incidents", headers={"X-Actor-Id": "601"}, json=draft)
+            assert confirm.status_code == 201
+            created_inc = confirm.json()["incident"]
+            created_inc_id = created_inc["id"]
+            assert created_inc["mc_code"].startswith("MC-UNSA-")
+
+            detail = client.get(f"/api/incidents/{created_inc_id}")
+            assert detail.status_code == 200
+            assert detail.json()["corrective_action"]["mc_code"] == created_inc["mc_code"]
+
+            view_after = client.get("/api/database-view").json()
+            r001_after = next(h for h in view_after["hallazgos"] if h["id"] == r001["id"])
+            assert r001_after["promoted_incident_id"] == created_inc_id
+            assert r001_after["promoted_incident_code"] == created_inc["incident_code"]
+
+            draft_again = client.post(f"/api/incidents/draft-from-finding/{r001['id']}")
+            assert draft_again.status_code == 200
+            assert draft_again.json()["already_exists"] is True
+            assert draft_again.json()["incident"]["id"] == created_inc_id
+
+            # Verificar filtro has_mc y detección en demo TXT
+            with_mc = client.get("/api/incidents?has_mc=WITH_MC").json()["incidents"]
+            without_mc = client.get("/api/incidents?has_mc=WITHOUT_MC").json()["incidents"]
+            assert all(i.get("mc_id") for i in with_mc)
+            assert all(not i.get("mc_id") for i in without_mc)
+            assert any(i["id"] == created_inc_id for i in with_mc)
+
+            demo_txt = (PROJECT_ROOT / "media" / "demos" / "demo_politica_portal_unsa.txt").read_bytes()
+            assert client.post(
+                "/api/upload",
+                files={"file": ("demo_politica_portal_unsa.txt", demo_txt, "text/plain")},
+            ).status_code == 200
+            assert client.post("/api/reanalyze").status_code == 200
+            view_txt = client.get("/api/database-view").json()
+            codes_txt = {h["codigo_regla"] for h in view_txt["hallazgos"]}
+            assert {"R-004", "R-005", "R-007"}.issubset(codes_txt)
+    finally:
+        if created_inc_id is not None:
+            _cleanup_created_incident(created_inc_id)
+        for name in uploaded_names:
+            for base_up in (
+                Path(files_router._get_writable_uploads_dir()),
+                PROJECT_ROOT / "media" / "uploads",
+            ):
+                p = base_up / name
+                if p.exists():
+                    p.unlink()
+        repository.resetear_base_de_datos()
+
+
+

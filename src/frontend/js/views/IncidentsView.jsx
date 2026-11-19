@@ -38,6 +38,7 @@ window.IncidentsView = function IncidentsView({
   const [statusModal, setStatusModal] = useState({ open: false, targetStatus: '', isReopen: false, incidentCode: '' });
   const [uploadingAtt, setUploadingAtt] = useState(false);
   const attInputRef = useRef(null);
+  const detailPanelRef = useRef(null);
 
   useEffect(() => {
     if (selectedIncident) {
@@ -362,10 +363,19 @@ window.IncidentsView = function IncidentsView({
           <option value="PI">No Conformidad (PI)</option>
           <option value="TECH">Técnico sin PII (IT)</option>
         </select>
-        {(filters.q || filters.year !== 'ALL' || filters.status !== 'ALL' || filters.severity || filters.classification || filters.control_id) && (
+        <select
+          value={filters.has_mc || ''}
+          onChange={(e) => setFilters({ ...filters, has_mc: e.target.value })}
+          className="px-2.5 py-1.5 rounded border border-surface-border bg-surface-ground text-ink-primary"
+        >
+          <option value="">MC 10.2: Todas</option>
+          <option value="WITH_MC">Con Medida 10.2</option>
+          <option value="WITHOUT_MC">Sin Medida 10.2</option>
+        </select>
+        {(filters.q || filters.year !== 'ALL' || filters.status !== 'ALL' || filters.severity || filters.classification || filters.control_id || filters.has_mc) && (
           <button
-            onClick={() => setFilters({ q: '', year: 'ALL', status: 'ALL', severity: '', classification: '', control_id: '' })}
-            className="px-2.5 py-1.5 rounded border border-surface-border text-ink-secondary hover:text-ink-primary"
+            onClick={() => setFilters({ q: '', year: 'ALL', status: 'ALL', severity: '', classification: '', control_id: '', has_mc: '' })}
+            className="px-2.5 py-1.5 rounded border border-surface-border text-ink-secondary hover:text-ink-primary cursor-pointer"
           >
             Limpiar
           </button>
@@ -373,9 +383,9 @@ window.IncidentsView = function IncidentsView({
       </div>
 
       {/* Master-Detail */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         {/* Lista Maestra (Izquierda) */}
-        <div className="xl:col-span-4 space-y-2 max-h-[72vh] overflow-y-auto pr-1">
+        <div className="lg:col-span-4 space-y-2 max-h-[72vh] overflow-y-auto pr-1">
           {incidents.length === 0 ? (
             <div className="p-6 rounded bg-surface-card border border-surface-border text-center text-xs text-ink-muted">
               No hay incidentes que coincidan con los filtros aplicados.
@@ -385,10 +395,19 @@ window.IncidentsView = function IncidentsView({
               const active = selectedIncident?.id === inc.id;
               const st = STATUS_MAP[inc.status] || STATUS_MAP.I;
               const sv = SEVERITY_MAP[inc.severity] || SEVERITY_MAP.M;
+              const mcCls = inc.mc_code
+                ? (MC_STATUS_MAP[inc.mc_status]?.cls || 'bg-emerald-50 text-emerald-900 border-emerald-200')
+                : 'bg-surface-ground text-ink-muted border-surface-border';
               return (
                 <button
                   key={inc.id}
-                  onClick={() => onSelectIncident(inc.id)}
+                  type="button"
+                  onClick={() => {
+                    onSelectIncident(inc.id);
+                    if (window.innerWidth < 1024) {
+                      detailPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
                   className={`w-full text-left p-3 rounded border transition-all cursor-pointer ${
                     active
                       ? 'bg-[var(--active-card-bg)] border-[var(--active-card-border)] shadow-xs'
@@ -409,8 +428,18 @@ window.IncidentsView = function IncidentsView({
                   <div className="text-xs font-semibold text-ink-primary line-clamp-2 leading-snug mb-1.5">
                     {inc.title}
                   </div>
+                  <div className="flex flex-wrap items-center gap-1 mb-1 text-[10px] font-mono">
+                    <span className={`px-1.5 py-0.5 rounded border font-semibold ${
+                      inc.involves_personal_data ? 'bg-rose-50 text-rose-900 border-rose-200' : 'bg-slate-100 text-slate-700 border-slate-300'
+                    }`}>
+                      {inc.involves_personal_data ? 'Brecha PII' : 'Técnico IT'}
+                    </span>
+                    <span className={`px-1.5 py-0.5 rounded border ${mcCls}`}>
+                      {inc.mc_code ? 'MC 10.2' : 'Sin MC 10.2'}
+                    </span>
+                  </div>
                   <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] font-mono text-ink-muted">
-                    <span>{inc.iso27701_control_id} • {inc.involves_personal_data ? inc.incident_type : 'IT (Sin PII)'}</span>
+                    <span>{inc.iso27701_control_id} • {inc.incident_type || 'BF'}</span>
                     <span className="truncate max-w-[160px]">{inc.assigned_to || 'Sin asignar'}</span>
                   </div>
                 </button>
@@ -420,7 +449,7 @@ window.IncidentsView = function IncidentsView({
         </div>
 
         {/* Expediente Detalle (Derecha) */}
-        <div className="xl:col-span-8 bg-surface-card border border-surface-border rounded overflow-hidden">
+        <div ref={detailPanelRef} className="lg:col-span-8 bg-surface-card border border-surface-border rounded overflow-hidden">
           {!selectedIncident ? (
             <div className="p-10 text-center text-xs text-ink-muted">
               Seleccione un incidente de la lista para ver su expediente completo.
@@ -477,7 +506,7 @@ window.IncidentsView = function IncidentsView({
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] font-mono text-ink-muted">Responsable:</span>
                     <select
-                      value={(users.find((u) => u.full_name === selectedIncident.assigned_to)?.id) || ''}
+                      value={(users.find((u) => selectedIncident.assigned_to && (u.full_name === selectedIncident.assigned_to || selectedIncident.assigned_to.includes(u.full_name)))?.id) || ''}
                       onChange={(e) => handleAssignUser(e.target.value)}
                       className="px-2.5 py-1 rounded border border-surface-border bg-surface-card text-ink-primary text-xs"
                     >

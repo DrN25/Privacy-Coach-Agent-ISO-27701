@@ -9,10 +9,17 @@ import shutil
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 
+from ...db import DEFAULT_DB_PATH
 from ...infrastructure.repository import repository
 from ...services.document_processor import document_processor
 
 router = APIRouter(tags=["Files"])
+
+
+def _get_writable_uploads_dir() -> str:
+    """Retorna directorio escribible para documentos subidos junto a la BD activa."""
+    db_path = os.path.abspath(os.getenv("DATABASE_PATH", DEFAULT_DB_PATH))
+    return os.path.join(os.path.dirname(db_path), "uploads")
 
 
 def obtener_base_dir() -> str:
@@ -39,6 +46,7 @@ def buscar_ruta_archivo_fisico(nombre_archivo: str) -> str:
     """Localiza la ruta real en disco del archivo buscado."""
     base_dir = obtener_base_dir()
     rutas_candidatas = [
+        os.path.join(_get_writable_uploads_dir(), nombre_archivo),
         os.path.join(base_dir, "media", "documents", "originales_unsa", nombre_archivo),
         os.path.join(base_dir, "media", "documents", nombre_archivo),
         os.path.join(base_dir, "media", "uploads", nombre_archivo),
@@ -248,10 +256,18 @@ async def upload_file(file: UploadFile = File(...)):
 
     base_dir = obtener_base_dir()
     temp_dir = os.path.join(base_dir, "media", "uploads")
-    os.makedirs(temp_dir, exist_ok=True)
-    temp_path = os.path.join(temp_dir, safe_filename)
-    with open(temp_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    try:
+        os.makedirs(temp_dir, exist_ok=True)
+        temp_path = os.path.join(temp_dir, safe_filename)
+        with open(temp_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except OSError:
+        temp_dir = _get_writable_uploads_dir()
+        os.makedirs(temp_dir, exist_ok=True)
+        temp_path = os.path.join(temp_dir, safe_filename)
+        file.file.seek(0)
+        with open(temp_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
 
     try:
         resultado = document_processor.procesar_archivo(temp_path, safe_filename)
