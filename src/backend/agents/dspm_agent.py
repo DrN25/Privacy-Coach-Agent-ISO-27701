@@ -71,18 +71,42 @@ def _resolver_codigo_auditoria(state: AuditState) -> Optional[str]:
 
 def nodo_dspm_agent(state: AuditState) -> Dict[str, Any]:
     """
-    Enriquece el estado del grafo con la regla canónica formal aplicable
-    al activo o consulta de auditoría bajo evaluación.
+    Enriquece el estado del grafo con la regla canónica formal o el control ISO
+    del incidente evaluado.
     """
-    codigo = _resolver_codigo_auditoria(state)
-    regla = resolver_regla_con_fallback(codigo or "R-001")
-    
+    ctx = state.get("contexto_brecha", {})
+    intencion = (state.get("intencion") or "").lower()
+
+    if ctx.get("incident_code") and not ctx.get("codigo_regla") and not ctx.get("regla_codigo"):
+        ctrl_id = ctx.get("iso27701_control_id") or ctx.get("control_iso27701") or "A.3.12"
+        regla = dict(resolver_regla_con_fallback("R-999"))
+        regla.update({
+            "codigo": ctx.get("incident_code"),
+            "titulo": ctx.get("title", regla["titulo"]),
+            "control_iso27701": ctrl_id,
+            "tipo_hallazgo": "DOCUMENTAL" if ctx.get("incident_type") == "PI" else "TECNICO",
+            "multa_estimada_uit": float(ctx.get("multa_estimada_uit") or 0.0),
+            "multa_estimada_pen": float(ctx.get("multa_estimada_pen") or 0.0),
+            "precedente_anpd": ctx.get("precedente_anpd") or "Evaluación ISO/IEC 27701:2025",
+        })
+    elif intencion == "sql_query" and not ctx.get("codigo_regla") and not ctx.get("hallazgo_id"):
+        regla = dict(resolver_regla_con_fallback("CONSULTA_SQL"))
+        regla.update({
+            "codigo": "SQL-LIVE",
+            "titulo": "Consulta Operativa en Tiempo Real sobre PIMS UNSA",
+            "control_iso27701": ctx.get("iso27701_control_id") or "A.3.12",
+            "tipo_hallazgo": "DOCUMENTAL",
+        })
+    else:
+        codigo = ctx.get("codigo_regla") or ctx.get("regla_codigo") or _resolver_codigo_auditoria(state)
+        regla = resolver_regla_con_fallback(codigo or "R-001")
+
     trace = list(state.get("trazabilidad") or [])
     trace.append({
         "paso": len(trace) + 1,
         "agente": "DSPM Risk Engine",
-        "accion": f"Resolución canónica de brecha ({regla.get('codigo', 'R-001')})",
-        "detalle": f"Regla: {regla.get('codigo')} - {regla.get('titulo')}. Nivel: {regla.get('nivel_riesgo')}. Multa: {regla.get('multa_estimada_uit')} UIT",
+        "accion": f"Resolución de control/regla ({regla.get('codigo', 'A.3.12')})",
+        "detalle": f"Ref: {regla.get('codigo')} | Control ISO: {regla.get('control_iso27701')} | Nivel: {regla.get('nivel_riesgo')}",
         "estado": "ok"
     })
 

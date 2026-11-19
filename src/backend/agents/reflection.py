@@ -15,16 +15,19 @@ def nodo_reflection(state: AuditState) -> Dict[str, Any]:
     tipo = regla.get("tipo_hallazgo", "TECNICO")
     iteracion = state.get("iteracion", 1)
 
+    intencion = (state.get("intencion") or "").lower()
+    min_len = 25 if intencion == "sql_query" else 100
+
     observaciones: List[str] = []
     aprobado = True
 
     # Criterio 1: Longitud mínima y sustancia pericial
-    if len(dictamen.strip()) < 100:
+    if len(dictamen.strip()) < min_len:
         aprobado = False
-        observaciones.append("El dictamen es demasiado breve o está incompleto.")
+        observaciones.append("La respuesta es demasiado breve o está incompleta.")
 
-    # Criterio 2: Presencia de bloque transaccional si es técnico
-    if tipo == "TECNICO":
+    # Criterio 2: Presencia de bloque transaccional si es remediación técnica SQL DDL
+    if tipo == "TECNICO" and intencion not in ("sql_query", "contexto"):
         if not parche_sql or "BEGIN" not in parche_sql.upper() or "COMMIT" not in parche_sql.upper():
             if iteracion < 2 and "ALTER TABLE" in dictamen.upper():
                 aprobado = False

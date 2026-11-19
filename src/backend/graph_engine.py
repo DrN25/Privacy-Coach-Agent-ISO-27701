@@ -24,15 +24,16 @@ SANCTIONS_FILE = os.path.join(DATASETS_DIR, "anpd_sanciones_dataset.json")
 # Deterministic DSPM Rule to ISO Controls Router (O(1) dictionary)
 DSPM_RULE_ROUTER: Dict[str, List[str]] = {
     "RULE_SENSITIVE_DATA_MISSING_CONSENT": ["A.1.2.4", "A.1.2.5"],
-    "RULE_UNENCRYPTED_SENSITIVE_STORAGE": ["A.3.24"],
-    "RULE_UNLIMITED_DATA_RETENTION": ["A.1.2.11", "A.1.2.12"],
-    "RULE_CROSS_BORDER_EXPOSURE": ["A.1.2.22", "A.1.2.23"],
+    "RULE_UNENCRYPTED_SENSITIVE_STORAGE": ["A.3.26"],
+    "RULE_UNLIMITED_DATA_RETENTION": ["A.1.4.8", "A.1.4.6"],
+    "RULE_CROSS_BORDER_EXPOSURE": ["A.1.5.2"],
     "RULE_MISSING_PRIVACY_NOTICE": ["A.1.2.2"],
-    "RULE_MISSING_ARCO_PROCEDURE": ["A.1.2.18", "A.1.2.19", "A.1.2.20", "A.1.2.21"],
-    "RULE_WEAK_ACCESS_CONTROL": ["A.3.15", "A.3.19"],
-    "RULE_MISSING_ACCESS_AUDIT_TRAIL": ["A.3.16"],
-    "RULE_MISSING_BACKUP_POLICY": ["A.3.25"],
-    "RULE_REAL_PII_IN_TESTING_ENV": ["A.3.29"],
+    "RULE_MISSING_ARCO_PROCEDURE": ["A.1.3.7", "A.1.3.10"],
+    "RULE_WEAK_ACCESS_CONTROL": ["A.3.21", "A.3.23"],
+    "RULE_MISSING_ACCESS_AUDIT_TRAIL": ["A.3.25"],
+    "RULE_MISSING_BACKUP_POLICY": ["A.3.24"],
+    "RULE_REAL_PII_IN_TESTING_ENV": ["A.3.31"],
+    "RULE_MISSING_INCIDENT_MANAGEMENT_PLAN": ["A.3.11", "A.3.12"],
     "RULE_PROCESSOR_WITHOUT_DPA_CONTRACT": ["A.2.1.1"],
     "RULE_HIGH_RISK_PROCESSING_WITHOUT_PIA": ["A.1.2.6"]
 }
@@ -110,10 +111,11 @@ class PIMSGraphEngine:
 
         cid = control_id.strip()
         keywords_map = {
-            "A.3.24": (["seguridad", "cifrado", "sensible", "salud", "diagnostico", "medico", "historia clinica"], "Salud / Clínica"),
             "A.3.26": (["seguridad", "cifrado", "sensible", "salud", "diagnostico", "medico", "historia clinica"], "Salud / Clínica"),
-            "A.3.13": (["seguridad", "credenciales", "contraseña", "autenticación", "hash", "password"], None),
+            "A.3.24": (["backup", "respaldo", "copia", "disponibilidad", "pérdida", "restauración"], None),
             "A.3.23": (["seguridad", "credenciales", "contraseña", "autenticación", "hash", "password"], None),
+            "A.3.11": (["incidente", "brecha", "plan", "csirt", "seguridad"], None),
+            "A.3.12": (["brecha", "incidente", "notificación", "exfiltración", "seguridad"], None),
             "A.1.4.5": (["tarjeta", "cvv", "pago", "proporcional", "retenci", "desproporcion", "financier"], "Financiero / Banca"),
             "A.1.2.4": (["consentimiento", "autorización", "tácito", "presunto", "speech", "publicidad"], None),
             "A.1.2.5": (["consentimiento", "autorización", "tácito", "presunto", "speech"], None),

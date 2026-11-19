@@ -59,10 +59,12 @@ class DocumentProcessor:
             return self.procesar_pdf(ruta_archivo, nombre)
         elif ext == ".sql":
             return self.procesar_sql(ruta_archivo, nombre)
+        elif ext == ".docx":
+            return self.procesar_docx(ruta_archivo, nombre)
         elif ext in (".md", ".txt"):
             return self.procesar_texto_politica(ruta_archivo, nombre)
         else:
-            raise ValueError(f"Extensión no soportada: {ext}. Formatos permitidos: .pdf, .sql, .md, .txt")
+            raise ValueError(f"Extensión no soportada: {ext}. Formatos permitidos: .pdf, .sql, .docx, .md, .txt")
 
     def procesar_pdf(self, ruta_archivo: str, nombre_archivo: str) -> Dict[str, Any]:
         """Extrae texto de PDF con PyMuPDF y aplica RapidOCR si detecta páginas escaneadas."""
@@ -215,6 +217,52 @@ class DocumentProcessor:
             "sha256": sha256,
             "total_clausulas": len(clausulas),
             "clausulas": clausulas
+        }
+
+    def procesar_docx(self, ruta_archivo: str, nombre_archivo: str) -> Dict[str, Any]:
+        """Procesa documentos Word (.docx): políticas, contratos o Informes de Auditoría (Apéndice 2)."""
+        from .docx_importer import extract_audit_nonconformities_from_docx, extract_docx_text
+
+        with open(ruta_archivo, "rb") as f:
+            raw_bytes = f.read()
+
+        tamano = os.path.getsize(ruta_archivo)
+        sha256 = self.calcular_hash_sha256(ruta_archivo)
+        contenido = extract_docx_text(raw_bytes)
+        nc_rows = extract_audit_nonconformities_from_docx(raw_bytes)
+
+        clausulas = self._segmentar_clausulas_texto(contenido, nombre_archivo)
+        for idx, nc in enumerate(nc_rows, 1):
+            ref_txt = f" [Ref MC: {nc['mc_ref']}]" if nc.get("mc_ref") else ""
+            clausulas.append({
+                "documento": nombre_archivo,
+                "numero_clausula": f"NC-{idx} ({nc['control_iso27701']})",
+                "titulo_clausula": f"No Conformidad Auditoría #{idx} [{nc['control_iso27701']}]",
+                "texto_clausula": f"{nc['nc_text']}{ref_txt}",
+                "tipo_clausula": "AUDITORIA_NC",
+                "estado_cumplimiento": "OBSERVADO",
+                "alerta_legal": f"No conformidad reportada en informe .docx (Control {nc['control_iso27701']})",
+            })
+
+        resumen = f"Word .docx analizado ({len(clausulas)} cláusulas/hallazgos, {len(nc_rows)} NC tabla auditoría)"
+        archivo_id = self.repo.registrar_archivo(
+            nombre=nombre_archivo,
+            tipo="DOCX",
+            tamano=tamano,
+            resumen=resumen,
+        )
+        for c in clausulas:
+            c["archivo_id"] = archivo_id
+            self.repo.registrar_clausula(c)
+
+        return {
+            "archivo_id": archivo_id,
+            "nombre": nombre_archivo,
+            "tipo": "DOCX",
+            "tamano": tamano,
+            "sha256": sha256,
+            "total_clausulas": len(clausulas),
+            "clausulas": clausulas,
         }
 
     def _segmentar_clausulas_texto(self, contenido: str, documento: str) -> List[Dict[str, Any]]:

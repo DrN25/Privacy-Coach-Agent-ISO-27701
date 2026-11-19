@@ -22,7 +22,7 @@ def get_graph_engine() -> PIMSGraphEngine:
 def nodo_normative_agent(state: AuditState) -> Dict[str, Any]:
     """Extrae el subgrafo normativo y los precedentes judiciales de la ANPD."""
     regla = state.get("regla_canonica", {})
-    control_id = regla.get("control_iso27701", "A.3.24")
+    control_id = regla.get("control_iso27701", "A.3.12")
     
     engine = get_graph_engine()
     subgrafo = engine.get_subgraph([control_id])
@@ -122,7 +122,11 @@ def nodo_normative_agent(state: AuditState) -> Dict[str, Any]:
 
     contexto_unsa: Dict[str, Any] = {}
     texto_eval = f"{activo} {origen} {clausulas_texto} {regla.get('titulo', '')} {latest_user_query}".lower()
-    terminos_unsa = ["unsa", "universidad", "san agustín", "san agustin", "estudiante", "alumno", "matricula", "matrícula", "docente", "posgrado", "admision", "admisión", "convenio"]
+    terminos_unsa = [
+        "unsa", "universidad", "san agustín", "san agustin", "estudiante", "alumno",
+        "matricula", "matrícula", "docente", "posgrado", "admision", "admisión", "convenio",
+        "clinica", "clínica", "hospital", "facultad", "campus", "reglamento", "resolucion", "resolución", "tupa"
+    ]
     
     unsa_consultado = False
     unsa_detalle_trace = "No requerida por contexto general"
@@ -136,7 +140,7 @@ def nodo_normative_agent(state: AuditState) -> Dict[str, Any]:
         
         resp_a2a = unsa_a2a_client.consultar_normativa(pregunta_a2a)
         if resp_a2a.get("disponible"):
-            if resp_a2a.get("citas") or (resp_a2a.get("texto") and not resp_a2a.get("abstained")):
+            if resp_a2a.get("citas") or ((resp_a2a.get("respuesta") or resp_a2a.get("texto")) and not resp_a2a.get("abstained")):
                 contexto_unsa = resp_a2a
                 unsa_detalle_trace = f"Conectado a unsa-mind. Obtenidas {len(resp_a2a.get('citas', []))} citas oficiales."
             else:
@@ -154,7 +158,7 @@ def nodo_normative_agent(state: AuditState) -> Dict[str, Any]:
                 }
                 unsa_detalle_trace = "Conectado a unsa-mind. Sin norma interna específica en repositorio; rige Ley 29733 supletoria."
         else:
-            unsa_detalle_trace = "Servicio unsa-mind en puerto 8001 no respondió o fuera de línea."
+            unsa_detalle_trace = f"Servicio unsa-mind en {unsa_a2a_client.url} no respondió o fuera de línea."
 
     unsa_sec = ""
     if contexto_unsa.get("citas"):
@@ -178,9 +182,9 @@ def nodo_normative_agent(state: AuditState) -> Dict[str, Any]:
         estado_a2a = "ok" if (contexto_unsa and contexto_unsa.get("disponible")) else "warn"
         trace.append({
             "paso": len(trace) + 1,
-            "agente": "Protocolo A2A (unsa-mind:8001)",
+            "agente": "Agente UNSA (unsa-mind A2A)",
             "accion": "Intercambio Inter-Agente (A2A) con Agente Institucional UNSA",
-            "detalle": f"Endpoint: http://127.0.0.1:8001/a2a | {unsa_detalle_trace}",
+            "detalle": f"Endpoint: {unsa_a2a_client.url} | {unsa_detalle_trace}",
             "estado": estado_a2a
         })
 

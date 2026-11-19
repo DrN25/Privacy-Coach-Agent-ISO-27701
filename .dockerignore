@@ -17,4 +17,11 @@ docs
 fuentes_normativas_pdf
 src/data/*.db-journal
 src/data/*.db
+src/data/*.bak
 src/data/uploads
+src/data/evidencias_uploads
+**/node_modules
+node_modules
+BD.zip
+scratch
+temp

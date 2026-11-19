@@ -42,6 +42,11 @@ Thumbs.db
 # Bases de datos temporales / locks locales
 *.sqlite3-journal
 *.db-journal
+*.bak
+*.checkpoint.bak
+src/data/evidencias_uploads/
+src/data/uploads/
+media/uploads/
 
 # Documentos PDF pesados / protegidos por derechos de autor (ISO OCR 14.7MB)
 # (Los grafos y datasets estructurados en .json de Material/ SÍ se versionan)
@@ -64,3 +69,19 @@ fuentes_normativas_pdf/
 # Dependencias Node.js
 node_modules/
 **/node_modules/
+
+# Otros / Archivos residuales y borradores locales
+/temp/
+/scratch/
+BD.zip
+skills-lock.json
+test_chat_flow.py
+verify_all_chat_features.py
+issues.md
+pendiente-conexion.md
+contenido.md
+Funcionalidades_Sistema.md
+docs/INVESTIGACION_ESTADO_DEL_ARTE_Y_ALCANCE_SISTEMA.md
+.agents/skills/design-taste-frontend/
+.agents/skills/frontend-design/
+.agents/skills/impeccable/

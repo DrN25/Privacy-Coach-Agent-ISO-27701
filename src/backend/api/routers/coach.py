@@ -5,7 +5,7 @@ Endpoints: /api/chat, /api/remediate, /api/export-dictamen/{hallazgo_id}.
 
 import datetime
 import logging
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel, Field
 
@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 
 class ChatRequest(BaseModel):
     hallazgo_id: int = 0
+    incident_id: Optional[int] = None
+    ui_context: Dict[str, Any] = Field(default_factory=dict)
     mensaje_usuario: Optional[str] = None
     mensaje: Optional[str] = None
     historial: List[dict] = Field(default_factory=list)
@@ -50,27 +52,41 @@ def post_chat(req: ChatRequest):
     if not texto_usuario:
         raise HTTPException(status_code=400, detail="El mensaje no puede estar vacío.")
 
-    brecha = repository.obtener_hallazgo_por_id(req.hallazgo_id)
+    selected_inc_id = req.incident_id or req.ui_context.get("selected_incident_id")
+    brecha = repository.obtener_hallazgo_por_id(req.hallazgo_id) if req.hallazgo_id else None
+
+    if not brecha and selected_inc_id:
+        inc = repository.obtener_incidente_unsa(int(selected_inc_id))
+        if inc:
+            inc["actions"] = repository.listar_acciones_incidente(int(selected_inc_id))
+            inc["corrective_action"] = repository.obtener_medida_correctiva(int(selected_inc_id)) or {}
+            inc["codigo_regla"] = inc.get("regla_codigo") or ""
+            inc["control_iso27701"] = inc.get("iso27701_control_id") or "A.3.12"
+            inc["elemento_afectado"] = inc.get("compromised_system") or inc.get("title")
+            brecha = inc
+
     if not brecha:
-        # Consulta general de auditoría o normativa institucional
+        # Consulta general / operativa PIMS
         brecha = {
             "id": req.hallazgo_id or 0,
             "codigo_regla": "CONSULTA_GENERAL",
-            "titulo": "Consulta Institucional de Privacidad y Normativa UNSA",
-            "control_iso27701": "A.5.25",
-            "principio_iso29100": "P1_CONSENTIMIENTO",
-            "articulo_ley29733": "Art. 13",
-            "elemento_afectado": "Sistemas y Procesos UNSA",
+            "titulo": "Consulta Institucional PIMS UNSA (ISO/IEC 27701:2025)",
+            "control_iso27701": "A.3.12",
+            "principio_iso29100": "Principle 10: Information security",
+            "articulo_ley29733": "Ley N.° 29733 / D.S. 016-2024-JUS",
+            "elemento_afectado": "Sistemas, Incidentes y Procesos UNSA",
             "origen_archivo": "Corpus Normativo Institucional UNSA",
-            "directiva_seguridad": "Directiva General OTI / RCU 0103-2026",
-            "multa_estimada_uit": 5.0,
-            "multa_estimada_pen": 25750.0,
-            "precedente_anpd": "Jurisprudencia General de Fiscalización ANPD"
+            "directiva_seguridad": "Directiva R.D. 019-2013-JUS / PIMS ISO 27701:2025",
+            "multa_estimada_uit": 0.0,
+            "multa_estimada_pen": 0.0,
+            "precedente_anpd": "Jurisprudencia ANPD (Auxiliar)",
         }
+
+    brecha["ui_context"] = req.ui_context or {}
 
     # Enriquecer con contexto normativo
     brecha["contexto_normativo"] = knowledge_bridge.extraer_subgrafo_control(
-        brecha.get("control_iso27701", "A.5.25")
+        brecha.get("control_iso27701", "A.3.12")
     )
 
     # Cláusulas vinculadas
@@ -89,30 +105,29 @@ def post_chat(req: ChatRequest):
     brecha["clausulas_documento"] = [dict(c) for c in cur.fetchall()]
     conn.close()
 
-    mensajes = req.historial or []
+    mensajes = list(req.historial or [])
     mensajes.append({"role": "user", "content": texto_usuario})
 
-    # Invocación al Coach / Grafo Multi-Agente
     dialogar_fn = get_dialogar_coach()
     respuesta = dialogar_fn(mensajes, brecha)
 
-    # Persistencia de interacción
     repository.guardar_interaccion_coach(
         hallazgo_id=req.hallazgo_id,
         rol="assistant",
         mensaje=respuesta["content"],
         reasoning=respuesta.get("reasoning"),
-        parche=respuesta.get("sql_patch")
+        parche=respuesta.get("sql_patch"),
     )
 
     return {
         "mensaje": respuesta["content"],
         "reasoning": respuesta.get("reasoning", ""),
         "sql_patch": respuesta.get("sql_patch", ""),
+        "sql_executed": respuesta.get("sql_executed", ""),
         "mode": respuesta.get("mode", "openrouter"),
         "trazabilidad": respuesta.get("trazabilidad", []),
         "contexto_unsa": respuesta.get("contexto_unsa", {}),
-        "error": respuesta.get("error")
+        "error": respuesta.get("error"),
     }
 
 

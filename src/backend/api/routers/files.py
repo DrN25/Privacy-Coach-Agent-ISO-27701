@@ -9,10 +9,17 @@ import shutil
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 
+from ...db import DEFAULT_DB_PATH
 from ...infrastructure.repository import repository
 from ...services.document_processor import document_processor
 
 router = APIRouter(tags=["Files"])
+
+
+def _get_writable_uploads_dir() -> str:
+    """Retorna directorio escribible para documentos subidos junto a la BD activa."""
+    db_path = os.path.abspath(os.getenv("DATABASE_PATH", DEFAULT_DB_PATH))
+    return os.path.join(os.path.dirname(db_path), "uploads")
 
 
 def obtener_base_dir() -> str:
@@ -39,6 +46,7 @@ def buscar_ruta_archivo_fisico(nombre_archivo: str) -> str:
     """Localiza la ruta real en disco del archivo buscado."""
     base_dir = obtener_base_dir()
     rutas_candidatas = [
+        os.path.join(_get_writable_uploads_dir(), nombre_archivo),
         os.path.join(base_dir, "media", "documents", "originales_unsa", nombre_archivo),
         os.path.join(base_dir, "media", "documents", nombre_archivo),
         os.path.join(base_dir, "media", "uploads", nombre_archivo),
@@ -225,7 +233,12 @@ def get_raw_document(archivo_id: str):
     if not ruta or not os.path.exists(ruta):
         raise HTTPException(status_code=404, detail=f"El archivo físico '{nombre}' no está disponible en disco.")
 
-    media_type = "application/pdf" if nombre.lower().endswith(".pdf") else "text/plain; charset=utf-8"
+    if nombre.lower().endswith(".pdf"):
+        media_type = "application/pdf"
+    elif nombre.lower().endswith(".docx"):
+        media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    else:
+        media_type = "text/plain; charset=utf-8"
     return FileResponse(
         ruta,
         media_type=media_type,
@@ -243,15 +256,23 @@ async def upload_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Nombre de archivo inválido.")
 
     fname = safe_filename.lower()
-    if not fname.endswith((".sql", ".pdf", ".md", ".txt")):
-        raise HTTPException(status_code=400, detail="Formato no soportado. Suba archivos SQL, PDF, MD o TXT.")
+    if not fname.endswith((".sql", ".pdf", ".docx", ".md", ".txt")):
+        raise HTTPException(status_code=400, detail="Formato no soportado. Suba archivos SQL, PDF, DOCX, MD o TXT.")
 
     base_dir = obtener_base_dir()
     temp_dir = os.path.join(base_dir, "media", "uploads")
-    os.makedirs(temp_dir, exist_ok=True)
-    temp_path = os.path.join(temp_dir, safe_filename)
-    with open(temp_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    try:
+        os.makedirs(temp_dir, exist_ok=True)
+        temp_path = os.path.join(temp_dir, safe_filename)
+        with open(temp_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except OSError:
+        temp_dir = _get_writable_uploads_dir()
+        os.makedirs(temp_dir, exist_ok=True)
+        temp_path = os.path.join(temp_dir, safe_filename)
+        file.file.seek(0)
+        with open(temp_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
 
     try:
         resultado = document_processor.procesar_archivo(temp_path, safe_filename)

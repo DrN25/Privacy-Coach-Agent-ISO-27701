@@ -12,10 +12,12 @@ if DB_PATH != DEFAULT_DB_PATH and os.path.exists(DEFAULT_DB_PATH):
         shutil.copy2(DEFAULT_DB_PATH, DB_PATH)
 
 def get_db_connection():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+    db_path = os.path.abspath(os.getenv("DATABASE_PATH", DEFAULT_DB_PATH))
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
+
 
 def init_db():
     conn = get_db_connection()
@@ -129,6 +131,10 @@ def init_db():
     """)
 
     conn.commit()
+
+    from .infrastructure.pims_schema import init_pims_tables
+    init_pims_tables(conn)
+
     conn.close()
 
 if __name__ == "__main__":

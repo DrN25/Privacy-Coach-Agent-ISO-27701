@@ -64,8 +64,9 @@ def get_postgres_connection():
 
 def get_sqlite_connection():
     """Retorna conexión a SQLite local (modo respaldo/desarrollo offline)."""
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+    db_path = os.path.abspath(os.getenv("DATABASE_PATH", DB_PATH))
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
 

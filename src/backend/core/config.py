@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     pg_user: str = Field(default="postgres", alias="PG_USER")
     pg_password: str = Field(default="", alias="PG_PASSWORD")
     pg_schema: str = Field(default="demo", alias="PG_SCHEMA")
-    pg_enabled: bool = Field(default=True, alias="PG_ENABLED")
+    pg_enabled: bool = Field(default=False, alias="PG_ENABLED")
 
     # Directorio de Almacenamiento Centralizado de Documentos
     media_dir: str = Field(default=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "media"), alias="MEDIA_DIR")

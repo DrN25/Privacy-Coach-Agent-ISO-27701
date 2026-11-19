@@ -84,6 +84,7 @@ jobs:
           done
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:18000/)" = "401"
           curl --fail --silent --user auditor:secret http://127.0.0.1:18000/ > /dev/null
+          curl --fail --silent --user auditor:secret http://127.0.0.1:18000/api/incidents | grep -q "INC-UNSA-"
 
       - name: Validate VPS deployment configuration
         env:
@@ -136,6 +137,8 @@ jobs:
             --exclude=.env \
             --exclude=.env.production \
             --exclude=.venv \
+            --exclude=**/node_modules \
+            --exclude=*.bak \
             --exclude=src/data/*.db \
             --exclude=src/data/uploads \
             -czf "$RUNNER_TEMP/privacy-coach.tar.gz" .

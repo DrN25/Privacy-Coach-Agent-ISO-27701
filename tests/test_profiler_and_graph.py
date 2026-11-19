@@ -17,4 +17,6 @@ def test_normative_datasets_load_expected_coverage():
     assert len(engine.controls_map) == 78
     assert len(engine.principles_map) == 11
     assert len(engine.sanctions_dataset) == 588
-    assert engine.get_control("A.3.24")["title"] == "Use of cryptography"
+    assert engine.get_control("A.3.26")["title"] == "Use of cryptography"
+    assert engine.get_control("A.3.24")["title"] == "Information backup"
+    assert engine.get_control("A.3.12")["title"] == "Response to information security incidents"
