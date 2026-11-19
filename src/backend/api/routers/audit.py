@@ -4,8 +4,9 @@ Endpoints: /api/status, /api/database-view, /api/reset, /api/reanalyze, /api/loa
 """
 
 import os
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
+from ...agents.doc_inspector_agent import analizar_documentos_con_ia
 from ...core.config import settings
 from ...infrastructure.repository import repository
 from ...knowledge_bridge import knowledge_bridge
@@ -70,6 +71,20 @@ def reanalyze_audit():
     return {
         "mensaje": "Reanálisis de Privacidad completado (DSPM + Router O(1)).",
         "total_brechas": len(hallazgos)
+    }
+
+
+@router.post("/api/inspector/ai-analyze")
+def run_ai_document_inspector(archivo_id: int | None = Query(default=None)):
+    """Ejecuta el Subagente IA Documental sobre archivos cargados contra los 78 controles ISO 27701:2025."""
+    res = analizar_documentos_con_ia(archivo_id=archivo_id)
+    return {
+        **res,
+        "mensaje": (
+            f"Subagente IA identificó '{res['tipo_documento']}' y detectó {res['hallazgos_nuevos']} hallazgo(s) adicional(es)."
+            if res.get("ai_executed")
+            else res.get("resumen_ejecutivo", "No se pudo ejecutar el subagente IA.")
+        ),
     }
 
 

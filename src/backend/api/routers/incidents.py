@@ -21,10 +21,16 @@ from ...infrastructure.llm_client import default_luna_client
 from ...infrastructure.repository import MAPA_SEVERIDAD_HALLAZGO, repository
 from ...knowledge_bridge import knowledge_bridge
 from ...services.docx_exporter import (
+    PIMS_TEMPLATES_CATALOG,
+    export_audit_nonconformities_docx,
+    export_blank_template_docx,
     export_corrective_action_docx,
+    export_corrective_procedure_docx,
+    export_incident_dossier_docx,
     export_management_review_d35_docx,
     export_management_review_d35_markdown,
 )
+from ...services.docx_importer import parse_d34_docx, parse_incident_report_docx
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Incidents"])
@@ -247,20 +253,24 @@ _FINDING_ASSET_USER_MAP = {
 
 
 def _build_draft_from_finding(hd: Dict[str, Any]) -> tuple[Dict[str, Any], bool]:
-    """Construye un borrador completo de 3 pasos desde un hallazgo DSPM y lo enriquece con IA."""
+    """Construye un borrador completo de 3 pasos desde un hallazgo DSPM/IA/Auditoría y lo enriquece con IA."""
     rule_code = str(hd.get("codigo_regla") or "R-001").upper()
-    regla = resolver_regla_con_fallback(rule_code)
-    ctrl_id = (regla.get("control_iso27701") if regla else None) or hd.get("control_iso27701") or "A.3.12"
+    is_custom_rule = rule_code.startswith("IA-") or rule_code == "AUD-NC"
+    regla = None if is_custom_rule else resolver_regla_con_fallback(rule_code)
+    ctrl_id = ((regla.get("control_iso27701") if regla else None) or hd.get("control_iso27701") or "A.3.12").upper()
     ctrl = knowledge_bridge.engine.get_control(ctrl_id) or {}
 
     sev = MAPA_SEVERIDAD_HALLAZGO.get(str(hd.get("nivel_riesgo", "MEDIO")).upper(), "M")
-    inc_type = "PI" if regla.get("tipo_hallazgo") == "DOCUMENTAL" else "BF"
+    if regla:
+        inc_type = "PI" if regla.get("tipo_hallazgo") == "DOCUMENTAL" else "BF"
+    else:
+        inc_type = "PI" if (ctrl_id.startswith("A.1") or ctrl_id.startswith("A.2") or rule_code == "AUD-NC") else "BF"
     asset_id, user_id = _FINDING_ASSET_USER_MAP.get(rule_code, (101, 601))
     today = datetime.now().strftime("%Y-%m-%d")
 
     elemento = hd.get("elemento_afectado") or ""
     origen = hd.get("origen_archivo") or "Inspector DSPM"
-    remed = regla.get("remediacion_sugerida") or ctrl.get("annex_b_guidance") or ""
+    remed = (regla.get("remediacion_sugerida") if regla else None) or ctrl.get("annex_b_guidance") or ""
 
     draft: Dict[str, Any] = {
         "title": f"{hd.get('titulo')} ({elemento})".strip(),
@@ -355,6 +365,27 @@ def draft_incident_from_finding(hallazgo_id: int):
         "incident": None,
         "draft": draft,
         "hallazgo": hd,
+    }
+
+
+@router.post("/api/incidents/import-docx")
+async def import_incident_from_docx(file: UploadFile = File(...)):
+    """Importa una ficha o reporte Word (.docx) hacia borrador de 3 pasos sin guardar todavía."""
+    fname = os.path.basename(file.filename or "")
+    if not fname.lower().endswith(".docx"):
+        raise HTTPException(status_code=400, detail="Debe subir un archivo Word con extensión .docx.")
+    raw = await file.read()
+    if not raw:
+        raise HTTPException(status_code=400, detail="El archivo .docx está vacío.")
+    try:
+        draft, ai_enriched = parse_incident_report_docx(raw, fname)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"No se pudo interpretar el archivo .docx: {exc}") from exc
+    return {
+        "draft": draft,
+        "ai_enriched": ai_enriched,
+        "filename": fname,
+        "mensaje": f"Archivo '{fname}' importado como borrador de 3 pasos. Revise y confirme.",
     }
 
 
@@ -504,6 +535,69 @@ def get_incident_history(incident_id: int):
 def list_corrective_actions(status: Optional[str] = None):
     items = repository.listar_medidas_correctivas(status)
     return {"corrective_actions": items, "total": len(items)}
+
+
+@router.post("/api/corrective-actions", status_code=201)
+def create_corrective_action_standalone(payload: Dict[str, Any], x_actor_id: Optional[int] = Header(default=None)):
+    """Crea una Medida Correctiva Cláusula 10.2 (independiente o asociada a un incidente)."""
+    mc = repository.guardar_medida_correctiva_por_id(payload, mc_id=None, actor_id=_actor(x_actor_id))
+    return {"corrective_action": mc, "mensaje": f"Medida correctiva {mc['mc_code']} registrada (Cláusula 10.2)."}
+
+
+@router.post("/api/corrective-actions/import-docx")
+async def import_corrective_action_docx_route(file: UploadFile = File(...)):
+    """Lee un Formulario D34 (.docx) de 12 filas y devuelve los campos parseados y el incidente coincidente si existe."""
+    fname = os.path.basename(file.filename or "")
+    if not fname.lower().endswith(".docx"):
+        raise HTTPException(status_code=400, detail="Debe subir un archivo Word D34 (.docx).")
+    raw = await file.read()
+    try:
+        parsed = parse_d34_docx(raw)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Error interpretando Formulario D34 .docx: {exc}") from exc
+
+    matched_incident = None
+    ref_code = parsed.get("incident_code_ref")
+    if ref_code:
+        for inc in repository.listar_incidentes_unsa():
+            if (inc.get("incident_code") or "").upper() == ref_code:
+                matched_incident = inc
+                break
+    return {
+        "draft": parsed,
+        "matched_incident": matched_incident,
+        "filename": fname,
+        "mensaje": f"Formulario D34 leído desde '{fname}'. Revise y guarde.",
+    }
+
+
+@router.put("/api/corrective-actions/{mc_id}")
+def update_corrective_action_by_id(
+    mc_id: int, payload: Dict[str, Any], x_actor_id: Optional[int] = Header(default=None)
+):
+    try:
+        mc = repository.guardar_medida_correctiva_por_id(payload, mc_id=mc_id, actor_id=_actor(x_actor_id))
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Medida correctiva no encontrada.")
+    return {"corrective_action": mc, "mensaje": f"Medida correctiva {mc['mc_code']} actualizada."}
+
+
+@router.get("/api/corrective-actions/{mc_id}/export-docx")
+def export_corrective_action_by_id_docx(mc_id: int):
+    mc = repository.obtener_medida_correctiva_por_id(mc_id)
+    if not mc:
+        raise HTTPException(status_code=404, detail="Medida correctiva no encontrada.")
+    inc = repository.obtener_incidente_unsa(mc["incident_id"]) if mc.get("incident_id") else None
+    cfg = repository.obtener_configuracion()
+    content = export_corrective_action_docx(mc, inc, cfg)
+    filename = f"D34_{mc['mc_code'].replace(' ', '_')}.docx"
+    return Response(
+        content=content,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.get("/api/incidents/{incident_id}/corrective-action")
@@ -749,6 +843,73 @@ def get_management_review_d35(format: str = Query(default="json")):
             headers={"Content-Disposition": 'attachment; filename="D35_Revision_Direccion_PIMS.docx"'},
         )
     return {"summary": summary, "markdown": export_management_review_d35_markdown(summary)}
+
+
+@router.get("/api/reports/corrective-procedure-docx")
+def get_corrective_procedure_docx():
+    """Exporta Procedimiento de Medidas Correctivas adaptado a UNSA ISO/IEC 27701:2025 con KPIs vivos."""
+    summary = repository.obtener_resumen_revision_direccion_d35()
+    raw = export_corrective_procedure_docx(summary, include_live_kpis=True)
+    return Response(
+        content=raw,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": 'attachment; filename="Procedimiento_Medidas_Correctivas_PIMS_UNSA.docx"'},
+    )
+
+
+@router.get("/api/reports/audit-nonconformities-docx")
+def get_audit_nonconformities_docx():
+    """Exporta Apéndice 2 de Auditoría y No Conformidades con referencias cruzadas MC-UNSA."""
+    summary = repository.obtener_resumen_revision_direccion_d35()
+    raw = export_audit_nonconformities_docx(summary)
+    return Response(
+        content=raw,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": 'attachment; filename="Informe_Auditoria_NoConformidades_PIMS_UNSA.docx"'},
+    )
+
+
+@router.get("/api/templates/pims")
+def list_pims_templates():
+    """Retorna catálogo oficial de plantillas .docx PIMS ISO/IEC 27701:2025."""
+    return {"templates": PIMS_TEMPLATES_CATALOG, "total": len(PIMS_TEMPLATES_CATALOG)}
+
+
+@router.get("/api/templates/pims/{template_id}/blank")
+def download_blank_pims_template(template_id: str):
+    """Descarga una plantilla oficial .docx en blanco lista para completar fuera del sistema."""
+    entry = next((t for t in PIMS_TEMPLATES_CATALOG if t["id"] == template_id), None)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Plantilla PIMS no encontrada.")
+    cfg = repository.obtener_configuracion()
+    raw = export_blank_template_docx(template_id, cfg)
+    return Response(
+        content=raw,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{entry["blank_filename"]}"'},
+    )
+
+
+@router.get("/api/incidents/{incident_id}/export-docx")
+def export_incident_dossier_word(incident_id: int):
+    """Exporta el Expediente completo de Incidente / Brecha PII (B.3.12 + A.3.14) en Word (.docx)."""
+    inc = repository.obtener_incidente_unsa(incident_id)
+    if not inc:
+        raise HTTPException(status_code=404, detail="Incidente no encontrado.")
+    ctrl_id = inc.get("iso27701_control_id") or "A.3.12"
+    ctrl = knowledge_bridge.engine.get_control(ctrl_id) or {}
+    acciones = repository.listar_acciones_incidente(incident_id)
+    mc = repository.obtener_medida_correctiva(incident_id)
+    adjuntos = repository.listar_adjuntos_incidente(incident_id)
+    historial = repository.listar_historial_incidente(incident_id)
+    cfg = repository.obtener_configuracion()
+    raw = export_incident_dossier_docx(inc, ctrl, acciones, mc, adjuntos, historial, cfg)
+    fname = f"Expediente_{inc['incident_code'].replace(' ', '_')}.docx"
+    return Response(
+        content=raw,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{fname}"'},
+    )
 
 
 @router.get("/api/incidents/{incident_id}/export-dictamen", response_class=PlainTextResponse)

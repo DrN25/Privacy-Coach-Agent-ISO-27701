@@ -4,6 +4,7 @@ Orquesta la evaluación determinista de las reglas canónicas R-001 a R-007
 sobre el inventario de datos y las cláusulas contractuales.
 """
 
+import re
 from datetime import datetime
 from typing import List, Dict, Any
 
@@ -121,8 +122,8 @@ class AuditService:
                 "fecha_deteccion": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             })
 
-        # 4. Reglas Documentales (R-004 a R-007)
-        cur.execute("SELECT id, documento, titulo_clausula, texto_clausula, tipo_clausula FROM clausulas_documentales")
+        # 4. Reglas Documentales (R-004 a R-007 y No Conformidades de Auditoría .docx)
+        cur.execute("SELECT id, documento, numero_clausula, titulo_clausula, texto_clausula, tipo_clausula FROM clausulas_documentales")
         clausulas = cur.fetchall()
         conn.close()
 
@@ -233,6 +234,28 @@ class AuditService:
                 "multa_estimada_pen": info["multa_estimada_pen"],
                 "precedente_anpd": info["precedente_anpd"],
                 "fecha_deteccion": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
+
+        # 5. No Conformidades extraídas directamente de Informes de Auditoría .docx (Apéndice 2)
+        aud_ncs = [c for c in clausulas if (c["tipo_clausula"] or "") == "AUDITORIA_NC"]
+        for nc in aud_ncs:
+            m_ctrl = re.search(r"\b([AB]\.[123](?:\.[0-9]+){1,2})\b", f"{nc['numero_clausula'] or ''} {nc['texto_clausula']}", re.IGNORECASE)
+            ctrl_id = m_ctrl.group(1).upper() if m_ctrl else "A.3.15"
+            self.repo.insertar_hallazgo({
+                "codigo_regla": "AUD-NC",
+                "titulo": f"No Conformidad de Auditoría ({ctrl_id}): {nc['titulo_clausula']}",
+                "descripcion": nc["texto_clausula"],
+                "nivel_riesgo": "ALTO",
+                "elemento_afectado": nc["titulo_clausula"],
+                "origen_archivo": nc["documento"],
+                "control_iso27701": ctrl_id,
+                "principio_iso29100": "Cumplimiento PIMS (Cláusula 9.2 / 10.2)",
+                "articulo_ley29733": "Art. 17 y 39 (Medidas de Seguridad y Responsabilidad)",
+                "directiva_seguridad": "ISO/IEC 27701:2025 Cláusula 9.2 / 10.2",
+                "multa_estimada_uit": 5.0,
+                "multa_estimada_pen": 5.0 * 5150.0,
+                "precedente_anpd": "Informe de Auditoría Interna PIMS UNSA",
+                "fecha_deteccion": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             })
 
         return self.repo.obtener_todos_los_hallazgos()

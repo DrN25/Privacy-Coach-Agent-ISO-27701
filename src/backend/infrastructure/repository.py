@@ -19,7 +19,7 @@ from .db import (
     get_postgres_connection,
     get_sqlite_connection,
 )
-from .pims_schema import init_pims_tables
+from .pims_schema import ensure_pims_migrations, init_pims_tables
 from ..core.rules_catalog import VALOR_UIT_PEN, resolver_regla_con_fallback
 
 logger = logging.getLogger("pims.repository")
@@ -60,6 +60,8 @@ class AuditRepository:
         ).fetchone()
         if not row:
             init_pims_tables(conn)
+        else:
+            ensure_pims_migrations(conn)
         return conn
 
     def _actor_label(self, conn: sqlite3.Connection, actor_id: Optional[int]) -> str:
@@ -306,7 +308,7 @@ class AuditRepository:
             regla_cod = payload.get("regla_codigo")
             multa_uit = float(payload.get("multa_estimada_uit") or 0.0)
             precedente = payload.get("precedente_anpd") or ""
-            if regla_cod:
+            if regla_cod and not str(regla_cod).startswith("IA-") and regla_cod != "AUD-NC":
                 rinfo = resolver_regla_con_fallback(regla_cod)
                 ctrl_id = payload.get("iso27701_control_id") or rinfo["control_iso27701"]
                 if not multa_uit:
@@ -727,7 +729,7 @@ class AuditRepository:
                 "action_to_implement", "notify_who", "approved_by_name", "due_date",
                 "responsible_id", "responsible_name", "implemented_on", "implemented_signature",
                 "effectiveness_reviewed_on", "effectiveness_signature", "doc_changes_required",
-                "doc_changes_signature", "status",
+                "doc_changes_signature", "status", "source_type", "iso27701_control_id",
             ]
 
             if existing:
@@ -795,17 +797,136 @@ class AuditRepository:
         finally:
             conn.close()
 
+    def obtener_medida_correctiva_por_id(self, mc_id: int) -> Optional[Dict[str, Any]]:
+        conn = self._pims_conn()
+        try:
+            row = conn.execute(
+                """
+                SELECT mc.*, ci.incident_code, ci.title AS incident_title, ci.severity AS incident_severity,
+                       ci.status AS incident_status,
+                       COALESCE(ext.iso27701_control_id, mc.iso27701_control_id, 'A.3.12') AS iso27701_control_id
+                FROM a6_corrective_action mc
+                LEFT JOIN core_incident ci ON ci.id = mc.incident_id
+                LEFT JOIN a6_incident_ext ext ON ext.incident_id = ci.id
+                WHERE mc.id = ? AND (ci.id IS NULL OR ci.is_deleted = 0)
+                """,
+                (mc_id,),
+            ).fetchone()
+            return dict(row) if row else None
+        finally:
+            conn.close()
+
+    def guardar_medida_correctiva_por_id(
+        self, payload: Dict[str, Any], mc_id: Optional[int] = None, actor_id: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """Crea o actualiza una Medida Correctiva D34 (con o sin incidente vinculado, Cláusula 10.2)."""
+        inc_id = payload.get("incident_id")
+        if inc_id is not None and str(inc_id).strip() != "":
+            inc_id_int = int(inc_id)
+            if mc_id is None:
+                return self.guardar_medida_correctiva(inc_id_int, payload, actor_id=actor_id)
+        else:
+            inc_id_int = None
+
+        conn = self._pims_conn()
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        try:
+            cfg = self._config_row(conn)
+            resp_name = payload.get("responsible_name")
+            resp_id = payload.get("responsible_id")
+            if resp_id and not resp_name:
+                u = conn.execute("SELECT first_name, last_name FROM auth_user WHERE id = ?", (int(resp_id),)).fetchone()
+                if u:
+                    resp_name = f"{u['first_name']} {u['last_name']}".strip()
+            actor_name = self._actor_label(conn, actor_id)
+
+            fields = [
+                "incident_id", "nonconformity_desc", "identified_on", "identified_by_id", "identified_by_name",
+                "identified_signature", "root_cause", "similar_mc_ref", "action_required",
+                "action_to_implement", "notify_who", "approved_by_name", "due_date",
+                "responsible_id", "responsible_name", "implemented_on", "implemented_signature",
+                "effectiveness_reviewed_on", "effectiveness_signature", "doc_changes_required",
+                "doc_changes_signature", "status", "source_type", "iso27701_control_id",
+            ]
+
+            if mc_id is not None:
+                existing = conn.execute("SELECT * FROM a6_corrective_action WHERE id = ?", (mc_id,)).fetchone()
+                if not existing:
+                    raise KeyError("Medida correctiva no encontrada.")
+                sets, params = [], []
+                for f in fields:
+                    if f in payload:
+                        val = (1 if payload[f] else 0) if f == "action_required" else (inc_id_int if f == "incident_id" else payload[f])
+                        sets.append(f"{f} = ?")
+                        params.append(val)
+                if sets:
+                    sets.append("updated_at = ?")
+                    params.extend([now, mc_id])
+                    sql_mc = f"UPDATE a6_corrective_action SET {', '.join(sets)} WHERE id = ?"  # nosec B608: columns strictly allowlisted
+                    conn.execute(sql_mc, params)
+                new_id = mc_id
+            else:
+                ident_on = payload.get("identified_on") or datetime.now().strftime("%Y-%m-%d")
+                year = int(ident_on[:4]) if len(ident_on) >= 4 and ident_on[:4].isdigit() else datetime.now().year
+                mc_code = payload.get("mc_code") or self._next_code(conn, "a6_corrective_action", "mc_code", "MC-UNSA", year)
+                cur = conn.cursor()
+                cur.execute(
+                    """
+                    INSERT INTO a6_corrective_action (
+                        incident_id, mc_code, nonconformity_desc, identified_on, identified_by_id,
+                        identified_by_name, identified_signature, root_cause, similar_mc_ref, action_required,
+                        action_to_implement, notify_who, approved_by_name, due_date, responsible_id,
+                        responsible_name, implemented_on, implemented_signature, effectiveness_reviewed_on,
+                        effectiveness_signature, doc_changes_required, doc_changes_signature, status,
+                        source_type, iso27701_control_id, created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        inc_id_int, mc_code,
+                        payload.get("nonconformity_desc") or "No conformidad registrada conforme a Cláusula 10.2.",
+                        ident_on,
+                        payload.get("identified_by_id") or actor_id or 601,
+                        payload.get("identified_by_name") or actor_name,
+                        payload.get("identified_signature") or "",
+                        payload.get("root_cause") or "",
+                        payload.get("similar_mc_ref") or "",
+                        1 if payload.get("action_required", 1) else 0,
+                        payload.get("action_to_implement") or "",
+                        payload.get("notify_who") or cfg["dpo_name"],
+                        payload.get("approved_by_name") or cfg["dpo_name"],
+                        payload.get("due_date") or "",
+                        resp_id, resp_name or actor_name,
+                        payload.get("implemented_on") or "",
+                        payload.get("implemented_signature") or "",
+                        payload.get("effectiveness_reviewed_on") or "",
+                        payload.get("effectiveness_signature") or "",
+                        payload.get("doc_changes_required") or "",
+                        payload.get("doc_changes_signature") or "",
+                        payload.get("status") or "ABIERTA",
+                        payload.get("source_type") or ("INCIDENTE" if inc_id_int else "MANUAL"),
+                        payload.get("iso27701_control_id") or "A.3.12",
+                        now, now,
+                    ),
+                )
+                new_id = cur.lastrowid
+
+            conn.commit()
+        finally:
+            conn.close()
+        return self.obtener_medida_correctiva_por_id(new_id)  # type: ignore[return-value]
+
     def listar_medidas_correctivas(self, status_filter: Optional[str] = None) -> List[Dict[str, Any]]:
         conn = self._pims_conn()
         try:
             rows = conn.execute(
                 """
                 SELECT mc.*, ci.incident_code, ci.title AS incident_title, ci.severity AS incident_severity,
-                       ci.status AS incident_status, ext.iso27701_control_id
+                       ci.status AS incident_status,
+                       COALESCE(ext.iso27701_control_id, mc.iso27701_control_id, 'A.3.12') AS iso27701_control_id
                 FROM a6_corrective_action mc
-                JOIN core_incident ci ON ci.id = mc.incident_id
+                LEFT JOIN core_incident ci ON ci.id = mc.incident_id
                 LEFT JOIN a6_incident_ext ext ON ext.incident_id = ci.id
-                WHERE ci.is_deleted = 0
+                WHERE (ci.id IS NULL OR ci.is_deleted = 0)
                 ORDER BY mc.id DESC
                 """
             ).fetchall()
@@ -1159,8 +1280,13 @@ class AuditRepository:
                 entry["codes"].append(i["incident_code"])
 
         open_list = [i for i in items if i["status"] != "C"]
+        disruptive = [i for i in items if i.get("severity") in ("C", "A")][:6]
+        users = self.listar_usuarios()
+        sin_mc = [i for i in items if not i.get("mc_id")]
+        mc_pend = [m for m in mc_list if m["status"] in ("ABIERTA", "EN_PROGRESO")]
         return {
             "config": cfg,
+            "users": users,
             "total_incidents": len(items),
             "open_incidents": len(open_list),
             "closed_incidents": len(items) - len(open_list),
@@ -1169,6 +1295,8 @@ class AuditRepository:
             "tech_non_pii": len([i for i in items if not i["involves_personal_data"]]),
             "by_year": [years_map[y] for y in sorted(years_map.keys())],
             "open_critical_by_responsible": sorted(crit_by_resp.values(), key=lambda x: -x["count"]),
+            "disruptive_incidents": disruptive,
+            "mc_items": mc_list,
             "top_controls": [
                 {"control_id": k, "count": v}
                 for k, v in sorted(ctrl_counts.items(), key=lambda kv: -kv[1])[:8]
@@ -1179,7 +1307,12 @@ class AuditRepository:
                 "en_progreso": len([m for m in mc_list if m["status"] == "EN_PROGRESO"]),
                 "implementadas": len([m for m in mc_list if m["status"] == "IMPLEMENTADA"]),
                 "verificadas": len([m for m in mc_list if m["status"] == "VERIFICADA"]),
-                "pendientes": len([m for m in mc_list if m["status"] in ("ABIERTA", "EN_PROGRESO")]),
+                "pendientes": len(mc_pend),
+            },
+            "procedure_kpis": {
+                "mc_iniciadas": len(mc_list),
+                "mc_incompletas": len(mc_pend),
+                "incidentes_sin_formulario_d34": len(sin_mc),
             },
         }
 

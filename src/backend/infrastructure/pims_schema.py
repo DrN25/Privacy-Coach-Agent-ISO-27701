@@ -285,6 +285,8 @@ def init_pims_tables(conn: sqlite3.Connection) -> None:
         doc_changes_required TEXT,
         doc_changes_signature TEXT,
         status TEXT NOT NULL DEFAULT 'ABIERTA',
+        source_type TEXT NOT NULL DEFAULT 'INCIDENTE',
+        iso27701_control_id TEXT DEFAULT 'A.3.12',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
     );
@@ -295,7 +297,24 @@ def init_pims_tables(conn: sqlite3.Connection) -> None:
     CREATE INDEX IF NOT EXISTS idx_a6_mc_status ON a6_corrective_action(status);
     """)
     conn.commit()
+    ensure_pims_migrations(conn)
     seed_pims_data(conn)
+
+
+def ensure_pims_migrations(conn: sqlite3.Connection) -> None:
+    """Agrega de forma idempotente columnas nuevas a tablas PIMS ya existentes."""
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(a6_corrective_action)").fetchall()}
+    if not cols:
+        return
+    changed = False
+    if "source_type" not in cols:
+        conn.execute("ALTER TABLE a6_corrective_action ADD COLUMN source_type TEXT NOT NULL DEFAULT 'INCIDENTE'")
+        changed = True
+    if "iso27701_control_id" not in cols:
+        conn.execute("ALTER TABLE a6_corrective_action ADD COLUMN iso27701_control_id TEXT DEFAULT 'A.3.12'")
+        changed = True
+    if changed:
+        conn.commit()
 
 
 def seed_pims_data(conn: sqlite3.Connection) -> None:

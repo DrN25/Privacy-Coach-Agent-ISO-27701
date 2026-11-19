@@ -233,7 +233,12 @@ def get_raw_document(archivo_id: str):
     if not ruta or not os.path.exists(ruta):
         raise HTTPException(status_code=404, detail=f"El archivo físico '{nombre}' no está disponible en disco.")
 
-    media_type = "application/pdf" if nombre.lower().endswith(".pdf") else "text/plain; charset=utf-8"
+    if nombre.lower().endswith(".pdf"):
+        media_type = "application/pdf"
+    elif nombre.lower().endswith(".docx"):
+        media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    else:
+        media_type = "text/plain; charset=utf-8"
     return FileResponse(
         ruta,
         media_type=media_type,
@@ -251,8 +256,8 @@ async def upload_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Nombre de archivo inválido.")
 
     fname = safe_filename.lower()
-    if not fname.endswith((".sql", ".pdf", ".md", ".txt")):
-        raise HTTPException(status_code=400, detail="Formato no soportado. Suba archivos SQL, PDF, MD o TXT.")
+    if not fname.endswith((".sql", ".pdf", ".docx", ".md", ".txt")):
+        raise HTTPException(status_code=400, detail="Formato no soportado. Suba archivos SQL, PDF, DOCX, MD o TXT.")
 
     base_dir = obtener_base_dir()
     temp_dir = os.path.join(base_dir, "media", "uploads")
